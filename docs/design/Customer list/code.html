@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"surface-container-low":"#f1f3ff","on-primary":"#ffffff","on-secondary-fixed-variant":"#3b485a","on-primary-container":"#9bede3","surface-dim":"#d2daf0","on-tertiary-fixed-variant":"#70361e","surface-container":"#e9edff","surface-bright":"#f9f9ff","background":"#f9f9ff","outline-variant":"#bec9c6","on-secondary":"#ffffff","secondary-container":"#d6e3fb","primary-fixed":"#a0f1e7","inverse-on-surface":"#edf0ff","error-container":"#ffdad6","on-surface-variant":"#3e4947","on-surface":"#141b2c","surface-container-high":"#e0e8ff","primary-fixed-dim":"#84d5cb","tertiary-container":"#925136","primary":"#00544d","secondary-fixed-dim":"#bac7de","on-primary-fixed":"#00201d","inverse-surface":"#293041","surface":"#f9f9ff","on-tertiary":"#ffffff","surface-container-lowest":"#ffffff","on-tertiary-fixed":"#370e00","on-error-container":"#93000a","primary-container":"#0b6e66","on-secondary-fixed":"#0f1c2d","surface-variant":"#dbe2f9","tertiary-fixed-dim":"#ffb598","on-secondary-container":"#586579","tertiary-fixed":"#ffdbce","secondary-fixed":"#d6e3fb","outline":"#6e7977","on-background":"#141b2c","on-error":"#ffffff","tertiary":"#753a21","on-tertiary-container":"#ffd6c7","secondary":"#525f73","on-primary-fixed-variant":"#00504a","surface-tint":"#016a62","surface-container-highest":"#dbe2f9","error":"#ba1a1a","inverse-primary":"#84d5cb"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"0.75rem","space-xl":"1.5rem","space-lg":"1rem","margin":"2rem","gutter":"1rem","space-sm":"0.5rem","space-xs":"0.25rem"},"fontFamily":{"label-sm":["IBM Plex Sans"],"label-lg":["IBM Plex Sans"],"headline-md":["IBM Plex Sans"],"body-sm":["IBM Plex Sans"],"body-md":["IBM Plex Sans"],"headline-sm":["IBM Plex Sans"],"body-lg":["IBM Plex Sans"],"label-md":["IBM Plex Sans"],"headline-lg":["IBM Plex Sans"]},"fontSize":{"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"600"}],"label-lg":["13px",{"lineHeight":"16px","fontWeight":"500"}],"headline-md":["18px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"body-lg":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-lg":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-screen w-[248px] bg-surface-container-lowest border-r border-outline-variant z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="p-[20px] pb-space-lg flex items-center justify-between border-b border-outline-variant"><div class="flex items-center gap-space-sm"><img alt="Lumina Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XBYwEzLKKFp8ecQM6agrAG7ZRTFrm20q8MiMEYcv0Mml6V74KQFpL19bXZprZu-PZNGZFsA2CFELtYONXI0ftfYVQh-yPpkHro6rEo0fH8MtqS10cbluv4DfCvPVEcgoU8Ut8nKffJOjHt3IJgOEJwIAoYb2d2VkuCApm_DKkIyvFim_WFitb0RJZWw8UDZPZOnwl0uGn8bnZj6oHgi6EiXR56a2A6mOzvWB5dBns"><span class="font-headline-sm text-headline-sm text-on-surface">Lumina</span></div><span class="font-label-sm text-label-sm uppercase px-space-xs py-[2px] bg-surface-container border border-outline-variant text-on-surface-variant rounded">Enterprise</span></div><nav class="px-space-sm py-space-md flex flex-col gap-space-xs" data-active-classes="bg-surface-container-low text-primary-container border-l-2 border-primary-container font-headline-sm"><div class="px-space-sm pt-space-xs pb-space-xs font-label-sm text-label-sm uppercase tracking-wider text-outline">Workspace</div><a class="flex items-center justify-between px-space-sm py-space-sm rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="overview" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">dashboard</span><span class="">Overview</span></div></a><a aria-current="page" class="flex items-center justify-between px-space-sm py-space-sm rounded transition-colors bg-surface-container-low text-primary-container border-l-2 border-primary-container font-headline-sm" data-path="customers" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">group</span><span class="">Customers</span></div></a><a class="flex items-center justify-between px-space-sm py-space-sm rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="match-review" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">rule</span><span class="">Match review</span></div><span class="font-mono font-label-sm text-[12px] leading-none px-space-xs py-[3px] rounded-full bg-surface-container border border-outline-variant text-on-surface-variant">14</span></a><div class="px-space-sm pt-space-md pb-space-xs font-label-sm text-label-sm uppercase tracking-wider text-outline">Data</div><a class="flex items-center justify-between px-space-sm py-space-sm rounded text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="connectors" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">hub</span><span class="">Connectors</span></div></a></nav></div><div class="p-space-md border-t border-outline-variant bg-surface-container-lowest"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7KovegAOa29UBUZgH4cGfmJczmqEwuphFRqcD2IxGGKJKBb5SSp7pArJa9qqvIKpMsIwRnOjg_IkJCbbWij2Tui3dW77hzD7UFAwI0dZxZjUVB9DI0a3Rz50o8XO-z1e5Cxq9GIunGLfW7gAz5u8OKAfP_DQm1wDmtDsvzszn-ICIYAfRUCV4lurcdCAVgEz3MrKnqCly7uo1Zh-LjZ8PkgesHwBHogYYle7FZw"><div class="flex flex-col min-w-0"><span class="font-label-lg text-label-lg text-on-surface truncate">Elena Vance</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Lead Data Steward</span></div></div><button aria-label="Account settings and options" class="p-space-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></div></div></aside><div class="pl-[248px] min-h-screen bg-surface"><header class="fixed top-0 left-[248px] right-0 h-14 bg-surface-container-lowest border-b border-outline-variant z-40 flex items-center justify-between px-margin"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs text-outline font-label-sm text-label-sm"><span class="material-symbols-outlined text-[16px]">corporate_fare</span><span class="">Institutional Core</span><span class="text-outline-variant">/</span><span class="text-on-surface">Production Ledger</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-[4px] bg-surface border border-outline-variant rounded font-label-sm text-label-sm text-on-surface-variant"><span class="w-1.5 h-1.5 rounded-full bg-primary-container inline-block"></span><span class="">Engine Sync: Active</span></div><button aria-label="Notifications" class="p-space-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7KovegAOa29UBUZgH4cGfmJczmqEwuphFRqcD2IxGGKJKBb5SSp7pArJa9qqvIKpMsIwRnOjg_IkJCbbWij2Tui3dW77hzD7UFAwI0dZxZjUVB9DI0a3Rz50o8XO-z1e5Cxq9GIunGLfW7gAz5u8OKAfP_DQm1wDmtDsvzszn-ICIYAfRUCV4lurcdCAVgEz3MrKnqCly7uo1Zh-LjZ8PkgesHwBHogYYle7FZw"></div></header><main class="relative pt-14 w-full bg-surface"><div class="max-w-[1280px] mx-auto p-margin"><div class="flex flex-col w-full"><!-- Page Header & Action Controls -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-lg mb-space-lg">
+  <div>
+    <div class="flex items-center gap-space-xs text-outline font-label-sm uppercase tracking-wider mb-space-xs">
+      <span class="">Institutional Registry</span>
+      <span class="">/</span>
+      <span class="text-primary-container font-mono">CANONICAL_INDEX</span>
+    </div>
+    <h1 class="font-headline-lg text-[22px] font-semibold text-on-surface">Customers</h1>
+  </div>
+  <div class="flex items-center gap-space-sm">
+    <button class="inline-flex items-center gap-space-xs px-space-md py-[8px] bg-surface-container-lowest text-on-surface text-label-lg font-label-lg rounded-[6px] border border-outline-variant hover:bg-surface-container-low transition-colors" type="button">
+      <span class="material-symbols-outlined text-[16px] text-outline">file_download</span>
+      <span class="">Export Canonical Set</span>
+    </button>
+    <button class="inline-flex items-center gap-space-xs px-space-lg py-[8px] bg-primary-container text-on-primary text-label-lg font-label-lg rounded-[6px] hover:bg-primary transition-colors" type="button">
+      <span class="material-symbols-outlined text-[16px]">play_circle</span>
+      <span class="">Run Manual Match</span>
+    </button>
+  </div>
+</div>
+
+<!-- Filter & Query Control Console -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-space-md mb-space-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-md">
+  <!-- Search Input -->
+  <div class="relative flex-1 max-w-md">
+    <span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-[18px] text-outline">search</span>
+    <input class="w-full h-9 pl-[38px] pr-space-md bg-surface-container-lowest text-on-surface font-body-sm rounded-lg border border-outline-variant placeholder:text-outline focus:outline-none focus:border-primary-container transition-colors" placeholder="Search name or ID, e.g. C-10001" type="text">
+  </div>
+
+  <!-- Segmented Control & Sort Dropdown -->
+  <div class="flex flex-wrap items-center gap-space-md">
+    <!-- Segmented Control: All, Low, Medium, High -->
+    <div class="inline-flex items-center bg-surface-container-low p-1 rounded-lg border border-outline-variant gap-1 text-label-sm font-label-sm">
+      <button type="button" class="px-space-md py-1 rounded-[6px] bg-primary-container text-on-primary font-semibold transition-colors">All</button>
+      <button type="button" class="px-space-md py-1 rounded-[6px] text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors">Low</button>
+      <button type="button" class="px-space-md py-1 rounded-[6px] text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors">Medium</button>
+      <button type="button" class="px-space-md py-1 rounded-[6px] text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors">High</button>
+    </div>
+
+    <!-- Sort Dropdown -->
+    <div class="flex items-center gap-space-xs bg-surface-container-lowest border border-outline-variant px-space-md py-[7px] rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors">
+      <span class="font-label-sm text-outline uppercase tracking-wider">Sort:</span>
+      <span class="font-label-lg text-on-surface font-medium">Lowest trust first</span>
+      <span class="material-symbols-outlined text-[16px] text-outline">expand_more</span>
+    </div>
+  </div>
+</div>
+
+<!-- Customers Master Table Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden mb-space-xl">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-body-md font-body-md">
+      <thead>
+        <tr class="bg-surface-container-low text-on-surface-variant font-label-sm uppercase tracking-wider border-b border-outline-variant">
+          <th class="py-space-md px-space-lg font-semibold">Customer</th>
+          <th class="py-space-md px-space-lg font-semibold">Trust score</th>
+          <th class="py-space-md px-space-lg font-semibold">Found in</th>
+          <th class="py-space-md px-space-lg font-semibold text-right">Conflicts</th>
+          <th class="py-space-md px-space-lg font-semibold">Review</th>
+          <th class="py-space-md px-space-lg font-semibold">Updated</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant font-body-sm text-[14px]">
+        <!-- Row 1: Arthur R. Pendelton -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">AP</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Arthur R. Pendelton</span>
+                <span class="font-mono text-label-sm text-outline">C-10015</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-error h-full rounded-full" style="width: 38%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-error text-[13px]">0.38</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-error">
+                <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Low
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Branch upload</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">5</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-error-container text-on-error-container font-label-sm font-medium">5 fields</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">13 min ago</td>
+        </tr>
+
+        <!-- Row 2: Maria Delgado-Soto -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">MD</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Maria Delgado-Soto</span>
+                <span class="font-mono text-label-sm text-outline">C-10018</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-error h-full rounded-full" style="width: 41%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-error text-[13px]">0.41</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-error">
+                <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Low
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Branch upload</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">4</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-error-container text-on-error-container font-label-sm font-medium">4 fields</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">13 min ago</td>
+        </tr>
+
+        <!-- Row 3: Kenneth Liang -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">KL</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Kenneth Liang</span>
+                <span class="font-mono text-label-sm text-outline">C-10022</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-error h-full rounded-full" style="width: 44%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-error text-[13px]">0.44</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-error">
+                <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Low
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Branch upload</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">3</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-error-container text-on-error-container font-label-sm font-medium">3 fields</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">25 min ago</td>
+        </tr>
+
+        <!-- Row 4: Evelyn T. Thorne -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">ET</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Evelyn T. Thorne</span>
+                <span class="font-mono text-label-sm text-outline">C-10027</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-error h-full rounded-full" style="width: 52%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-error text-[13px]">0.52</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-error">
+                <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Low
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">2</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-error-container text-on-error-container font-label-sm font-medium">2 fields</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">42 min ago</td>
+        </tr>
+
+        <!-- Row 5: James Novak -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">JN</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">James Novak</span>
+                <span class="font-mono text-label-sm text-outline">C-10031</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-error h-full rounded-full" style="width: 55%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-error text-[13px]">0.55</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-error">
+                <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Low
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">FLEXCUBE</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">2</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-error-container text-on-error-container font-label-sm font-medium">2 fields</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">1 h ago</td>
+        </tr>
+
+        <!-- Row 6: Helena Rostova-Vane -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">HR</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Helena Rostova-Vane</span>
+                <span class="font-mono text-label-sm text-outline">C-10034</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-error h-full rounded-full" style="width: 58%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-error text-[13px]">0.58</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-error">
+                <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Low
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">FLEXCUBE</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">1</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-error-container text-on-error-container font-label-sm font-medium">1 field</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">1 h ago</td>
+        </tr>
+
+        <!-- Row 7: Marcus Sterling -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">MS</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Marcus Sterling</span>
+                <span class="font-mono text-label-sm text-outline">C-10008</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-tertiary-container h-full rounded-full" style="width: 74%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-tertiary-container text-[13px]">0.74</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-tertiary-container">
+                <span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span> Medium
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">FLEXCUBE</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">2</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-error-container text-on-error-container font-label-sm font-medium">2 fields</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">2 h ago</td>
+        </tr>
+
+        <!-- Row 8: Julian Marc Thorne -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">JT</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Julian Marc Thorne</span>
+                <span class="font-mono text-label-sm text-outline">C-10003</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-primary-container h-full rounded-full" style="width: 88%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-primary-container text-[13px]">0.88</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-primary-container">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> High
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">FLEXCUBE</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Branch upload</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">0</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-surface-container text-primary-container font-label-sm font-medium">Complete</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">3 h ago</td>
+        </tr>
+
+        <!-- Row 9: Eleanor Catherine Vance -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-primary-container text-on-primary font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">EV</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Eleanor Catherine Vance</span>
+                <span class="font-mono text-label-sm text-outline">C-10001</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-primary-container h-full rounded-full" style="width: 97%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-primary-container text-[13px]">0.97</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-primary-container">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> High
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">FLEXCUBE</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Salesforce</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">0</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-surface-container text-primary-container font-label-sm font-medium">Complete</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">3 h ago</td>
+        </tr>
+
+        <!-- Row 10: Siddharth R. Patel -->
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant font-semibold flex items-center justify-center font-mono text-[13px] shrink-0">SP</div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-on-surface text-[14px]">Siddharth R. Patel</span>
+                <span class="font-mono text-label-sm text-outline">C-10004</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-24 bg-surface-container h-1.5 rounded-full overflow-hidden shrink-0">
+                <div class="bg-primary-container h-full rounded-full" style="width: 95%;"></div>
+              </div>
+              <span class="font-mono font-semibold text-primary-container text-[13px]">0.95</span>
+              <span class="inline-flex items-center gap-1 font-label-sm text-primary-container">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> High
+              </span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">FLEXCUBE</span>
+              <span class="px-space-xs py-[2px] bg-surface-container text-on-surface-variant rounded text-label-sm font-mono">Branch upload</span>
+            </div>
+          </td>
+          <td class="py-space-md px-space-lg text-right font-mono font-semibold text-on-surface">0</td>
+          <td class="py-space-md px-space-lg">
+            <span class="inline-flex items-center px-space-sm py-[2px] rounded-full bg-surface-container text-primary-container font-label-sm font-medium">Complete</span>
+          </td>
+          <td class="py-space-md px-space-lg text-on-surface-variant font-body-sm">4 h ago</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table Footer -->
+  <div class="p-space-md bg-surface-container-lowest flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant border-t border-outline-variant">
+    <div class="flex items-center gap-space-xs">
+      <span class="font-mono text-on-surface font-semibold">19 customers</span>
+      <span class="text-outline mx-space-xs">•</span>
+      <span class="">Sorted by trust score (ascending)</span>
+    </div>
+    <div class="flex items-center gap-space-xs">
+      <button class="px-space-sm py-1 rounded bg-surface-container-low text-on-surface disabled:opacity-40" disabled="" type="button">Previous</button>
+      <span class="px-space-sm py-1 font-mono text-on-surface font-semibold bg-surface-container-high rounded">1</span>
+      <button class="px-space-sm py-1 rounded hover:bg-surface-container-low text-on-surface" type="button">2</button>
+      <button class="px-space-sm py-1 rounded bg-surface-container-low hover:bg-surface-container text-on-surface" type="button">Next</button>
+    </div>
+  </div>
+</div></div></div></main></div>
+
+</body></html>
