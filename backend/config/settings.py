@@ -46,6 +46,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'sources',
+    'ingestion',
+    'mdm',
+    'api',
+    'accounts',
+    'audit',
 ]
 
 MIDDLEWARE = [
@@ -98,7 +103,22 @@ DATABASES = {
 # Fake FLEXCUBE core banking system. Connectors read it with raw SQL; Django never migrates it.
 FLEXCUBE_DB_URL = os.getenv('FLEXCUBE_DB_URL', '')
 
+# Fake Salesforce API response and branch CSV uploads, kept in the repo under fake_sources/.
+SALESFORCE_MOCK_FILE = os.getenv('SALESFORCE_MOCK_FILE') or str(BASE_DIR.parent / 'fake_sources' / 'salesforce' / 'contacts.json')
+BRANCH_CSV_DIR = os.getenv('BRANCH_CSV_DIR') or str(BASE_DIR.parent / 'fake_sources' / 'branch_csv')
+
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
+# The React dev server proxies /api to Django, so the browser sends its own origin with each request.
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:5173').split(',')
+
+REST_FRAMEWORK = {
+    # Every endpoint needs a logged-in user unless it says otherwise. This is customer data.
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication'],
+    # Signed in AND given a Lumina role (see accounts/roles.py). Views add finer checks on top.
+    'DEFAULT_PERMISSION_CLASSES': ['api.permissions.HasRole'],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+}
 
 
 # Password validation
