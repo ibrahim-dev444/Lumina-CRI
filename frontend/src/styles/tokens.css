@@ -1,0 +1,186 @@
+/*
+ * Design tokens. Every colour, size and radius in the app comes from here.
+ * Components never use raw hex values; they use these names, so dark mode is one block below.
+ */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #f7f6fb; /* faint lavender, not grey */
+  --surface: #ffffff;
+  --surface-2: #faf9fd; /* table headers, hovered rows */
+  --surface-sunken: #f2f0f9; /* tracks, skeletons, inset areas */
+  --border: #e8e5f0;
+  --border-strong: #d6d1e4;
+
+  /* Text */
+  --text: #17142b;
+  --text-2: #4a4763;
+  --text-3: #6b6886;
+  --text-4: #9d99b5;
+
+  /* Brand accent: soft violet */
+  --accent: #6f55f0;
+  --accent-hover: #5b43d6;
+  --accent-soft: #f0edfe;
+  --accent-text: #4b37c4;
+  --on-accent: #ffffff;
+
+  /* Status: always shown with a dot or icon AND a label, never colour alone */
+  --good-text: #067647;
+  --good-bg: #ecfdf3;
+  --good-dot: #17b26a;
+  --warn-text: #b54708;
+  --warn-bg: #fffaeb;
+  --warn-dot: #f79009;
+  --bad-text: #b42318;
+  --bad-bg: #fef3f2;
+  --bad-dot: #f04438;
+  --neutral-text: #344054;
+  --neutral-bg: #f2f4f7;
+  --neutral-dot: #98a2b3;
+
+  /* Charts: one hue for single-series charts, its soft step for tracks */
+  --chart-1: #6f55f0;
+  --chart-track: #f0edfe;
+  --chart-grid: #ece9f3;
+  --chart-axis: #a6a2bd;
+  /* Trust bands as chart marks: softer than the status dots, still clearly rose / amber / green */
+  --band-low: #e5677c;
+  --band-medium: #eea23e;
+  --band-high: #35b07c;
+
+  /*
+   * Identity hues, validated for colour-blind separation (dataviz validator, light + dark).
+   * Fixed order, never cycled. Each entity always keeps its hue:
+   *   1 violet  FLEXCUBE, Name     2 pink   Mobile        3 peach  Branch upload, Email
+   *   4 sky     Salesforce, Address 5 green Date of birth
+   * --cN is the mark colour, --cN-soft a tinted background, --cN-ink readable text on that background.
+   */
+  --c1: #6f55f0;
+  --c1-soft: #f0edfe;
+  --c1-ink: #4b37c4;
+  --c2: #d6528a;
+  --c2-soft: #fcebf2;
+  --c2-ink: #a8305f;
+  --c3: #e07a38;
+  --c3-soft: #fdf0e6;
+  --c3-ink: #a24d14;
+  --c4: #2b8fd0;
+  --c4-soft: #e9f3fb;
+  --c4-ink: #1d6496;
+  --c5: #23966b;
+  --c5-soft: #e6f5ee;
+  --c5-ink: #136a4a;
+
+  /* Page background: blush pink at the top, lavender grey in the middle, aqua at the bottom */
+  --page-bg: radial-gradient(1200px 700px at 0% 0%, #ddd6ff 0%, transparent 60%),
+    radial-gradient(1000px 700px at 100% 0%, #ffd9ec 0%, transparent 55%),
+    radial-gradient(1100px 800px at 100% 100%, #cfe1ff 0%, transparent 60%),
+    radial-gradient(1000px 800px at 0% 100%, #cbf3ee 0%, transparent 60%),
+    linear-gradient(135deg, #f1efff 0%, #f6f1fb 50%, #eef4ff 100%);
+  /* Frosted glass: cards and the sidebar let the gradient glow through */
+  --glass: rgb(255 255 255 / 0.3);
+  --glass-strong: rgb(255 255 255 / 0.9);
+  --glass-sheen: linear-gradient(135deg, rgb(255 255 255 / 0.5) 0%, rgb(255 255 255 / 0.08) 60%, rgb(255 255 255 / 0.2) 100%);
+  --glass-border: rgb(255 255 255 / 0.65);
+  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 1px 0 0 rgb(255 255 255 / 0.35),
+    inset 0 -1px 0 rgb(255 255 255 / 0.15);
+  --glass-shadow: 0 1px 2px rgb(70 50 140 / 0.05), 0 16px 40px -16px rgb(70 50 140 / 0.28);
+  /* Colour orbs floating behind the page, so the glass has something to blur */
+  --orb-1: #8b7cf6; /* violet */
+  --orb-2: #f472b6; /* pink */
+  --orb-3: #5eb8f5; /* sky */
+  --orb-4: #4fd1c5; /* teal */
+  --brand-gradient: linear-gradient(135deg, #e7799a 0%, #8b78f5 55%, #46b8c2 100%);
+  --aqua: #2a9fa9;
+  --aqua-soft: #def3f4;
+
+  /* Type */
+  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-hero: 48px;
+
+  /* Shape and depth */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-pop: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 2px 6px rgb(16 24 40 / 0.06);
+  --focus: 0 0 0 3px rgb(111 85 240 / 0.25);
+
+  --sidebar-width: 248px;
+}
+
+/* Dark theme: only when the user picks it with the sun/moon button. Light is the default. */
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --bg: #0e0c16;
+    --surface: #15131f;
+    --surface-2: #1a1826;
+    --surface-sunken: #110f1a;
+    --border: #272437;
+    --border-strong: #343047;
+    --text: #ebe9f5;
+    --text-2: #b1adc8;
+    --text-3: #8e8aa8;
+    --text-4: #625e7c;
+    --accent: #8b78f5;
+    --accent-hover: #a08ff8;
+    --accent-soft: rgb(139 120 245 / 0.16);
+    --accent-text: #c2b8ff;
+    --on-accent: #ffffff;
+    --good-text: #75e0a7;
+    --good-bg: rgb(23 178 106 / 0.12);
+    --warn-text: #fec84b;
+    --warn-bg: rgb(247 144 9 / 0.12);
+    --bad-text: #fda29b;
+    --bad-bg: rgb(240 68 56 / 0.12);
+    --neutral-text: #ced4dc;
+    --neutral-bg: rgb(152 162 179 / 0.12);
+    --chart-1: #8b78f5;
+    --chart-track: rgb(139 120 245 / 0.16);
+    --chart-grid: #272437;
+    --chart-axis: #625e7c;
+    --band-low: #e9788b;
+    --band-medium: #e6a046;
+    --band-high: #3dbb87;
+    --shadow-pop: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.4);
+    --focus: 0 0 0 3px rgb(139 120 245 / 0.35);
+    --c1: #8b78f5;
+    --c1-soft: rgb(139 120 245 / 0.16);
+    --c1-ink: #c2b8ff;
+    --c2: #d85590;
+    --c2-soft: rgb(216 85 144 / 0.16);
+    --c2-ink: #f3a0c3;
+    --c3: #d97730;
+    --c3-soft: rgb(217 119 48 / 0.16);
+    --c3-ink: #f4b183;
+    --c4: #3d9be0;
+    --c4-soft: rgb(61 155 224 / 0.16);
+    --c4-ink: #8cc7f2;
+    --c5: #2fa77a;
+    --c5-soft: rgb(47 167 122 / 0.16);
+    --c5-ink: #7fd8b0;
+    --page-bg: radial-gradient(1200px 700px at 0% 0%, #2b1f5c 0%, transparent 60%),
+      radial-gradient(1000px 700px at 100% 0%, #4a1d4a 0%, transparent 55%),
+      radial-gradient(1100px 800px at 100% 100%, #13305a 0%, transparent 60%),
+      linear-gradient(135deg, #0f0c29 0%, #1d1a3f 50%, #12152e 100%);
+    --glass: rgb(255 255 255 / 0.06);
+    --glass-strong: rgb(24 21 34 / 0.92);
+    --glass-sheen: linear-gradient(135deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0.02) 60%, rgb(255 255 255 / 0.05) 100%);
+    --glass-border: rgb(255 255 255 / 0.14);
+    --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.08);
+    --glass-shadow: 0 12px 32px -14px rgb(0 0 0 / 0.7);
+    --orb-1: #6d5ae6;
+    --orb-2: #c0397f;
+    --orb-3: #2a6fc0;
+    --orb-4: #1f9e94;
+    --aqua: #5cc6cf;
+    --aqua-soft: rgb(92 198 207 / 0.14);
+}
