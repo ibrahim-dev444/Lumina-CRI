@@ -1,81 +1,158 @@
 # Lumina CRI
 
-Bank customer data platform. Lumina reads customer data from many bank systems, cleans it, matches records that belong to the same person, builds one **golden record** per customer, and gives each customer a **trust score**.
+Bank customer data platform. Lumina reads customer data from several bank systems, cleans it, works out which records belong to the same person, builds one **golden record** per customer, and gives each customer a **trust score** from 0 to 1.
 
-The two HTML files in this folder are clickable prototypes of the UI:
-- `Lumina Trust Console.html`: connectors, golden record, trust score
-- `Lumina Bank CRM.html`: role-based CRM screens
+Team rules (branches, pull requests, migrations, secrets) are in [CONTRIBUTING.md](CONTRIBUTING.md). Read it before your first change.
 
 ## Stack
 
-| Part | Tech |
-|---|---|
-| Frontend | React + TypeScript (Vite), in `frontend/` |
-| Backend | Django + Django REST Framework, in `backend/` |
-| Database | PostgreSQL 16, running in Docker |
+| Part | Tech | Folder |
+|---|---|---|
+| Frontend | React + TypeScript, built with Vite | `frontend/` |
+| Backend | Django + Django REST Framework | `backend/` |
+| Database | PostgreSQL 16 in Docker | `docker-compose.yml` |
 
 ## Folder layout
 
 ```
 LUMINA CRI/
-├── backend/                 Django project
-│   ├── config/              settings, urls
-│   └── sources/             Source model (each bank system + its trust level)
-├── frontend/                React + TypeScript app
-├── docker/postgres/init/    SQL that creates and fills the fake source systems
-├── docker-compose.yml       Local Postgres
-└── .env.example             Template for your local .env
+├── backend/
+│   ├── config/        Settings and URLs
+│   ├── sources/       The bank systems we read from, and how much we trust each one
+│   ├── ingestion/     Connectors: read each system, keep the raw copy, save a cleaned copy
+│   ├── mdm/           Matching, golden record and trust score
+│   ├── accounts/      Roles and masking of personal data
+│   ├── audit/         Append-only log of who did what
+│   └── api/           REST endpoints the React app calls
+├── frontend/src/
+│   ├── api/           API client and TypeScript types
+│   ├── auth/          Sign-in state and role checks
+│   ├── components/    Reusable pieces (charts, badges, layout)
+│   ├── pages/         One file per screen
+│   └── styles/        Design tokens and CSS
+├── fake_sources/      Fake Salesforce export and branch CSV files
+├── docker/postgres/init/   Creates the fake FLEXCUBE database on first start
+├── docs/design/       Design references and Stitch prompts
+├── docker-compose.yml
+└── .env.example       Template for your own .env
 ```
 
 ## First-time setup
 
-You need: Docker Desktop, Python 3.10+, Node 20+, Git.
+You need Git, Docker Desktop, Python 3.10 or newer, and Node 20 or newer.
 
-1. **Create your `.env`.** Copy `.env.example` to `.env`. Put your own password and secret key in it. `.env` is never committed.
-2. **Start Postgres.** Start Docker Desktop, then run:
-   ```
-   docker compose up -d
-   ```
-   On first start, this creates two databases: `lumina` (ours) and `src_flexcube` (fake FLEXCUBE with 10 messy customers).
-3. **Set up the backend:**
-   ```
-   cd backend
-   python -m venv .venv
-   .venv\Scripts\activate          (Windows)   |   source .venv/bin/activate   (Mac/Linux)
-   pip install -r requirements.txt
-   python manage.py migrate
-   python manage.py createsuperuser
-   python manage.py runserver
-   ```
-   Open http://localhost:8000/admin and check that 3 sources are listed.
-4. **Set up the frontend** in a second terminal:
-   ```
-   cd frontend
-   npm install
-   npm run dev
-   ```
-   Open http://localhost:5173.
+**1. Get the code**
 
-## How the team shares the database
+```
+git clone https://github.com/ibrahim-dev444/Lumina-CRI.git
+cd Lumina-CRI
+```
 
-Every developer runs **their own** Postgres in Docker. Nobody connects to anyone else's laptop.
+**2. Create your `.env`.** Copy `.env.example` to `.env`, then replace `change-me-locally` (both places) with a password of your choice, and `DJANGO_SECRET_KEY` with a random string. To make one:
 
-What is shared through git:
-- **Table structure:** Django migrations in `backend/*/migrations/`. After `git pull`, run `python manage.py migrate`.
-- **Starting data:** seed migrations and the SQL in `docker/postgres/init/`.
-- **Settings template:** `.env.example`. Real values stay in each person's own `.env`.
+```
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+```
 
-Rules:
-- Changed a model? Run `python manage.py makemigrations` and commit the new migration file with your code.
-- Never edit a migration that is already on `main`. Add a new one instead.
-- Two people created migrations at the same time? Run `python manage.py makemigrations --merge`.
-- Need fresh data? Run `docker compose down -v` (this **deletes** your local DB), then `docker compose up -d` and `python manage.py migrate`.
+`.env` stays on your machine. Never commit it and never paste it into chat.
 
-A shared **dev server** database for testing everything together comes later.
+**3. Start the database.** Open Docker Desktop and wait until it is running, then:
 
-## Run tests
+```
+docker compose up -d
+```
+
+Postgres runs on port **5433**, so it does not clash with a PostgreSQL installed directly on your computer.
+
+**4. Set up the backend.**
+
+Windows (PowerShell):
+```
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+```
+
+Mac or Linux: the same, but activate with `source .venv/bin/activate`.
+
+**5. Load the fake bank data and build customers.**
+
+```
+python manage.py sync flexcube
+python manage.py sync salesforce
+python manage.py sync branch_csv
+python manage.py build_customers
+```
+
+**6. Create logins.**
+
+```
+python manage.py createsuperuser
+python manage.py seed_demo_users
+```
+
+`seed_demo_users` creates one login per role (relationship manager, contact centre agent, data steward, compliance officer) and prints their passwords once. Run it again to reset them.
+
+**7. Start the backend.** Keep this terminal open.
+
+```
+python manage.py runserver
+```
+
+**8. Start the frontend** in a second terminal.
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 and sign in.
+
+## Every day
+
+```
+docker compose up -d                 # from the project folder, Docker Desktop running
+cd backend && .venv\Scripts\activate && python manage.py runserver
+cd frontend && npm run dev           # second terminal
+```
+
+After every `git pull`, also run:
 
 ```
 cd backend
-pytest
+pip install -r requirements.txt
+python manage.py migrate
+cd ../frontend
+npm install
 ```
+
+## Useful commands
+
+| Command (inside `backend/`) | What it does |
+|---|---|
+| `python manage.py sync <source>` | Read one source: `flexcube`, `salesforce` or `branch_csv` |
+| `python manage.py build_customers` | Re-run matching, golden records and trust scores |
+| `python manage.py seed_demo_users` | Create or reset one demo login per role |
+| `pytest` | Run all backend tests |
+
+| Command (inside `frontend/`) | What it does |
+|---|---|
+| `npm run dev` | Start the app at http://localhost:5173 |
+| `npm run build` | Type-check and build; must pass before a pull request |
+| `npm run lint` | Check code style |
+
+## Look at the database
+
+Connect pgAdmin or DBeaver to host `localhost`, port `5433`, database `lumina`, user `lumina`, and the password from your `.env`. The fake FLEXCUBE system is the `src_flexcube` database on the same server. Use these tools to look, not to edit: changes made by hand skip score recalculation and the audit log.
+
+## Reset your local data
+
+```
+docker compose down -v      # deletes your local database
+docker compose up -d
+```
+
+Then repeat steps 4 (migrate) to 6. This only affects your own machine.
