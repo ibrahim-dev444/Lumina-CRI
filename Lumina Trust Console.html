@@ -1,0 +1,390 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lumina Trust Console</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F6;--surface:#FFFFFF;--ink:#16202E;--muted:#556070;--line:#DCE1E7;--track:#E9EDF1;
+  --rail:#14233B;--rail-ink:#C9D3E0;--rail-on:#24395C;--rail-head:#FFFFFF;
+  --accent:#0B6E66;--accent-ink:#FFFFFF;
+  --good-bg:#D8EFEA;--good-ink:#0A4F49;--warn-bg:#F7EACB;--warn-ink:#6B4700;
+  --bad-bg:#F6DDD3;--bad-ink:#7A2410;--neutral-bg:#E6EAEE;--neutral-ink:#3A4656;--win-bg:#E4F1EF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1620;--surface:#18212E;--ink:#E6EBF2;--muted:#9AA8BA;--line:#2B3747;--track:#263242;
+    --rail:#0B111A;--rail-ink:#B4C0D0;--rail-on:#22324A;--rail-head:#FFFFFF;
+    --accent:#3DB8A9;--accent-ink:#06211E;
+    --good-bg:#123B36;--good-ink:#8FDDD0;--warn-bg:#43340F;--warn-ink:#F0CF7A;
+    --bad-bg:#4A2015;--bad-ink:#F3B39E;--neutral-bg:#263242;--neutral-ink:#C3CEDB;--win-bg:#143430;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1620;--surface:#18212E;--ink:#E6EBF2;--muted:#9AA8BA;--line:#2B3747;--track:#263242;
+  --rail:#0B111A;--rail-ink:#B4C0D0;--rail-on:#22324A;--rail-head:#FFFFFF;
+  --accent:#3DB8A9;--accent-ink:#06211E;
+  --good-bg:#123B36;--good-ink:#8FDDD0;--warn-bg:#43340F;--warn-ink:#F0CF7A;
+  --bad-bg:#4A2015;--bad-ink:#F3B39E;--neutral-bg:#263242;--neutral-ink:#C3CEDB;--win-bg:#143430;
+}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45}
+*{box-sizing:border-box}
+h1,h2,h3,p,dl,dd{margin:0}
+h1{font-size:26px;font-weight:600;text-wrap:balance}
+h2{font-size:16px;font-weight:600}
+h3{font-size:15px;font-weight:600}
+.app{display:flex;flex-wrap:wrap}
+.rail{flex:1 1 200px;background:var(--rail);padding:20px 16px;display:flex;flex-direction:column;gap:4px}
+.brand{color:var(--rail-head);font-size:18px;font-weight:600;padding:0 12px 12px}
+.rail button{text-align:left;padding:11px 12px;border:0;border-radius:6px;background:transparent;color:var(--rail-ink);font:inherit;cursor:pointer}
+.rail button[aria-current="page"]{background:var(--rail-on);color:var(--rail-head);font-weight:600}
+.rail .note{color:var(--rail-ink);font-size:12px;padding:16px 12px 0}
+.main{flex:999 1 520px;min-width:0;padding-inline:clamp(16px,3vw,36px);padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.bar .last{color:var(--muted);font-size:13px;flex:1 1 260px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.tile.off{border-style:dashed}
+.kv{display:flex;flex-direction:column;gap:6px}
+.kv div{display:flex;justify-content:space-between;gap:12px}
+.kv dt{color:var(--muted)}
+.kv dd{text-align:right}
+.pill{display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap}
+.good{background:var(--good-bg);color:var(--good-ink)}
+.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.bad{background:var(--bad-bg);color:var(--bad-ink)}
+.neutral{background:var(--neutral-bg);color:var(--neutral-ink)}
+.btn{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[aria-pressed="true"]{background:var(--rail);border-color:var(--rail);color:var(--rail-head)}
+.btn:disabled{opacity:.6;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label{font-size:13px;font-weight:600}
+.field{display:flex;flex-direction:column;gap:4px;flex:1 1 180px}
+input,select{min-height:40px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;width:100%}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--track);vertical-align:top}
+td.win{background:var(--win-bg);font-weight:600}
+.meter{display:inline-block;width:72px;height:8px;border-radius:4px;background:var(--track);vertical-align:middle;overflow:hidden}
+.meter i{display:block;height:8px;background:var(--accent)}
+.big{font-size:44px;font-weight:600;line-height:1}
+.msg{font-size:13px;font-weight:600;color:var(--good-ink)}
+.msg.err{color:var(--bad-ink)}
+</style>
+
+<div class="app">
+  <nav class="rail" aria-label="Main">
+    <div class="brand">Lumina CRI</div>
+    <button type="button" data-act="nav" data-view="connectors">Connectors</button>
+    <button type="button" data-act="nav" data-view="customers">Customers</button>
+    <button type="button" data-act="nav" data-view="activity">Activity log</button>
+    <p class="note">Demo with simulated data. No bank system is connected.</p>
+  </nav>
+  <div class="main">
+    <div class="bar">
+      <div class="row">
+        <button type="button" class="btn" id="live" data-act="live" aria-pressed="true">Live feed: on</button>
+        <span class="pill neutral">Simulated data</span>
+      </div>
+      <div class="last" id="last" aria-live="polite"></div>
+    </div>
+    <div id="view" class="stack"></div>
+  </div>
+</div>
+
+<script>
+const DAY = 864e5, NOW = Date.now();
+const TIER = {
+  ckyc_verified: [1, 'CKYC verified'], cbs_core_banking: [0.85, 'Core system of record'],
+  whatsapp_verified: [0.75, 'WhatsApp verified'], crm_agent_entered: [0.55, 'Entered by staff'],
+  manual_upload: [0.4, 'Manual upload'], unverified: [0.2, 'Unverified'], manual_override: [1, 'Manual override']
+};
+const S = [
+  ['flex', 'Oracle FLEXCUBE', 'Core banking', 'Savings and current accounts', 'Oracle Database (JDBC)', 'cbs_core_banking', 1],
+  ['finn', 'FinnOne Neo', 'Lending', 'Personal loans', 'Oracle Database (JDBC)', 'cbs_core_banking', 1],
+  ['home', 'Home Loans', 'Lending', 'Home loan servicing', 'Microsoft SQL Server', 'cbs_core_banking', 1],
+  ['car', 'Car Loans', 'Lending', 'Car loan servicing', 'Microsoft SQL Server', 'cbs_core_banking', 1],
+  ['bike', 'Bike Loans', 'Lending', 'Two-wheeler loan servicing', 'PostgreSQL', 'cbs_core_banking', 1],
+  ['card', 'Credit Cards', 'Cards', 'Card accounts and billing', 'IBM Db2', 'cbs_core_banking', 1],
+  ['wealth', 'Wealth and Demat', 'Core banking', 'Investments and demat holdings', 'Oracle Database (JDBC)', 'cbs_core_banking', 0],
+  ['dyn', 'Microsoft Dynamics 365', 'CRM', 'Contacts and service cases', 'Dataverse Web API', 'crm_agent_entered', 1],
+  ['sf', 'Salesforce', 'CRM', 'Leads, contacts and campaigns', 'Salesforce REST API', 'crm_agent_entered', 1],
+  ['cc', 'Call Centre', 'Channels', 'Details captured on calls', 'File drop (SFTP)', 'crm_agent_entered', 1],
+  ['wa', 'Gupshup WhatsApp', 'Channels', 'Numbers confirmed on WhatsApp', 'Webhook', 'whatsapp_verified', 1],
+  ['dig', 'Internet and Mobile Banking', 'Channels', 'Profile details customers typed in', 'PostgreSQL', 'unverified', 1],
+  ['ckyc', 'CKYC Registry', 'Verification', 'Centrally verified identity', 'Registry API', 'ckyc_verified', 0],
+  ['branch', 'Branch Uploads', 'Files', 'Spreadsheets from branches', 'CSV upload', 'manual_upload', 1]
+].map(a => ({ id: a[0], name: a[1], cat: a[2], what: a[3], via: a[4], tier: a[5], on: !!a[6], lastSync: NOW - Math.floor(3 * 36e5), busy: false }));
+const FIELDS = [['name', 'Name', 0.25], ['mobile', 'Mobile', 0.25], ['email', 'Email', 0.15], ['address', 'Address', 0.2], ['dob', 'Birth month', 0.15]];
+const C = [
+  ['C-10021', 'HNW', ['Suresh Kumar', 'Sooresh Kumar', 'Suresh K'], ['9822104521', '9822107788'], ['suresh.kumar@mail.example', 'skumar84@webmail.example'], ['14 Shanti Apartments, Kothrud, Pune 411038', 'Plot 7, Sector 21, Nigdi, Pune 411044', 'Kothrud, Pune'], '1984-07'],
+  ['C-10482', 'Retail', ['Anita Deshmukh', 'Aneeta Deshmukh', 'Anita S Deshmukh'], ['9890012345', '9890056712'], ['anita.d@mail.example', 'adeshmukh@office.example'], ['B-203 Lake View, Powai, Mumbai 400076', '22 Tilak Road, Nashik 422001', 'Powai, Mumbai'], '1990-03'],
+  ['C-20931', 'HNW', ['Rajesh Iyer', 'Rajesh R Iyer', 'Rajesh Aiyar'], ['9845098450', '9845011223'], ['rajesh.iyer@mail.example', 'riyer@firm.example'], ['42 Cathedral Road, Gopalapuram, Chennai 600086', '9 Lake Area, Nungambakkam, Chennai 600034', 'Gopalapuram, Chennai'], '1972-11'],
+  ['C-11307', 'Retail', ['Farah Sheikh', 'Farha Shaikh', 'Farah S'], ['9967033441', '9967078890'], ['farah.sheikh@mail.example', 'fsheikh@webmail.example'], ['5 Hill Road, Bandra West, Mumbai 400050', '18 Station Road, Thane 400601', 'Bandra West, Mumbai'], '1993-05'],
+  ['C-14410', 'HNW', ['Gurpreet Sandhu', 'Gurprit Singh Sandhu', 'G S Sandhu'], ['9815567001', '9815522334'], ['gurpreet.sandhu@mail.example', 'gsandhu@agri.example'], ['House 310, Sector 35, Chandigarh 160022', 'Village Road, Kharar, Mohali 140301', 'Sector 35, Chandigarh'], '1979-01'],
+  ['C-15288', 'HNW', ['Nandini Rao', 'Nandhini Rao', 'Nandini V Rao'], ['9741200765', '9741255310'], ['nandini.rao@mail.example', 'nrao@clinic.example'], ['77 12th Main, Indiranagar, Bengaluru 560038', '3 Temple Street, Malleshwaram, Bengaluru 560003', 'Indiranagar, Bengaluru'], '1981-09'],
+  ['C-16054', 'Retail', ['Joseph Mathew', 'Joseph Mathews', 'Jose Mathew'], ['9447011882', '9447066120'], ['joseph.mathew@mail.example', 'jmathew@webmail.example'], ['Rose Villa, Kadavanthra, Kochi 682020', 'MC Road, Kottayam 686001', 'Kadavanthra, Kochi'], '1987-12'],
+  ['C-17119', 'Retail', ['Kavita Joshi', 'Kavitha Joshi', 'Kavita R Joshi'], ['9925044170', '9925090015'], ['kavita.joshi@mail.example', 'kjoshi@school.example'], ['12 Satellite Road, Ahmedabad 380015', 'Ring Road, Rajkot 360001', 'Satellite, Ahmedabad'], '1995-02'],
+  ['C-18240', 'Retail', ['Mohammed Faizal', 'Mohd Faisal', 'Mohammad Faizal'], ['9849077563', '9849012908'], ['m.faizal@mail.example', 'faizal.m@shop.example'], ['8-2-120 Road No 3, Banjara Hills, Hyderabad 500034', 'Charminar Road, Hyderabad 500002', 'Banjara Hills, Hyderabad'], '1989-06'],
+  ['C-19376', 'HNW', ['Priya Chatterjee', 'Priya Chatterji', 'Priya Chattopadhyay'], ['9830045127', '9830099461'], ['priya.chatterjee@mail.example', 'pchatterjee@studio.example'], ['21 Ballygunge Place, Kolkata 700019', 'Salt Lake Sector 2, Kolkata 700091', 'Ballygunge, Kolkata'], '1986-04']
+].map(a => ({ id: a[0], seg: a[1], names: a[2], mob: a[3], em: a[4], ad: a[5], dob: a[6] }));
+
+function rng(seed) { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
+const recs = {}, ovr = {}, hist = {}, trace = [];
+C.forEach((c, i) => {
+  const r = rng(i * 97 + 13);
+  recs[c.id] = {}; ovr[c.id] = {}; hist[c.id] = [];
+  S.forEach(s => {
+    const present = s.id === 'flex' || r() < (s.id === 'ckyc' ? 0.7 : 0.58);
+    if (!present) return;
+    const t = TIER[s.tier][0], b = s.id === 'ckyc' ? 1 : (t >= 0.75 ? 0.8 : 0.5);
+    const ts = NOW - (20 + Math.floor(r() * 700)) * DAY;
+    const pick = a => (r() < b ? a[0] : a[1 + Math.floor(r() * (a.length - 1))]);
+    const other = c.dob.slice(0, 5) + String((+c.dob.slice(5) % 12) + 1).padStart(2, '0');
+    recs[c.id][s.id] = {
+      name: { v: pick(c.names), ts }, mobile: { v: pick(c.mob), ts },
+      email: { v: (b < 1 && r() < 0.25) ? null : pick(c.em), ts },
+      address: { v: pick(c.ad), ts }, dob: { v: (b === 1 || r() < 0.92) ? c.dob : other, ts }
+    };
+  });
+});
+
+const norm = v => String(v).toLowerCase().replace(/[^a-z0-9]/g, '');
+const esc = v => String(v).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+const custById = id => C.find(c => c.id === id);
+function field(cid, f) {
+  const c = [];
+  for (const s of S) {
+    if (!s.on) continue;
+    const x = recs[cid][s.id];
+    if (x && x[f].v != null) c.push({ sid: s.id, src: s.name, v: x[f].v, ts: x[f].ts, trust: TIER[s.tier][0], tier: s.tier });
+  }
+  const o = ovr[cid][f];
+  if (o) c.push({ sid: 'override', src: 'Manual override', v: o.v, ts: o.ts, trust: 1, tier: 'manual_override' });
+  c.sort((a, b) => b.trust - a.trust || b.ts - a.ts);
+  return { win: c[0] || null, cands: c, conflicts: Math.max(0, new Set(c.map(x => norm(x.v))).size - 1) };
+}
+function score(cid) {
+  let t = 0;
+  for (const [f, , w] of FIELDS) { const g = field(cid, f); if (g.win) t += w * g.win.trust; }
+  return Math.round(t * 1000) / 1000;
+}
+function refreshScores() {
+  for (const c of C) {
+    const s = score(c.id), h = hist[c.id];
+    if (!h.length || h[h.length - 1].s !== s) h.push({ t: Date.now(), s });
+  }
+}
+function log(who, what, cid, f, result) {
+  trace.unshift({ t: Date.now(), who, what, cid, f, result });
+  if (trace.length > 200) trace.pop();
+}
+const band = s => (s >= 0.8 ? ['good', 'High'] : s >= 0.6 ? ['warn', 'Medium'] : ['bad', 'Low']);
+const fmtDate = ts => new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtTime = ts => new Date(ts).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+function disp(f, v) {
+  if (v == null) return '';
+  if (f === 'mobile') return v.slice(0, 2) + 'xxxx' + v.slice(-4);
+  if (f === 'email') { const i = v.indexOf('@'); return v[0] + '•••' + v.slice(i); }
+  return v;
+}
+const fieldLabel = f => (FIELDS.find(x => x[0] === f) || [0, ''])[1];
+const goldenName = c => { const g = field(c.id, 'name').win; return g ? g.v : c.names[0]; };
+const delta = cid => { const h = hist[cid]; return h.length > 1 ? Math.round((h[h.length - 1].s - h[h.length - 2].s) * 100) / 100 : 0; };
+function deltaHtml(d) {
+  if (!d) return '<span class="muted">No change</span>';
+  return d > 0 ? `<span class="pill good">Up ${d.toFixed(2)}</span>` : `<span class="pill bad">Down ${Math.abs(d).toFixed(2)}</span>`;
+}
+
+const state = { view: 'connectors', cat: 'All', cid: null, live: true, q: '', sort: 'low' };
+const $ = id => document.getElementById(id);
+const view = $('view');
+
+function show(v, cid) {
+  state.view = v; if (cid) state.cid = cid;
+  document.querySelectorAll('.rail button').forEach(b => {
+    const on = b.dataset.view === v || (v === 'customer' && b.dataset.view === 'customers');
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  if (v === 'connectors') {
+    const cats = ['All', ...new Set(S.map(s => s.cat))];
+    view.innerHTML = `<div class="stack" style="gap:4px"><h1>Connectors</h1><p class="muted">Each connector pulls customer details from one bank system. Turn a source on or off and the trust scores update.</p></div>
+      <div class="row">${cats.map(c => `<button type="button" class="btn" data-act="cat" data-cat="${esc(c)}" aria-pressed="${c === state.cat}">${esc(c)}</button>`).join('')}</div>
+      <p class="muted" id="conn-summary"></p><div class="grid" id="conn-grid"></div>
+      <div class="panel"><h2>More connectors</h2><p class="muted">Not part of this demo: Finacle, Temenos Transact, Account Aggregator.</p></div>`;
+  } else if (v === 'customers') {
+    view.innerHTML = `<div class="stack" style="gap:4px"><h1>Customers</h1><p class="muted">One record per customer, built from every connected source. The trust score shows how reliable that record is.</p></div>
+      <div class="row"><div class="field" style="max-width:320px"><label for="q">Search by name or ID</label><input id="q" type="text" value="${esc(state.q)}"></div>
+      <div class="field" style="max-width:220px"><label for="sort">Sort</label><select id="sort"><option value="low">Lowest trust first</option><option value="high">Highest trust first</option><option value="name">Name</option></select></div></div>
+      <div class="panel"><div class="scroll" id="cust-table"></div></div>`;
+    $('sort').value = state.sort;
+  } else if (v === 'customer') {
+    view.innerHTML = `<div><button type="button" class="btn" data-act="nav" data-view="customers">Back to customers</button></div>
+      <div class="panel" id="c-head"></div>
+      <div class="panel"><h2>Golden record</h2><p class="muted small">For each field, the value from the most trusted source is used. If two sources have equal trust, the most recently verified one wins.</p><div class="scroll" id="c-golden"></div></div>
+      <div class="panel"><h2>What each source says</h2><p class="muted small">Highlighted cells are the values used in the golden record.</p><div class="scroll" id="c-matrix"></div></div>
+      <form class="panel" id="ovr-form"><h2>Correct a field with evidence</h2>
+        <div class="row" style="align-items:flex-end">
+          <div class="field"><label for="o-field">Field</label><select id="o-field">${FIELDS.map(f => `<option value="${f[0]}">${f[1]}</option>`).join('')}</select></div>
+          <div class="field"><label for="o-value">Correct value</label><input id="o-value" type="text"></div>
+          <div class="field"><label for="o-ref">Evidence reference</label><input id="o-ref" type="text"></div>
+          <div class="field"><label for="o-why">Reason</label><input id="o-why" type="text"></div>
+          <button type="submit" class="btn primary">Save correction</button>
+        </div><p class="msg" id="o-msg" hidden></p></form>`;
+  } else {
+    view.innerHTML = `<div class="stack" style="gap:4px"><h1>Activity log</h1><p class="muted">Every sync, source update, correction and connector change, newest first.</p></div>
+      <div class="panel"><div class="scroll" id="trace-table"></div></div>`;
+  }
+  paint();
+}
+
+function paint() {
+  const t = trace[0];
+  $('last').textContent = t ? `Latest: ${t.who} ${t.what}${t.cid ? ' for ' + goldenName(custById(t.cid)) : ''}. ${t.result}` : '';
+  if (state.view === 'connectors') {
+    const on = S.filter(s => s.on).length;
+    const total = C.reduce((n, c) => n + S.filter(s => s.on && recs[c.id][s.id]).length, 0);
+    $('conn-summary').textContent = `${on} of ${S.length} sources connected · ${total} source records for ${C.length} customers`;
+    $('conn-grid').innerHTML = S.filter(s => state.cat === 'All' || s.cat === state.cat).map(s => {
+      const n = C.filter(c => recs[c.id][s.id]).length, tr = TIER[s.tier];
+      return `<article class="tile${s.on ? '' : ' off'}">
+        <div class="row between"><h3>${esc(s.name)}</h3><span class="pill ${s.on ? 'good' : 'neutral'}">${s.on ? 'Connected' : 'Not connected'}</span></div>
+        <p class="muted">${esc(s.cat)} · ${esc(s.what)}</p>
+        <dl class="kv">
+          <div><dt>Connects through</dt><dd>${esc(s.via)}</dd></div>
+          <div><dt>Trust level</dt><dd><span class="mono">${tr[0].toFixed(2)}</span> · ${esc(tr[1])}</dd></div>
+          <div><dt>Customers found</dt><dd class="mono">${n}</dd></div>
+          <div><dt>Last sync</dt><dd>${s.on ? fmtTime(s.lastSync) : 'Never'}</dd></div>
+        </dl>
+        <div class="row">${s.on ? `<button type="button" class="btn primary" data-act="sync" data-id="${s.id}"${s.busy ? ' disabled' : ''}>${s.busy ? 'Syncing' : 'Sync now'}</button>` : ''}
+        <button type="button" class="btn" data-act="toggle" data-id="${s.id}">${s.on ? 'Disconnect' : 'Connect'}</button></div>
+      </article>`;
+    }).join('');
+  } else if (state.view === 'customers') {
+    const q = norm(state.q);
+    let rows = C.map(c => ({ c, name: goldenName(c), s: score(c.id) })).filter(r => !q || norm(r.name + r.c.id).includes(q));
+    rows.sort((a, b) => state.sort === 'name' ? a.name.localeCompare(b.name) : state.sort === 'high' ? b.s - a.s : a.s - b.s);
+    $('cust-table').innerHTML = `<table style="min-width:820px"><thead><tr><th>Customer</th><th>Segment</th><th>Trust score</th><th>Latest change</th><th>Sources</th><th>Fields in conflict</th><th>Needs review</th><th></th></tr></thead><tbody>${rows.map(r => {
+      const b = band(r.s), gs = FIELDS.map(f => field(r.c.id, f[0]));
+      const src = S.filter(s => s.on && recs[r.c.id][s.id]).length;
+      const conf = gs.filter(g => g.conflicts > 0).length, low = gs.filter(g => !g.win || g.win.trust < 0.4).length;
+      return `<tr><td><strong>${esc(r.name)}</strong><div class="muted small mono">${r.c.id}</div></td><td>${r.c.seg}</td>
+        <td><span class="meter"><i style="width:${Math.round(r.s * 100)}%"></i></span> <span class="mono">${r.s.toFixed(2)}</span> <span class="pill ${b[0]}">${b[1]}</span></td>
+        <td>${deltaHtml(delta(r.c.id))}</td><td class="mono">${src}</td><td class="mono">${conf} of 5</td>
+        <td>${low ? `<span class="pill bad">${low} field${low > 1 ? 's' : ''}</span>` : '<span class="muted">None</span>'}</td>
+        <td><button type="button" class="btn" data-act="open" data-id="${r.c.id}" aria-label="Open ${esc(r.name)}">Open</button></td></tr>`;
+    }).join('') || '<tr><td colspan="8" class="muted">No customers match that search.</td></tr>'}</tbody></table>`;
+  } else if (state.view === 'customer') {
+    const c = custById(state.cid), s = score(c.id), b = band(s), h = hist[c.id];
+    const srcN = S.filter(x => x.on && recs[c.id][x.id]).length, onN = S.filter(x => x.on).length;
+    const gm = field(c.id, 'mobile').win, ge = field(c.id, 'email').win;
+    $('c-head').innerHTML = `<div class="row between" style="align-items:flex-start">
+        <div class="stack" style="gap:4px"><h1>${esc(goldenName(c))}</h1><p class="muted"><span class="mono">${c.id}</span> · ${c.seg} · found in ${srcN} of ${onN} connected sources</p></div>
+        <div class="stack" style="gap:6px;align-items:flex-end"><div class="row"><span class="big mono">${s.toFixed(2)}</span><span class="pill ${b[0]}">${b[1]} trust</span></div>
+        <div class="row small"><span class="muted">Updated ${fmtTime(h[h.length - 1].t)}</span>${deltaHtml(delta(c.id))}</div></div></div>
+      <dl class="kv" style="max-width:560px">
+        <div><dt>Best number to call</dt><dd>${gm ? `<span class="mono">${esc(disp('mobile', gm.v))}</span> · ${esc(gm.src)} · trust ${gm.trust.toFixed(2)}` : 'None on file'}</dd></div>
+        <div><dt>Best email</dt><dd>${ge ? `<span class="mono">${esc(disp('email', ge.v))}</span> · ${esc(ge.src)} · trust ${ge.trust.toFixed(2)}` : 'None on file'}</dd></div>
+      </dl>`;
+    $('c-golden').innerHTML = `<table style="min-width:760px"><thead><tr><th>Field</th><th>Value we use</th><th>Trust</th><th>From</th><th>Last verified</th><th>Other values seen</th><th>Weight in score</th></tr></thead><tbody>${FIELDS.map(([f, label, w]) => {
+      const g = field(c.id, f), x = g.win;
+      if (!x) return `<tr><td>${label}</td><td class="muted" colspan="5">No connected source has this field</td><td class="mono">${Math.round(w * 100)}%</td></tr>`;
+      return `<tr><td>${label}</td><td><strong>${esc(disp(f, x.v))}</strong></td>
+        <td><span class="mono">${x.trust.toFixed(2)}</span>${x.trust < 0.4 ? ' <span class="pill bad">Needs review</span>' : ''}</td>
+        <td>${esc(x.src)}<div class="muted small">${esc(TIER[x.tier][1])}</div></td><td>${fmtDate(x.ts)}</td>
+        <td>${g.conflicts ? `<span class="pill warn">${g.conflicts} different</span>` : '<span class="muted">None</span>'}</td><td class="mono">${Math.round(w * 100)}%</td></tr>`;
+    }).join('')}</tbody></table>`;
+    const wins = {}; FIELDS.forEach(([f]) => { const w = field(c.id, f).win; wins[f] = w ? w.sid : null; });
+    const rowsM = S.filter(x => x.on && recs[c.id][x.id]).map(x => ({ sid: x.id, name: x.name, trust: TIER[x.tier][0], get: f => recs[c.id][x.id][f].v }));
+    if (Object.keys(ovr[c.id]).length) rowsM.push({ sid: 'override', name: 'Manual override', trust: 1, get: f => (ovr[c.id][f] ? ovr[c.id][f].v : null) });
+    rowsM.sort((a, b2) => b2.trust - a.trust);
+    $('c-matrix').innerHTML = `<table style="min-width:980px"><thead><tr><th>Source</th><th>Trust</th>${FIELDS.map(f => `<th>${f[1]}</th>`).join('')}</tr></thead><tbody>${rowsM.map(r => `<tr><td>${esc(r.name)}</td><td class="mono">${r.trust.toFixed(2)}</td>${FIELDS.map(([f]) => {
+      const v = r.get(f); if (v == null) return '<td class="muted">Not held</td>';
+      const w = wins[f] === r.sid;
+      return `<td${w ? ' class="win"' : ''}>${esc(disp(f, v))}${w ? ' <span class="pill good">Used</span>' : ''}</td>`;
+    }).join('')}</tr>`).join('')}</tbody></table>`;
+  } else {
+    $('trace-table').innerHTML = `<table style="min-width:820px"><thead><tr><th>When</th><th>Who</th><th>What happened</th><th>Customer</th><th>Field</th><th>Result</th></tr></thead><tbody>${trace.map(t => `<tr><td class="small">${fmtTime(t.t)}</td><td>${esc(t.who)}</td><td>${esc(t.what)}</td><td>${t.cid ? esc(goldenName(custById(t.cid))) : ''}</td><td>${t.f ? fieldLabel(t.f) : ''}</td><td>${esc(t.result)}</td></tr>`).join('')}</tbody></table>`;
+  }
+}
+
+function scoreNote(before, after) { return before === after ? `Trust score stays ${after.toFixed(2)}.` : `Trust score ${before.toFixed(2)} to ${after.toFixed(2)}.`; }
+function tick() {
+  if (!state.live) return;
+  const c = C[Math.floor(Math.random() * C.length)];
+  const ss = S.filter(s => s.on && recs[c.id][s.id]);
+  if (!ss.length) return;
+  const s = ss[Math.floor(Math.random() * ss.length)];
+  const f = FIELDS[Math.floor(Math.random() * FIELDS.length)][0];
+  const x = recs[c.id][s.id][f], before = field(c.id, f).win, sb = score(c.id);
+  const vars = { name: c.names, mobile: c.mob, email: c.em, address: c.ad }[f];
+  let what;
+  if (vars && Math.random() < 0.45) {
+    const o = vars.filter(v => v !== x.v);
+    x.v = o[Math.floor(Math.random() * o.length)]; what = 'sent a new value';
+  } else { if (x.v == null) x.v = vars ? vars[0] : c.dob; what = 'confirmed its value'; }
+  x.ts = Date.now();
+  const after = field(c.id, f).win; refreshScores();
+  const changed = !before || before.sid !== after.sid || norm(before.v) !== norm(after.v);
+  log(s.name, what, c.id, f, (changed ? `Golden record now uses ${after.src}. ` : 'Golden record unchanged. ') + scoreNote(sb, score(c.id)));
+  paint();
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'nav') show(b.dataset.view);
+  else if (act === 'cat') { state.cat = b.dataset.cat; show('connectors'); }
+  else if (act === 'open') show('customer', b.dataset.id);
+  else if (act === 'live') { state.live = !state.live; b.setAttribute('aria-pressed', state.live); b.textContent = 'Live feed: ' + (state.live ? 'on' : 'off'); }
+  else if (act === 'toggle') {
+    const s = S.find(x => x.id === b.dataset.id); s.on = !s.on; if (s.on) s.lastSync = Date.now();
+    refreshScores(); log('You', (s.on ? 'connected ' : 'disconnected ') + s.name, null, null, 'Trust scores recalculated for all customers.'); paint();
+  } else if (act === 'sync') {
+    const s = S.find(x => x.id === b.dataset.id); s.busy = true; paint();
+    setTimeout(() => {
+      let n = 0;
+      C.forEach(c => { const r = recs[c.id][s.id]; if (r && Math.random() < 0.5) { n++; FIELDS.forEach(([f]) => { if (r[f].v != null) r[f].ts = Date.now(); }); } });
+      s.busy = false; s.lastSync = Date.now(); refreshScores();
+      log(s.name, 'finished a sync', null, null, `${n} customer record${n === 1 ? '' : 's'} confirmed as current.`); paint();
+    }, 800);
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { state.q = e.target.value; paint(); }
+  if (e.target.id === 'sort') { state.sort = e.target.value; paint(); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'ovr-form') return;
+  e.preventDefault();
+  const f = $('o-field').value, v = $('o-value').value.trim(), ref = $('o-ref').value.trim(), why = $('o-why').value.trim(), msg = $('o-msg');
+  msg.hidden = false;
+  if (!v || !ref || !why) { msg.className = 'msg err'; msg.textContent = 'Enter the correct value, an evidence reference and a reason.'; return; }
+  if (f === 'mobile' && !/^\d{10}$/.test(v)) { msg.className = 'msg err'; msg.textContent = 'Enter the mobile number as 10 digits.'; return; }
+  if (f === 'email' && !/^\S+@\S+\.\S+$/.test(v)) { msg.className = 'msg err'; msg.textContent = 'Enter a full email address.'; return; }
+  if (f === 'dob' && !/^\d{4}-(0[1-9]|1[0-2])$/.test(v)) { msg.className = 'msg err'; msg.textContent = 'Enter the birth month as YYYY-MM.'; return; }
+  const sb = score(state.cid);
+  ovr[state.cid][f] = { v, ts: Date.now(), ref, why };
+  refreshScores();
+  log('steward.demo', 'corrected a field', state.cid, f, `Evidence ${ref}. ` + scoreNote(sb, score(state.cid)));
+  msg.className = 'msg'; msg.textContent = `Saved. ${fieldLabel(f)} now uses your correction at trust 1.00.`;
+  $('o-value').value = ''; $('o-ref').value = ''; $('o-why').value = '';
+  paint();
+});
+
+refreshScores();
+log('System', 'loaded the starting data', null, null, `${S.filter(s => s.on).length} sources connected.`);
+show('connectors');
+setInterval(tick, 5000);
+</script>
+
+</body></html>

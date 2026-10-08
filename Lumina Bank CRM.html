@@ -1,0 +1,748 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lumina Bank CRM</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F6;--surface:#FFFFFF;--ink:#16202E;--muted:#556070;--line:#DCE1E7;--track:#E9EDF1;
+  --rail:#14233B;--rail-ink:#C9D3E0;--rail-on:#24395C;--rail-head:#FFFFFF;
+  --accent:#0B6E66;--accent-ink:#FFFFFF;--differ:#B87A00;--crit:#B4401A;
+  --good-bg:#D8EFEA;--good-ink:#0A4F49;--warn-bg:#F7EACB;--warn-ink:#6B4700;
+  --bad-bg:#F6DDD3;--bad-ink:#7A2410;--neutral-bg:#E6EAEE;--neutral-ink:#3A4656;--win-bg:#E4F1EF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1620;--surface:#18212E;--ink:#E6EBF2;--muted:#9AA8BA;--line:#2B3747;--track:#263242;
+    --rail:#0B111A;--rail-ink:#B4C0D0;--rail-on:#22324A;--rail-head:#FFFFFF;
+    --accent:#3DB8A9;--accent-ink:#06211E;--differ:#E0B040;--crit:#E0795A;
+    --good-bg:#123B36;--good-ink:#8FDDD0;--warn-bg:#43340F;--warn-ink:#F0CF7A;
+    --bad-bg:#4A2015;--bad-ink:#F3B39E;--neutral-bg:#263242;--neutral-ink:#C3CEDB;--win-bg:#143430;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1620;--surface:#18212E;--ink:#E6EBF2;--muted:#9AA8BA;--line:#2B3747;--track:#263242;
+  --rail:#0B111A;--rail-ink:#B4C0D0;--rail-on:#22324A;--rail-head:#FFFFFF;
+  --accent:#3DB8A9;--accent-ink:#06211E;--differ:#E0B040;--crit:#E0795A;
+  --good-bg:#123B36;--good-ink:#8FDDD0;--warn-bg:#43340F;--warn-ink:#F0CF7A;
+  --bad-bg:#4A2015;--bad-ink:#F3B39E;--neutral-bg:#263242;--neutral-ink:#C3CEDB;--win-bg:#143430;
+}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45}
+*{box-sizing:border-box}
+h1,h2,h3,p,dl,dd,ul{margin:0}
+ul{padding:0;list-style:none}
+h1{font-size:26px;font-weight:600;text-wrap:balance}
+h2{font-size:16px;font-weight:600}
+h3{font-size:15px;font-weight:600}
+.app{display:flex;flex-wrap:wrap}
+.rail{flex:1 1 200px;background:var(--rail);padding:20px 16px;display:flex;flex-direction:column;gap:4px}
+.brand{color:var(--rail-head);font-size:18px;font-weight:600;padding:0 12px 12px}
+.rail button{text-align:left;padding:11px 12px;border:0;border-radius:6px;background:transparent;color:var(--rail-ink);font:inherit;cursor:pointer}
+.rail button[aria-current="page"]{background:var(--rail-on);color:var(--rail-head);font-weight:600}
+.rail .who{color:var(--rail-ink);font-size:13px;padding:16px 12px 4px}
+.rail .who strong{color:var(--rail-head);display:block;font-size:14px}
+.main{flex:999 1 520px;min-width:0;padding-inline:clamp(16px,3vw,36px);padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.bar .last{color:var(--muted);font-size:13px;flex:1 1 260px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.tight{gap:4px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.tile.off{border-style:dashed}
+button.tile{text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.kv{display:flex;flex-direction:column;gap:6px}
+.kv div{display:flex;justify-content:space-between;gap:12px}
+.kv dt{color:var(--muted)}
+.kv dd{text-align:right}
+.pill{display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap}
+.good{background:var(--good-bg);color:var(--good-ink)}
+.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.bad{background:var(--bad-bg);color:var(--bad-ink)}
+.neutral{background:var(--neutral-bg);color:var(--neutral-ink)}
+.notice{border-radius:6px;padding:12px 14px;font-weight:500}
+.btn{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[aria-pressed="true"],.btn[aria-selected="true"]{background:var(--rail);border-color:var(--rail);color:var(--rail-head)}
+.btn:disabled{opacity:.6;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label{font-size:13px;font-weight:600}
+.field{display:flex;flex-direction:column;gap:4px;flex:1 1 170px}
+input,select{min-height:40px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;width:100%}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--track);vertical-align:top}
+td.win{background:var(--win-bg);font-weight:600}
+.meter{display:inline-block;width:64px;height:8px;border-radius:4px;background:var(--track);vertical-align:middle;overflow:hidden}
+.meter i{display:block;height:8px;background:var(--accent)}
+.big{font-size:44px;font-weight:600;line-height:1}
+.msg{font-size:13px;font-weight:600;color:var(--good-ink)}
+.msg.err{color:var(--bad-ink)}
+.timeline li{display:flex;flex-wrap:wrap;gap:6px 16px;padding:12px 0;border-bottom:1px solid var(--track)}
+.timeline .when{flex:0 0 150px;color:var(--muted);font-size:13px}
+.timeline .what{flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ask li{padding:10px 0;border-bottom:1px solid var(--track);display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:space-between}
+svg .ln{stroke:var(--line);fill:none}
+svg .ln.agree{stroke:var(--accent)}
+svg .ln.differ{stroke:var(--differ)}
+svg .nd{fill:var(--track);stroke:var(--muted);stroke-width:1}
+svg .nd.agree{fill:var(--accent);stroke:none}
+svg .nd.differ{fill:var(--differ);stroke:none}
+svg .lb{fill:var(--ink);font-size:12px;font-weight:600}
+svg .sub{fill:var(--muted);font-size:10.5px;font-weight:400}
+svg .core{fill:var(--rail)}
+svg .coretx{fill:var(--rail-head)}
+.login{max-width:440px;width:100%;margin-inline:auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:26px;font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.hbar{display:grid;grid-template-columns:minmax(100px,150px) 1fr auto;gap:8px 10px;align-items:center}
+.hbar .t{height:10px;background:var(--track);border-radius:0 4px 4px 0;overflow:hidden}
+.hbar .t i{display:block;height:10px;background:var(--accent);border-radius:0 4px 4px 0}
+.seg{display:flex;gap:2px;height:14px}
+.seg i{display:block;border-radius:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.c-good{background:var(--accent)}.c-warn{background:var(--differ)}.c-bad{background:var(--crit)}.c-none{background:var(--track)}
+.agr td{padding:3px;border:0}
+.agr td:first-child{padding-right:12px;white-space:nowrap}
+.agr th.v{writing-mode:vertical-rl;transform:rotate(180deg);padding:6px 3px;border:0}
+.cell{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:3px;font-style:normal;font-size:13px;font-weight:600;color:var(--surface)}
+svg .ax{stroke:var(--line)}
+svg .tk{fill:var(--muted);font-size:11px}
+svg .dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+svg .f-good{fill:var(--accent)}
+svg .ring{fill:none;stroke:var(--track)}
+svg .sp{stroke-width:7;stroke-linecap:round}
+svg .s-good{stroke:var(--accent)}svg .s-warn{stroke:var(--differ)}svg .s-bad{stroke:var(--crit)}svg .s-none{stroke:var(--track)}
+svg .spl{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
+</style>
+
+<div class="app">
+  <nav class="rail" id="rail" aria-label="Main" hidden></nav>
+  <div class="main">
+    <div class="bar" id="bar" hidden>
+      <div class="row">
+        <button type="button" class="btn" id="live" data-act="live" aria-pressed="true">Live feed: on</button>
+        <span class="pill neutral">Simulated data</span>
+      </div>
+      <div class="last" id="last" aria-live="polite"></div>
+    </div>
+    <div id="view" class="stack"></div>
+  </div>
+</div>
+
+<script>
+/* Lumina Bank CRM: browser-only demo. All customers, sources and events are simulated. */
+
+/* ---------- 1. Reference data ---------- */
+const DAY = 864e5, NOW = Date.now();
+
+// Source reliability levels (US-22). A higher number wins when sources disagree.
+const TIER = {
+  ckyc_verified: [1, 'CKYC verified'], cbs_core_banking: [0.85, 'System of record'],
+  whatsapp_verified: [0.75, 'WhatsApp verified'], crm_agent_entered: [0.55, 'Entered by staff'],
+  manual_upload: [0.4, 'Batch copy or upload'], unverified: [0.2, 'Unverified'], manual_override: [1, 'Manual correction']
+};
+
+// Golden-record fields: key, label, weight in the customer trust score (weights sum to 1).
+const FIELDS = [
+  ['name', 'Full name', 0.14], ['father', "Father's name", 0.06], ['dob', 'Date of birth', 0.10], ['gender', 'Gender', 0.03],
+  ['pan', 'PAN', 0.14], ['aadhaar', 'Aadhaar', 0.10], ['ckyc', 'CKYC number', 0.05], ['mobile', 'Mobile', 0.14],
+  ['email', 'Email', 0.07], ['curAddr', 'Current address', 0.09], ['permAddr', 'Permanent address', 0.05],
+  ['occupation', 'Occupation', 0.02], ['income', 'Annual income', 0.01]
+];
+const F_ALL = FIELDS.map(f => f[0]);
+const F_CRM = ['name', 'dob', 'gender', 'mobile', 'email', 'curAddr', 'occupation', 'income'];
+const F_CONTACT = ['name', 'mobile', 'email', 'curAddr'];
+const F_CKYC = ['name', 'father', 'dob', 'gender', 'pan', 'aadhaar', 'ckyc', 'mobile', 'curAddr', 'permAddr'];
+const F_AML = ['name', 'father', 'dob', 'pan', 'permAddr'];
+
+// Connectors: id, name, short name, category, technology, reliability level, connected at start, fields held.
+const SRC = [
+  ['flex', 'Oracle FLEXCUBE', 'FLEXCUBE', 'Core banking', 'Oracle Database', 'cbs_core_banking', 1, F_ALL],
+  ['finn', 'FinnOne Neo', 'FinnOne', 'Lending', 'Oracle Database', 'cbs_core_banking', 1, F_ALL],
+  ['home', 'Home Loans', 'Home loans', 'Lending', 'Microsoft SQL Server', 'cbs_core_banking', 1, F_ALL],
+  ['car', 'Car Loans', 'Car loans', 'Lending', 'Microsoft SQL Server', 'cbs_core_banking', 1, F_ALL],
+  ['bike', 'Bike Loans', 'Bike loans', 'Lending', 'PostgreSQL', 'cbs_core_banking', 1, F_ALL],
+  ['card', 'Credit Cards', 'Cards', 'Cards', 'IBM Db2', 'cbs_core_banking', 1, F_ALL],
+  ['wealth', 'Wealth and Demat', 'Wealth', 'Core banking', 'Oracle Database', 'cbs_core_banking', 0, F_ALL],
+  ['dyn', 'Microsoft Dynamics 365', 'Dynamics', 'CRM', 'Dataverse Web API', 'crm_agent_entered', 1, F_CRM],
+  ['sf', 'Salesforce', 'Salesforce', 'CRM', 'Salesforce REST API', 'crm_agent_entered', 1, F_CRM],
+  ['cc', 'Contact Centre', 'Contact ctr', 'Channels', 'File drop (SFTP)', 'crm_agent_entered', 1, F_CONTACT],
+  ['wa', 'Gupshup WhatsApp', 'WhatsApp', 'Channels', 'Webhook', 'whatsapp_verified', 1, ['name', 'mobile']],
+  ['dig', 'Internet and Mobile Banking', 'Net banking', 'Channels', 'PostgreSQL', 'unverified', 1, F_CONTACT],
+  ['ckyc', 'CKYC Registry', 'CKYC', 'Verification', 'Registry API', 'ckyc_verified', 0, F_CKYC],
+  ['aml', 'AML Screening', 'AML', 'Verification', 'Microsoft SQL Server', 'cbs_core_banking', 1, F_AML],
+  ['dbx', 'Databricks Lakehouse', 'Databricks', 'Analytics', 'Databricks SQL warehouse', 'manual_upload', 1, F_ALL],
+  ['branch', 'Branch Uploads', 'Branch', 'Files', 'CSV upload', 'manual_upload', 1, F_ALL]
+].map(a => ({ id: a[0], name: a[1], short: a[2], cat: a[3], tech: a[4], tier: a[5], on: !!a[6], has: a[7], lastSync: NOW - 3 * 36e5, busy: false }));
+const PRODUCT = { flex: ['Savings account', 'Balance'], finn: ['Personal loan', 'Outstanding'], home: ['Home loan', 'Outstanding'], car: ['Car loan', 'Outstanding'], bike: ['Bike loan', 'Outstanding'], card: ['Credit card', 'Outstanding'], wealth: ['Demat and investments', 'Holdings'] };
+
+// Demo sign-ins. Each role sees different screens and different levels of personal data.
+// Demo credentials only. A real build checks passwords on the server and never ships them to the browser.
+const USERS = [
+  { id: 'agent', un: 'imran', pw: 'Agent@2026', name: 'Imran Qureshi', role: 'Contact centre agent', nav: ['overview', 'customers'], log: true },
+  { id: 'rm', un: 'kavya', pw: 'Rm@2026', name: 'Kavya Nair', role: 'Relationship manager', nav: ['overview', 'customers'], log: true },
+  { id: 'steward', un: 'arun', pw: 'Steward@2026', name: 'Arun Pillai', role: 'Data steward', nav: ['overview', 'customers', 'connectors', 'approvals', 'audit'], manage: true, correct: true },
+  { id: 'compliance', un: 'meera', pw: 'Comply@2026', name: 'Meera Subramanian', role: 'Compliance officer', nav: ['overview', 'customers', 'compliance', 'approvals', 'connectors', 'audit'], reveal: true, approve: true }
+];
+const NAV = { overview: 'Overview', customers: 'Customers', compliance: 'Compliance queue', approvals: 'Approvals', connectors: 'Connectors', audit: 'Audit log' };
+const AGENTS = ['Imran Qureshi', 'Deepa Menon', 'Rohit Bansal', 'Sneha Kulkarni'];
+const TOPICS = ['FD renewal rate', 'Credit card charge dispute', 'Home loan statement', 'Address change request', 'Debit card not received', 'Net banking login'];
+const PURPOSES = ['Servicing', 'Marketing', 'Analytics', 'Cross-sell', 'Account Aggregator'];
+
+/* ---------- 2. Demo customers (fictional) ---------- */
+const C = [
+  ['C-10021', 'HNW', ['Suresh Kumar', 'Sooresh Kumar', 'Suresh K'], ['Ramesh Kumar', 'R Kumar'], '1984-07-14', 'Male', 'BKQPK4521F', '4521', '50012345678821', ['9822104521', '9822107788'], ['suresh.kumar@mail.example', 'skumar84@webmail.example'], ['14 Shanti Apartments, Kothrud, Pune 411038', 'Kothrud, Pune'], 'Plot 7, Sector 21, Nigdi, Pune 411044', 'Business owner', '₹25 to 50 lakh'],
+  ['C-10482', 'Retail', ['Anita Deshmukh', 'Aneeta Deshmukh', 'Anita S Deshmukh'], ['Shripad Deshmukh', 'S V Deshmukh'], '1990-03-22', 'Female', 'CMTPD7719K', '7719', '50023456789104', ['9890012345', '9890056712'], ['anita.d@mail.example', 'adeshmukh@office.example'], ['B-203 Lake View, Powai, Mumbai 400076', 'Powai, Mumbai'], '22 Tilak Road, Nashik 422001', 'Salaried', '₹10 to 25 lakh'],
+  ['C-20931', 'HNW', ['Rajesh Iyer', 'Rajesh R Iyer', 'Rajesh Aiyar'], ['Ramanathan Iyer', 'R Iyer'], '1972-11-05', 'Male', 'AFZPI3308L', '3308', '50034567890217', ['9845098450', '9845011223'], ['rajesh.iyer@mail.example', 'riyer@firm.example'], ['42 Cathedral Road, Gopalapuram, Chennai 600086', 'Gopalapuram, Chennai'], '9 Lake Area, Nungambakkam, Chennai 600034', 'Chartered accountant', '₹50 lakh to 1 crore'],
+  ['C-11307', 'Retail', ['Farah Sheikh', 'Farha Shaikh', 'Farah S'], ['Imtiaz Sheikh', 'Imtiyaz Shaikh'], '1993-05-30', 'Female', 'DLRPS6642M', '6642', '50045678901336', ['9967033441', '9967078890'], ['farah.sheikh@mail.example', 'fsheikh@webmail.example'], ['5 Hill Road, Bandra West, Mumbai 400050', 'Bandra West, Mumbai'], '18 Station Road, Thane 400601', 'Salaried', '₹5 to 10 lakh'],
+  ['C-14410', 'HNW', ['Gurpreet Sandhu', 'Gurprit Singh Sandhu', 'G S Sandhu'], ['Harbhajan Singh Sandhu', 'H S Sandhu'], '1979-01-19', 'Male', 'AGNPS9015R', '9015', '50056789012448', ['9815567001', '9815522334'], ['gurpreet.sandhu@mail.example', 'gsandhu@agri.example'], ['House 310, Sector 35, Chandigarh 160022', 'Sector 35, Chandigarh'], 'Village Road, Kharar, Mohali 140301', 'Agri business', '₹25 to 50 lakh'],
+  ['C-15288', 'HNW', ['Nandini Rao', 'Nandhini Rao', 'Nandini V Rao'], ['Venkatesh Rao', 'V Rao'], '1981-09-08', 'Female', 'BHJPR2276C', '2276', '50067890123559', ['9741200765', '9741255310'], ['nandini.rao@mail.example', 'nrao@clinic.example'], ['77 12th Main, Indiranagar, Bengaluru 560038', 'Indiranagar, Bengaluru'], '3 Temple Street, Malleshwaram, Bengaluru 560003', 'Doctor', '₹50 lakh to 1 crore'],
+  ['C-16054', 'Retail', ['Joseph Mathew', 'Joseph Mathews', 'Jose Mathew'], ['Mathew Varghese', 'M Varghese'], '1987-12-11', 'Male', 'CXWPM5580H', '5580', '50078901234662', ['9447011882', '9447066120'], ['joseph.mathew@mail.example', 'jmathew@webmail.example'], ['Rose Villa, Kadavanthra, Kochi 682020', 'Kadavanthra, Kochi'], 'MC Road, Kottayam 686001', 'Salaried', '₹10 to 25 lakh'],
+  ['C-19376', 'HNW', ['Priya Chatterjee', 'Priya Chatterji', 'Priya Chattopadhyay'], ['Subrata Chatterjee', 'S Chatterjee'], '1986-04-27', 'Female', 'AQLPC8134T', '8134', '50089012345773', ['9830045127', '9830099461'], ['priya.chatterjee@mail.example', 'pchatterjee@studio.example'], ['21 Ballygunge Place, Kolkata 700019', 'Ballygunge, Kolkata'], 'Salt Lake Sector 2, Kolkata 700091', 'Architect', '₹25 to 50 lakh']
+].map(a => ({ id: a[0], seg: a[1], names: a[2], fathers: a[3], dob: a[4], gender: a[5], pan: a[6], aad4: a[7], ckyc: a[8], mob: a[9], em: a[10], cur: a[11], perm: a[12], occ: a[13], inc: a[14] }));
+
+// Every value a source might hold for a field. The first entry is the correct one.
+function variants(c, f) {
+  switch (f) {
+    case 'name': return c.names;
+    case 'father': return c.fathers;
+    case 'dob': return [c.dob, c.dob.slice(0, 8) + String((+c.dob.slice(8) % 28) + 1).padStart(2, '0')];
+    case 'gender': return [c.gender];
+    case 'pan': return [c.pan, c.pan.slice(0, 6) + c.pan[7] + c.pan[6] + c.pan.slice(8)];
+    case 'aadhaar': return ['xxxx xxxx ' + c.aad4]; // only the last four digits exist in this demo
+    case 'ckyc': return [c.ckyc];
+    case 'mobile': return c.mob;
+    case 'email': return c.em;
+    case 'curAddr': return [c.cur[0], c.perm, c.cur[1]];
+    case 'permAddr': return [c.perm, c.cur[0]];
+    case 'occupation': return [c.occ, 'Self-employed'];
+    default: return [c.inc];
+  }
+}
+
+function rng(seed) { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
+const recs = {}, ovr = {}, hist = {}, accts = {}, talks = {}, kyc = {}, consent = {}, audit = [];
+C.forEach((c, i) => {
+  const r = rng(i * 97 + 13);
+  recs[c.id] = {}; ovr[c.id] = {}; hist[c.id] = []; accts[c.id] = [];
+  // Source records: stronger sources are more likely to hold the correct value.
+  SRC.forEach(s => {
+    const present = s.id === 'flex' || r() < (s.id === 'ckyc' ? 0.75 : s.id === 'dbx' ? 0.9 : 0.55);
+    if (!present) return;
+    const t = TIER[s.tier][0], b = s.id === 'ckyc' ? 1 : (t >= 0.75 ? 0.8 : 0.5);
+    const ts = NOW - (20 + Math.floor(r() * 700)) * DAY, rec = {};
+    s.has.forEach(f => {
+      const a = variants(c, f), bias = (f === 'pan' || f === 'dob' || f === 'permAddr') ? Math.max(b, 0.88) : b;
+      let v = (a.length > 1 && r() >= bias) ? a[1 + Math.floor(r() * (a.length - 1))] : a[0];
+      if (b < 1 && (f === 'email' || f === 'father' || f === 'occupation') && r() < 0.2) v = null;
+      rec[f] = { v, ts };
+    });
+    recs[c.id][s.id] = rec;
+    if (PRODUCT[s.id]) accts[c.id].push({ sid: s.id, type: PRODUCT[s.id][0], label: PRODUCT[s.id][1], no: 'xxxx xxxx ' + String(1000 + Math.floor(r() * 9000)), amt: Math.round((0.5 + r() * 40) * 1e5) });
+  });
+  // Conversation history with agents.
+  const main = TOPICS[i % TOPICS.length], n = 3 + Math.floor(r() * 3);
+  talks[c.id] = [];
+  for (let k = 0; k < n; k++) {
+    const topic = r() < 0.6 ? main : TOPICS[Math.floor(r() * TOPICS.length)], mood = r() < 0.4 ? 'Negative' : r() < 0.75 ? 'Neutral' : 'Positive';
+    talks[c.id].push({ ts: NOW - (1 + Math.floor(r() * 40)) * DAY - Math.floor(r() * 8) * 36e5, channel: ['Call', 'Call', 'WhatsApp', 'Branch', 'Email'][Math.floor(r() * 5)], agent: AGENTS[Math.floor(r() * AGENTS.length)], topic, mood, outcome: r() < 0.4 ? 'Resolved' : 'Open', note: mood === 'Negative' ? 'Customer was unhappy and asked for an update.' : 'Customer asked for an update.' });
+  }
+  talks[c.id].sort((a, b) => b.ts - a.ts);
+  // KYC and AML. Re-KYC is due every 2, 8 or 10 years for high, medium and low risk.
+  const risk = i === 4 ? 'High' : (c.seg === 'HNW' && r() < 0.5 ? 'Medium' : 'Low');
+  const last = NOW - (100 + Math.floor(r() * (risk === 'High' ? 900 : 3400))) * DAY;
+  const due = last + ({ High: 2, Medium: 8, Low: 10 }[risk]) * 365 * DAY;
+  kyc[c.id] = { risk, last, due, reason: risk === 'High' ? 'Cash-intensive business' : risk === 'Medium' ? 'High-value account' : 'Standard profile', pep: i === 4 ? 'Related to a politically exposed person' : 'No', screened: NOW - Math.floor(r() * 30) * DAY };
+  consent[c.id] = PURPOSES.map((p, k) => [p, k === 0 ? 'Granted' : ['Granted', 'Granted', 'Revoked', 'Pending'][Math.floor(r() * 4)]]);
+});
+
+/* ---------- 3. Trust engine ---------- */
+const norm = v => String(v).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+// Golden value for one field: highest trust wins; on a tie the most recently verified wins.
+function field(cid, f) {
+  const c = [];
+  for (const s of SRC) {
+    if (!s.on) continue;
+    const x = recs[cid][s.id];
+    if (x && x[f] && x[f].v != null) c.push({ sid: s.id, src: s.name, v: x[f].v, ts: x[f].ts, trust: TIER[s.tier][0], tier: s.tier });
+  }
+  const o = ovr[cid][f];
+  if (o) c.push({ sid: 'override', src: 'Manual correction', v: o.v, ts: o.ts, trust: 1, tier: 'manual_override' });
+  c.sort((a, b) => b.trust - a.trust || b.ts - a.ts);
+  return { win: c[0] || null, cands: c, conflicts: Math.max(0, new Set(c.map(x => norm(x.v))).size - 1) };
+}
+// Customer trust score: weighted mean of the field trust scores.
+function score(cid) {
+  let t = 0;
+  for (const [f, , w] of FIELDS) { const g = field(cid, f); if (g.win) t += w * g.win.trust; }
+  return Math.round(t * 1000) / 1000;
+}
+function refreshScores() {
+  for (const c of C) { const s = score(c.id), h = hist[c.id]; if (!h.length || h[h.length - 1].s !== s) h.push({ t: Date.now(), s }); }
+}
+// A repeat contact: two or more contacts on one topic in 30 days with the latest still open.
+function repeatIssue(cid) {
+  const recent = talks[cid].filter(t => t.ts > Date.now() - 30 * DAY);
+  for (const t of recent) {
+    const same = recent.filter(x => x.topic === t.topic);
+    if (same.length >= 2 && same[0].outcome === 'Open') return { topic: t.topic, count: same.length, agents: new Set(same.map(x => x.agent)).size };
+  }
+  return null;
+}
+// Caller verification: only ask about fields that are well trusted and where every source agrees.
+function verification(cid) {
+  const ask = [], avoid = [];
+  [['dob', 'What is your date of birth?'], ['father', "What is your father's name?"], ['permAddr', 'What is your permanent address?'], ['email', 'Which email address is registered with us?'], ['curAddr', 'What is your current address?']].forEach(([f, q]) => {
+    const g = field(cid, f);
+    if (g.win && g.win.trust >= 0.85 && !g.conflicts) { if (ask.length < 3) ask.push({ f, q, a: g.win.v }); }
+    else avoid.push({ f, why: !g.win ? 'no source holds it' : g.conflicts ? `${g.conflicts + 1} different values on file` : `trust is only ${g.win.trust.toFixed(2)}` });
+  });
+  return { ask, avoid };
+}
+
+/* ---------- 4. Formatting and masking ---------- */
+const esc = v => String(v).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+const fmtDate = ts => new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtTime = ts => new Date(ts).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const money = n => '₹' + (n / 1e5).toFixed(1) + ' lakh';
+function disp(f, v, cid) {
+  if (v == null) return '';
+  if (f === 'pan') return state.reveal[cid] ? v : 'xxxxx' + v.slice(5, 9) + 'x';
+  if (f === 'ckyc') return 'xxxxxxxxxx' + v.slice(-4);
+  if (f === 'mobile') return v.slice(0, 2) + 'xxxx' + v.slice(-4);
+  if (f === 'email') return v[0] + '•••' + v.slice(v.indexOf('@'));
+  if (f === 'dob') return fmtDate(new Date(v + 'T00:00:00').getTime());
+  return v;
+}
+const fieldLabel = f => (FIELDS.find(x => x[0] === f) || [0, ''])[1];
+const custById = id => C.find(c => c.id === id);
+const goldenName = c => { const g = field(c.id, 'name').win; return g ? g.v : c.names[0]; };
+const band = s => (s >= 0.8 ? ['good', 'High'] : s >= 0.6 ? ['warn', 'Medium'] : ['bad', 'Low']);
+const delta = cid => { const h = hist[cid]; return h.length > 1 ? Math.round((h[h.length - 1].s - h[h.length - 2].s) * 100) / 100 : 0; };
+const deltaHtml = d => !d ? '<span class="muted">No change</span>' : d > 0 ? `<span class="pill good">Up ${d.toFixed(2)}</span>` : `<span class="pill bad">Down ${Math.abs(d).toFixed(2)}</span>`;
+const pill = (cls, text) => `<span class="pill ${cls}">${esc(text)}</span>`;
+function kycStatus(cid) { const k = kyc[cid]; return k.due < Date.now() ? ['bad', 'Re-KYC overdue'] : k.due - Date.now() < 180 * DAY ? ['warn', 'Re-KYC due soon'] : ['good', 'KYC verified']; }
+const riskPill = r => pill({ Low: 'good', Medium: 'warn', High: 'bad' }[r], r + ' risk');
+const statusPill = s => pill({ Granted: 'good', Revoked: 'bad', Pending: 'warn', Resolved: 'good', Open: 'warn', Negative: 'bad', Neutral: 'neutral', Positive: 'good' }[s] || 'neutral', s);
+
+/* ---------- 5. Session ---------- */
+const state = { user: null, view: 'login', cat: 'All', cid: null, tab: 'brief', live: true, q: '', reveal: {}, fails: 0, lockUntil: 0, notice: '' };
+const pending = []; // corrections waiting for a second person to approve
+const $ = id => document.getElementById(id);
+const view = $('view');
+function log(who, what, cid, result) { audit.unshift({ t: Date.now(), who, what, cid, result }); if (audit.length > 300) audit.pop(); }
+
+/* ---------- 6. Screens ---------- */
+const TABS = [['brief', 'Before you speak'], ['identity', 'Identity'], ['sources', 'Sources'], ['talk', 'Conversations'], ['accounts', 'Accounts'], ['comp', 'Compliance']];
+
+function show(v, cid) {
+  state.view = v; if (cid) state.cid = cid;
+  const u = state.user;
+  // Role check: a screen outside the signed-in role is refused and logged.
+  if (u && v !== 'customer' && !u.nav.includes(v)) { log(u.name, 'tried to open ' + v, null, 'Blocked: not allowed for this role.'); v = state.view = 'overview'; }
+  $('rail').hidden = !u; $('bar').hidden = !u;
+  if (!u) {
+    view.innerHTML = `<div class="login stack"><div class="stack tight"><h1>Lumina Bank CRM</h1><p class="muted">Sign in to continue.</p></div>
+      <form class="panel" id="login-form">
+        <div class="field" style="flex:none"><label for="l-user">Username</label><input id="l-user" type="text" autocomplete="username"></div>
+        <div class="field" style="flex:none"><label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+        <button type="submit" class="btn primary">Sign in</button>
+        <p class="msg err" id="l-msg"${state.notice ? '' : ' hidden'}>${esc(state.notice)}</p>
+        <p class="muted small">Three wrong attempts lock sign-in for 30 seconds. You are signed out after 5 minutes without activity.</p></form>
+      <div class="panel"><h2>Demo accounts</h2><p class="muted small">These accounts exist only in this demo. Each role sees different screens and a different level of personal data.</p>
+        <div class="scroll"><table><thead><tr><th>Role</th><th>Username</th><th>Password</th></tr></thead><tbody>${USERS.map(x => `<tr><td>${esc(x.role)}</td><td class="mono">${x.un}</td><td class="mono">${x.pw}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+    return;
+  }
+  $('rail').innerHTML = `<div class="brand">Lumina CRM</div>${u.nav.map(n => `<button type="button" data-act="nav" data-view="${n}"${(n === v || (v === 'customer' && n === 'customers')) ? ' aria-current="page"' : ''}>${NAV[n]}</button>`).join('')}
+    <p class="who"><strong>${esc(u.name)}</strong>${esc(u.role)}</p><button type="button" data-act="logout">Sign out</button>`;
+  if (v === 'customers') {
+    view.innerHTML = `<div class="stack tight"><h1>Customers</h1><p class="muted">One golden record per customer, built from every connected source.</p></div>
+      <div class="field" style="max-width:320px;flex:none"><label for="q">Search by name or ID</label><input id="q" type="text" value="${esc(state.q)}"></div>
+      <div class="panel"><div class="scroll" id="cust-table"></div></div>`;
+  } else if (v === 'customer') {
+    view.innerHTML = `<div><button type="button" class="btn" data-act="nav" data-view="customers">Back to customers</button></div>
+      <div class="panel" id="c-head"></div>
+      <div class="row" role="tablist">${TABS.map(t => `<button type="button" class="btn" role="tab" data-act="tab" data-tab="${t[0]}" aria-selected="${t[0] === state.tab}">${t[1]}</button>`).join('')}</div>
+      <div class="stack" id="tab-dyn"></div><div id="tab-form">${tabForm()}</div>`;
+  } else if (v === 'overview') {
+    view.innerHTML = `<div class="stack tight"><h1>Overview</h1><p class="muted">How reliable the bank's customer data is right now, and where it needs attention.</p></div><div class="stack" id="ov"></div>`;
+  } else if (v === 'approvals') {
+    view.innerHTML = `<div class="stack tight"><h1>Approvals</h1><p class="muted">A correction proposed by a data steward changes the record only after a compliance officer approves it.</p></div><div id="appr"></div>`;
+  } else if (v === 'connectors') {
+    const cats = ['All', ...new Set(SRC.map(s => s.cat))];
+    view.innerHTML = `<div class="stack tight"><h1>Connectors</h1><p class="muted">${u.manage ? 'Turn a source on or off and every trust score recalculates.' : 'Only a data steward can change connectors. You can view them here.'}</p></div>
+      <div class="row">${cats.map(c => `<button type="button" class="btn" data-act="cat" data-cat="${esc(c)}" aria-pressed="${c === state.cat}">${esc(c)}</button>`).join('')}</div>
+      <p class="muted" id="conn-summary"></p><div class="grid" id="conn-grid"></div>`;
+  } else if (v === 'compliance') {
+    view.innerHTML = `<div class="stack tight"><h1>Compliance queue</h1><p class="muted">KYC and AML status for every customer, highest risk first.</p></div><div class="panel"><div class="scroll" id="comp-table"></div></div>`;
+  } else {
+    view.innerHTML = `<div class="stack tight"><h1>Audit log</h1><p class="muted">Every record opened, PAN viewed, correction, sync and source update, newest first.</p></div><div class="panel"><div class="scroll" id="audit-table"></div></div>`;
+  }
+  paint();
+}
+
+// Forms live outside the repainted area so the live feed never wipes what someone is typing.
+function tabForm() {
+  const u = state.user;
+  if (state.tab === 'identity' && u.reveal) return `<div class="panel"><h2>View the full PAN</h2><p class="muted small">Choose why you need it. The reason is written to the audit log.</p>
+    <div class="row" style="align-items:flex-end"><div class="field" style="max-width:320px"><label for="pan-reason">Reason</label><select id="pan-reason"><option value="">Choose a reason</option><option>Regulatory request</option><option>Suspicious transaction review</option><option>Customer dispute</option></select></div>
+    <button type="button" class="btn primary" data-act="reveal">Show or hide full PAN</button></div><p class="msg" id="pan-msg" hidden></p></div>`;
+  if (state.tab === 'identity' && u.correct) return `<form class="panel" id="ovr-form"><h2>Propose a correction with evidence</h2>
+    <div class="row" style="align-items:flex-end">
+      <div class="field"><label for="o-field">Field</label><select id="o-field">${FIELDS.filter(f => f[0] !== 'aadhaar').map(f => `<option value="${f[0]}">${esc(f[1])}</option>`).join('')}</select></div>
+      <div class="field"><label for="o-value">Correct value</label><input id="o-value" type="text"></div>
+      <div class="field"><label for="o-ref">Evidence reference</label><input id="o-ref" type="text"></div>
+      <div class="field"><label for="o-why">Reason</label><input id="o-why" type="text"></div>
+      <button type="submit" class="btn primary">Send for approval</button></div><p class="msg" id="o-msg" hidden></p></form>`;
+  if (state.tab === 'talk' && u.log) return `<form class="panel" id="talk-form"><h2>Log a conversation</h2>
+    <div class="row" style="align-items:flex-end">
+      <div class="field"><label for="t-channel">Channel</label><select id="t-channel"><option>Call</option><option>WhatsApp</option><option>Branch</option><option>Email</option></select></div>
+      <div class="field"><label for="t-topic">Topic</label><select id="t-topic">${TOPICS.map(t => `<option>${esc(t)}</option>`).join('')}</select></div>
+      <div class="field"><label for="t-mood">Customer mood</label><select id="t-mood"><option>Neutral</option><option>Positive</option><option>Negative</option></select></div>
+      <div class="field"><label for="t-outcome">Outcome</label><select id="t-outcome"><option>Open</option><option>Resolved</option></select></div>
+      <div class="field" style="flex-basis:280px"><label for="t-note">What was said</label><input id="t-note" type="text"></div>
+      <button type="submit" class="btn primary">Save conversation</button></div><p class="msg" id="t-msg" hidden></p></form>`;
+  return '';
+}
+
+// Radial map: the golden record in the middle, every source around it. Thicker lines mean more trusted sources.
+function sourceMap(c) {
+  const W = 760, H = 430, cx = 380, cy = 215, rx = 250, ry = 150;
+  let lines = '', nodes = '';
+  SRC.forEach((s, i) => {
+    const a = (i + 0.5) / SRC.length * 2 * Math.PI - Math.PI / 2, co = Math.cos(a), si = Math.sin(a);
+    const px = cx + rx * co, py = cy + ry * si, rec = s.on && recs[c.id][s.id];
+    let cls = 'none', note = s.on ? 'Not held' : 'Off';
+    if (rec) {
+      let held = 0, match = 0;
+      FIELDS.forEach(([f]) => { const v = rec[f] && rec[f].v, w = field(c.id, f).win; if (v != null && w) { held++; if (norm(v) === norm(w.v)) match++; } });
+      cls = match === held ? 'agree' : 'differ'; note = `${match}/${held} match`;
+      lines += `<line x1="${cx}" y1="${cy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" class="ln ${cls}" stroke-width="${(1 + TIER[s.tier][0] * 5).toFixed(1)}"></line>`;
+    }
+    const side = co > 0.3 ? 'start' : co < -0.3 ? 'end' : 'middle';
+    const lx = px + (side === 'start' ? 12 : side === 'end' ? -12 : 0);
+    const ly = side === 'middle' ? (si < 0 ? py - 26 : py + 22) : py - 2;
+    nodes += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" class="nd ${cls}"><title>${esc(s.name)}: ${note}</title></circle>
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${side}" class="lb">${esc(s.short)}</text><text x="${lx.toFixed(1)}" y="${(ly + 13).toFixed(1)}" text-anchor="${side}" class="lb sub">${note}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of every source and how well it matches the golden record" style="width:100%;max-width:760px;height:auto">${lines}
+    <circle cx="${cx}" cy="${cy}" r="48" class="core"></circle><text x="${cx}" y="${cy + 2}" text-anchor="middle" class="coretx mono" style="font-size:24px;font-weight:600">${score(c.id).toFixed(2)}</text>
+    <text x="${cx}" y="${cy + 20}" text-anchor="middle" class="coretx" style="font-size:10.5px">Golden record</text>${nodes}</svg>`;
+}
+
+function paint() {
+  if (!state.user) return;
+  const t = audit[0];
+  $('last').textContent = t ? `Latest: ${t.who} ${t.what}${t.cid ? ' for ' + goldenName(custById(t.cid)) : ''}. ${t.result}` : '';
+  const v = state.view;
+  if (v === 'overview') paintOverview();
+  else if (v === 'approvals') paintApprovals();
+  else if (v === 'customers') paintCustomers();
+  else if (v === 'customer') paintCustomer();
+  else if (v === 'connectors') paintConnectors();
+  else if (v === 'compliance') {
+    const order = { High: 0, Medium: 1, Low: 2 };
+    $('comp-table').innerHTML = `<table style="min-width:900px"><thead><tr><th>Customer</th><th>AML risk</th><th>Reason</th><th>Politically exposed</th><th>KYC</th><th>Last KYC</th><th>Re-KYC due</th><th>Sanctions check</th><th></th></tr></thead><tbody>${C.slice().sort((a, b) => order[kyc[a.id].risk] - order[kyc[b.id].risk] || kyc[a.id].due - kyc[b.id].due).map(c => {
+      const k = kyc[c.id], ks = kycStatus(c.id);
+      return `<tr><td><strong>${esc(goldenName(c))}</strong><div class="muted small mono">${c.id}</div></td><td>${riskPill(k.risk)}</td><td>${esc(k.reason)}</td><td>${k.pep === 'No' ? 'No' : pill('bad', 'Yes')}</td><td>${pill(ks[0], ks[1])}</td><td>${fmtDate(k.last)}</td><td>${fmtDate(k.due)}</td><td>Clear · ${fmtDate(k.screened)}</td>
+        <td><button type="button" class="btn" data-act="open" data-id="${c.id}" data-tab="comp" aria-label="Open ${esc(goldenName(c))}">Open</button></td></tr>`;
+    }).join('')}</tbody></table>`;
+  } else {
+    $('audit-table').innerHTML = `<table style="min-width:760px"><thead><tr><th>When</th><th>Who</th><th>What happened</th><th>Customer</th><th>Result</th></tr></thead><tbody>${audit.map(a => `<tr><td class="small">${fmtTime(a.t)}</td><td>${esc(a.who)}</td><td>${esc(a.what)}</td><td>${a.cid ? esc(goldenName(custById(a.cid))) : ''}</td><td>${esc(a.result)}</td></tr>`).join('')}</tbody></table>`;
+  }
+}
+
+/* ---------- 6b. Charts ---------- */
+const legend = items => `<div class="legend">${items.map(([cls, text]) => `<span><i class="sw c-${cls}"></i>${esc(text)}</span>`).join('')}</div>`;
+const stat = (n, label) => `<div class="stat"><b class="mono">${n}</b><span class="muted">${label}</span></div>`;
+// Horizontal bars. Each row is [label, value, extra html shown after the value].
+const hbar = (rows, max, fmt) => `<div class="hbar">${rows.map(r => `<span>${esc(r[0])}</span><span class="t" title="${esc(r[0])}: ${fmt(r[1])}"><i style="width:${max ? r[1] / max * 100 : 0}%"></i></span><span><span class="mono">${fmt(r[1])}</span>${r[2] || ''}</span>`).join('')}</div>`;
+// One stacked bar. Each part is [status, label, count].
+const seg = parts => `<div class="seg">${parts.filter(p => p[2]).map(p => `<i class="c-${p[0]}" style="flex:${p[2]}" title="${esc(p[1])}: ${p[2]}"></i>`).join('')}</div>` + legend(parts.map(p => [p[0], `${p[1]}: ${p[2]}`]));
+
+// Trust fingerprint: one spoke per field. Longer is more trusted; amber means sources disagree.
+function fingerprint(c) {
+  let out = '';
+  FIELDS.forEach(([f, label], i) => {
+    const g = field(c.id, f), t = g.win ? g.win.trust : 0, a = i / FIELDS.length * 2 * Math.PI - Math.PI / 2;
+    const cls = !g.win ? 'none' : t < 0.4 ? 'bad' : g.conflicts ? 'warn' : 'good', r0 = 24, r1 = r0 + 6 + 38 * t;
+    out += `<line x1="${(80 + r0 * Math.cos(a)).toFixed(1)}" y1="${(80 + r0 * Math.sin(a)).toFixed(1)}" x2="${(80 + r1 * Math.cos(a)).toFixed(1)}" y2="${(80 + r1 * Math.sin(a)).toFixed(1)}" class="sp s-${cls}"><title>${esc(label)}: ${g.win ? 'trust ' + t.toFixed(2) + (g.conflicts ? ', sources disagree' : '') : 'not held'}</title></line>`;
+  });
+  return `<svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Trust fingerprint, one spoke per field"><circle cx="80" cy="80" r="72" class="ring"></circle>${out}</svg>`;
+}
+// Trust score during this session, newest on the right.
+function spark(c) {
+  const h = hist[c.id].slice(-24), W = 180, vals = h.map(x => x.s), mn = Math.min(...vals), mx = Math.max(...vals);
+  const pts = h.length < 2 ? [[8, 22], [W - 8, 22]] : h.map((x, i) => [8 + i * (W - 16) / (h.length - 1), mx === mn ? 22 : 36 - (x.s - mn) / (mx - mn) * 28]);
+  const end = pts[pts.length - 1];
+  return `<svg viewBox="0 0 ${W} 44" width="180" height="44" role="img" aria-label="Trust score during this session"><polyline points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" class="spl"></polyline><circle cx="${end[0].toFixed(1)}" cy="${end[1].toFixed(1)}" r="4" class="dot"></circle></svg>`;
+}
+// Agreement grid: every source against every field for one customer.
+function agreeGrid(c) {
+  const rows = SRC.filter(s => s.on && recs[c.id][s.id]);
+  return `<div class="scroll"><table class="agr" style="width:auto"><thead><tr><th>Source</th>${FIELDS.map(f => `<th class="v">${esc(f[1])}</th>`).join('')}</tr></thead><tbody>${rows.map(s => `<tr><td>${esc(s.name)}</td>${FIELDS.map(([f, label]) => {
+    const x = recs[c.id][s.id][f], v = x && x.v, w = field(c.id, f).win, st = v == null ? 'none' : norm(v) === norm(w.v) ? 'good' : 'warn';
+    return `<td><i class="cell c-${st}" title="${esc(s.name)}, ${esc(label)}: ${st === 'none' ? 'not held' : st === 'good' ? 'matches' : 'differs'}">${st === 'warn' ? '×' : ''}</i></td>`;
+  }).join('')}</tr>`).join('')}</tbody></table></div>${legend([['good', 'Matches the golden record'], ['warn', 'Differs (marked ×)'], ['none', 'Not held']])}`;
+}
+
+function paintOverview() {
+  const u = state.user, sc = C.map(c => ({ c, s: score(c.id) })).sort((a, b) => a.s - b.s);
+  const avg = sc.reduce((n, x) => n + x.s, 0) / C.length;
+  const confBy = FIELDS.map(([f, l]) => [l, C.filter(c => field(c.id, f).conflicts > 0).length]).sort((a, b) => b[1] - a[1]);
+  // For each source: the share of its values that match the golden record.
+  const agree = SRC.filter(s => s.on).map(s => {
+    let held = 0, match = 0;
+    C.forEach(c => { const r = recs[c.id][s.id]; if (!r) return; s.has.forEach(f => { const v = r[f].v, w = field(c.id, f).win; if (v != null && w) { held++; if (norm(v) === norm(w.v)) match++; } }); });
+    return { s, held, pct: held ? Math.round(match / held * 100) : 0 };
+  }).filter(x => x.held).sort((a, b) => a.pct - b.pct);
+  const ky = { good: 0, warn: 0, bad: 0 }, rk = { Low: 0, Medium: 0, High: 0 };
+  C.forEach(c => { ky[kycStatus(c.id)[0]]++; rk[kyc[c.id].risk]++; });
+  // Trust runway: one dot per customer on a 0.4 to 1.0 scale. Close scores stack upward.
+  const X = s => 30 + (Math.max(0.4, s) - 0.4) / 0.6 * 540;
+  let lastX = -99, level = 0, dots = '';
+  sc.forEach(x => {
+    const px = X(x.s); level = px - lastX < 14 ? Math.min(level + 1, 4) : 0; lastX = px;
+    dots += `<circle cx="${px.toFixed(1)}" cy="${74 - level * 14}" r="6" class="dot" data-act="open" data-id="${x.c.id}" style="cursor:pointer"><title>${esc(goldenName(x.c))}: ${x.s.toFixed(2)}</title></circle>`;
+  });
+  const ticks = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1].map(t => `<line x1="${X(t)}" y1="84" x2="${X(t)}" y2="89" class="ax"></line><text x="${X(t)}" y="103" text-anchor="middle" class="tk">${t.toFixed(1)}</text>`).join('');
+  const bands = [[0.5, 'Low'], [0.7, 'Medium'], [0.9, 'High']].map(b => `<text x="${X(b[0])}" y="12" text-anchor="middle" class="tk">${b[1]}</text>`).join('') + [0.6, 0.8].map(t => `<line x1="${X(t)}" y1="18" x2="${X(t)}" y2="84" class="ax" stroke-dasharray="3 4"></line>`).join('');
+  // Contact pulse: conversations per day over the last 30 days.
+  const days = Array(30).fill(0);
+  C.forEach(c => talks[c.id].forEach(t => { const d = Math.floor((Date.now() - t.ts) / DAY); if (d >= 0 && d < 30) days[29 - d]++; }));
+  const mx = Math.max(1, ...days);
+  const cols = days.map((n, i) => n ? `<rect x="${i * 20 + 3}" y="${(92 - n / mx * 70).toFixed(1)}" width="14" height="${(n / mx * 70).toFixed(1)}" rx="3" class="f-good"><title>${29 - i === 0 ? 'Today' : (29 - i) + ' days ago'}: ${n} contact${n > 1 ? 's' : ''}</title></rect>` : '').join('');
+  const count = what => audit.filter(a => a.what === what).length;
+  $('ov').innerHTML = `<div class="stats">${stat(C.length, 'Customers')}${stat(avg.toFixed(2), 'Average trust score')}${stat(SRC.filter(s => s.on).length + ' of ' + SRC.length, 'Sources connected')}${stat(sc.filter(x => x.s < 0.8).length, 'Customers below high trust')}</div>
+    <div class="panel"><h2>Trust runway</h2><p class="muted small">Each dot is one customer, placed by trust score. Select a dot to open the customer.</p>
+      <div class="scroll"><svg viewBox="0 0 600 110" role="img" aria-label="Customers placed by trust score from 0.4 to 1.0" style="width:100%;min-width:480px;height:auto">${bands}<line x1="30" y1="84" x2="570" y2="84" class="ax"></line>${ticks}${dots}</svg></div></div>
+    <div class="cols">
+      <div class="panel"><h2>Where records disagree</h2><p class="muted small">Customers with conflicting values, by field.</p>${hbar(confBy, C.length, v => v + ' of ' + C.length)}</div>
+      <div class="panel"><h2>Trusted, but is it right?</h2><p class="muted small">Share of each source's values that match the golden record, lowest first.</p>${hbar(agree.map(x => [x.s.name, x.pct, `<span class="muted small"> · trust ${TIER[x.s.tier][0].toFixed(2)}</span>${TIER[x.s.tier][0] >= 0.85 && x.pct < 80 ? ' ' + pill('warn', 'Check') : ''}`]), 100, v => v + '%')}</div>
+    </div>
+    <div class="cols">
+      <div class="panel"><h2>KYC status</h2>${seg([['good', 'Verified', ky.good], ['warn', 'Due soon', ky.warn], ['bad', 'Overdue', ky.bad]])}<h2>AML risk</h2>${seg([['good', 'Low', rk.Low], ['warn', 'Medium', rk.Medium], ['bad', 'High', rk.High]])}</div>
+      <div class="panel"><h2>Contact pulse</h2><p class="muted small">Customer conversations per day, last 30 days. Busiest day: ${mx}.</p>
+        <div class="scroll"><svg viewBox="0 0 600 112" role="img" aria-label="Conversations per day over the last 30 days" style="width:100%;min-width:420px;height:auto">${cols}<line x1="0" y1="92" x2="600" y2="92" class="ax"></line><text x="3" y="108" class="tk">30 days ago</text><text x="597" y="108" text-anchor="end" class="tk">Today</text></svg></div></div>
+    </div>
+    ${u.reveal || u.manage ? `<div class="stack tight"><h2>Security this session</h2></div><div class="stats">${stat(count('failed to sign in'), 'Failed sign-ins')}${stat(count('viewed the full PAN'), 'Full PAN views')}${stat(pending.length, 'Corrections waiting')}${stat(audit.filter(a => a.result.startsWith('Blocked')).length, 'Blocked actions')}</div>` : ''}`;
+}
+
+function paintApprovals() {
+  const u = state.user;
+  $('appr').innerHTML = pending.length ? `<div class="panel"><div class="scroll"><table style="min-width:900px"><thead><tr><th>Requested</th><th>By</th><th>Customer</th><th>Field</th><th>Current value</th><th>Proposed value</th><th>Evidence and reason</th><th></th></tr></thead><tbody>${pending.map(p => {
+    const w = field(p.cid, p.f).win;
+    return `<tr><td class="small">${fmtTime(p.t)}</td><td>${esc(p.by)}</td><td>${esc(goldenName(custById(p.cid)))}</td><td>${esc(fieldLabel(p.f))}</td><td>${w ? esc(disp(p.f, w.v, p.cid)) : 'None'}</td><td><strong>${esc(disp(p.f, p.v, p.cid))}</strong></td><td>${esc(p.ref)}<div class="muted small">${esc(p.why)}</div></td>
+      <td>${u.approve ? `<div class="row"><button type="button" class="btn primary" data-act="approve" data-id="${p.id}">Approve</button><button type="button" class="btn" data-act="reject" data-id="${p.id}">Reject</button></div>` : pill('warn', 'Waiting for compliance')}</td></tr>`;
+  }).join('')}</tbody></table></div></div>` : '<div class="panel"><p class="muted">No corrections are waiting for approval.</p></div>';
+}
+
+function paintCustomers() {
+  const q = norm(state.q);
+  const rows = C.map(c => ({ c, name: goldenName(c), s: score(c.id) })).filter(r => !q || norm(r.name + r.c.id).includes(q)).sort((a, b) => a.s - b.s);
+  $('cust-table').innerHTML = `<table style="min-width:920px"><thead><tr><th>Customer</th><th>Segment</th><th>Trust score</th><th>Latest change</th><th>KYC</th><th>AML risk</th><th>Sources</th><th>Fields in conflict</th><th>Last contact</th><th></th></tr></thead><tbody>${rows.map(r => {
+    const b = band(r.s), ks = kycStatus(r.c.id), conf = FIELDS.filter(f => field(r.c.id, f[0]).conflicts > 0).length;
+    return `<tr><td><strong>${esc(r.name)}</strong><div class="muted small mono">${r.c.id}</div></td><td>${r.c.seg}</td>
+      <td><span class="meter"><i style="width:${Math.round(r.s * 100)}%"></i></span> <span class="mono">${r.s.toFixed(2)}</span> ${pill(b[0], b[1])}</td>
+      <td>${deltaHtml(delta(r.c.id))}</td><td>${pill(ks[0], ks[1])}</td><td>${riskPill(kyc[r.c.id].risk)}</td>
+      <td class="mono">${SRC.filter(s => s.on && recs[r.c.id][s.id]).length}</td><td class="mono">${conf} of ${FIELDS.length}</td><td>${fmtDate(talks[r.c.id][0].ts)}</td>
+      <td><button type="button" class="btn" data-act="open" data-id="${r.c.id}" aria-label="Open ${esc(r.name)}">Open</button></td></tr>`;
+  }).join('') || '<tr><td colspan="10" class="muted">No customers match that search.</td></tr>'}</tbody></table>`;
+}
+
+function paintConnectors() {
+  const on = SRC.filter(s => s.on).length, total = C.reduce((n, c) => n + SRC.filter(s => s.on && recs[c.id][s.id]).length, 0);
+  $('conn-summary').textContent = `${on} of ${SRC.length} sources connected · ${total} source records for ${C.length} customers`;
+  $('conn-grid').innerHTML = SRC.filter(s => state.cat === 'All' || s.cat === state.cat).map(s => {
+    const tr = TIER[s.tier];
+    return `<article class="tile${s.on ? '' : ' off'}"><div class="row between"><h3>${esc(s.name)}</h3>${pill(s.on ? 'good' : 'neutral', s.on ? 'Connected' : 'Not connected')}</div>
+      <p class="muted">${esc(s.cat)}</p>
+      <dl class="kv"><div><dt>Technology</dt><dd>${esc(s.tech)}</dd></div><div><dt>Trust level</dt><dd><span class="mono">${tr[0].toFixed(2)}</span> · ${esc(tr[1])}</dd></div>
+      <div><dt>Fields supplied</dt><dd class="mono">${s.has.length} of ${FIELDS.length}</dd></div><div><dt>Customers found</dt><dd class="mono">${C.filter(c => recs[c.id][s.id]).length}</dd></div>
+      <div><dt>Last sync</dt><dd>${s.on ? fmtTime(s.lastSync) : 'Never'}</dd></div></dl>
+      ${state.user.manage ? `<div class="row">${s.on ? `<button type="button" class="btn primary" data-act="sync" data-id="${s.id}"${s.busy ? ' disabled' : ''}>${s.busy ? 'Syncing' : 'Sync now'}</button>` : ''}<button type="button" class="btn" data-act="toggle" data-id="${s.id}">${s.on ? 'Disconnect' : 'Connect'}</button></div>` : ''}</article>`;
+  }).join('');
+}
+
+function paintCustomer() {
+  const c = custById(state.cid), s = score(c.id), b = band(s), h = hist[c.id], k = kyc[c.id], ks = kycStatus(c.id), u = state.user;
+  $('c-head').innerHTML = `<div class="row between" style="align-items:flex-start">
+      <div class="stack" style="gap:8px"><h1>${esc(goldenName(c))}</h1><p class="muted"><span class="mono">${c.id}</span> · ${c.seg} · found in ${SRC.filter(x => x.on && recs[c.id][x.id]).length} of ${SRC.filter(x => x.on).length} connected sources</p>
+      <div class="row">${pill(ks[0], ks[1])}${riskPill(k.risk)}${k.pep === 'No' ? '' : pill('bad', 'Politically exposed link')}</div></div>
+      <div class="stack" style="gap:6px;align-items:flex-end"><div class="row"><span class="big mono">${s.toFixed(2)}</span>${pill(b[0], b[1] + ' trust')}</div>
+      <div class="row small"><span class="muted">Updated ${fmtTime(h[h.length - 1].t)}</span>${deltaHtml(delta(c.id))}</div></div></div>
+    <div class="row" style="gap:20px">${fingerprint(c)}<div class="stack tight" style="flex:1 1 220px"><h3>Trust fingerprint</h3><p class="muted small">One spoke per field. Longer spokes are more trusted. Amber spokes have sources that disagree; red ones need review.</p>${spark(c)}<p class="muted small">Trust score during this session.</p></div></div>`;
+  const dyn = $('tab-dyn'), tab = state.tab;
+  if (tab === 'brief') {
+    const ver = verification(c.id), rep = repeatIssue(c.id), last = talks[c.id][0], gm = field(c.id, 'mobile').win;
+    const mk = consent[c.id].find(x => x[0] === 'Marketing')[1];
+    dyn.innerHTML = `${rep ? `<div class="notice bad">Contact number ${rep.count} about "${esc(rep.topic)}" in the last 30 days, handled by ${rep.agents} different agent${rep.agents > 1 ? 's' : ''} and still open. Do not ask the customer to explain it again.</div>` : ''}
+      ${mk !== 'Granted' ? `<div class="notice warn">Marketing consent is ${mk.toLowerCase()}. Do not pitch offers on this contact.</div>` : ''}
+      ${ks[0] !== 'good' ? `<div class="notice warn">${ks[1]}. Ask the customer to update their KYC documents.</div>` : ''}
+      <div class="panel"><h2>Verify the caller</h2><p class="muted small">These questions use only details that are well trusted and where every source agrees.</p>
+        <ul class="ask">${ver.ask.map(a => `<li><span>${esc(a.q)}</span><strong>${esc(disp(a.f, a.a, c.id))}</strong></li>`).join('') || '<li class="muted">No field is reliable enough. Verify with a one-time passcode instead.</li>'}</ul>
+        ${ver.avoid.length ? `<p class="small muted">Do not verify with: ${ver.avoid.map(a => `${esc(fieldLabel(a.f).toLowerCase())} (${esc(a.why)})`).join('; ')}.</p>` : ''}</div>
+      <div class="panel"><h2>Last contact</h2><p><strong>${esc(last.topic)}</strong> · ${esc(last.channel)} with ${esc(last.agent)} on ${fmtDate(last.ts)}</p><p>${esc(last.note)}</p><div class="row">${statusPill(last.outcome)}${statusPill(last.mood)}</div></div>
+      <div class="panel"><h2>Best way to reach them</h2><p>${gm ? `<span class="mono">${esc(disp('mobile', gm.v, c.id))}</span> · from ${esc(gm.src)} · trust ${gm.trust.toFixed(2)} · verified ${fmtDate(gm.ts)}` : 'No mobile number on file.'}</p></div>`;
+  } else if (tab === 'identity') {
+    dyn.innerHTML = `<div class="panel"><h2>Golden record</h2><p class="muted small">Each field uses the value from the most trusted source. On a tie, the most recently verified wins. Aadhaar always shows the last four digits only.</p><div class="scroll">
+      <table style="min-width:820px"><thead><tr><th>Field</th><th>Value we use</th><th>Trust</th><th>From</th><th>Last verified</th><th>Other values seen</th></tr></thead><tbody>${FIELDS.map(([f, label]) => {
+      const g = field(c.id, f), x = g.win;
+      if (!x) return `<tr><td>${esc(label)}</td><td class="muted" colspan="5">No connected source holds this field</td></tr>`;
+      const show = f === 'pan' && state.reveal[c.id] ? ' ' + pill('warn', 'Shown in full') : '';
+      return `<tr><td>${esc(label)}</td><td><strong class="${/pan|aadhaar|ckyc|mobile/.test(f) ? 'mono' : ''}">${esc(disp(f, x.v, c.id))}</strong>${show}</td>
+        <td><span class="mono">${x.trust.toFixed(2)}</span>${x.trust < 0.4 ? ' ' + pill('bad', 'Needs review') : ''}</td><td>${esc(x.src)}<div class="muted small">${esc(TIER[x.tier][1])}</div></td>
+        <td>${fmtDate(x.ts)}</td><td>${g.conflicts ? pill('warn', g.conflicts + ' different') : '<span class="muted">None</span>'}</td></tr>`;
+    }).join('')}</tbody></table></div></div>`;
+  } else if (tab === 'sources') {
+    const wins = {}; FIELDS.forEach(([f]) => { const w = field(c.id, f).win; wins[f] = w ? w.sid : null; });
+    const rows = SRC.filter(x => x.on && recs[c.id][x.id]).map(x => ({ sid: x.id, name: x.name, trust: TIER[x.tier][0], get: f => (recs[c.id][x.id][f] ? recs[c.id][x.id][f].v : null) }));
+    if (Object.keys(ovr[c.id]).length) rows.push({ sid: 'override', name: 'Manual correction', trust: 1, get: f => (ovr[c.id][f] ? ovr[c.id][f].v : null) });
+    rows.sort((a, b2) => b2.trust - a.trust);
+    dyn.innerHTML = `<div class="panel"><h2>Source map</h2><p class="muted small">The golden record sits in the middle. Thicker lines are more trusted sources. Teal sources agree with the golden record on every field they hold; amber sources disagree on at least one.</p>${sourceMap(c)}</div>
+      <div class="panel"><h2>Agreement grid</h2><p class="muted small">Every source against every field, at a glance.</p>${agreeGrid(c)}</div>
+      <div class="panel"><h2>What each source says</h2><p class="muted small">Highlighted cells are the values used in the golden record.</p><div class="scroll"><table style="min-width:1900px"><thead><tr><th>Source</th><th>Trust</th>${FIELDS.map(f => `<th>${esc(f[1])}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r.name)}</td><td class="mono">${r.trust.toFixed(2)}</td>${FIELDS.map(([f]) => {
+      const val = r.get(f); if (val == null) return '<td class="muted">Not held</td>';
+      const w = wins[f] === r.sid; return `<td${w ? ' class="win"' : ''}>${esc(disp(f, val, c.id))}${w ? ' ' + pill('good', 'Used') : ''}</td>`;
+    }).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  } else if (tab === 'talk') {
+    const rep = repeatIssue(c.id);
+    dyn.innerHTML = `${rep ? `<div class="notice bad">Repeat contact: ${rep.count} conversations about "${esc(rep.topic)}" in 30 days, still open.</div>` : ''}
+      <div class="panel"><h2>Conversation history</h2><ul class="timeline">${talks[c.id].map(t => `<li><span class="when">${fmtTime(t.ts)}</span><div class="what"><strong>${esc(t.topic)}</strong><span>${esc(t.channel)} with ${esc(t.agent)}</span><span>${esc(t.note)}</span><div class="row">${statusPill(t.outcome)}${statusPill(t.mood)}</div></div></li>`).join('')}</ul></div>`;
+  } else if (tab === 'accounts') {
+    const rows = accts[c.id].filter(a => SRC.find(s => s.id === a.sid).on);
+    dyn.innerHTML = `<div class="panel"><h2>Products held</h2><div class="scroll"><table style="min-width:640px"><thead><tr><th>Product</th><th>Account</th><th>Amount</th><th>Held in</th><th>Technology</th></tr></thead><tbody>${rows.map(a => { const s = SRC.find(x => x.id === a.sid); return `<tr><td><strong>${esc(a.type)}</strong></td><td class="mono">${a.no}</td><td>${a.label} <span class="mono">${money(a.amt)}</span></td><td>${esc(s.name)}</td><td>${esc(s.tech)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="muted">No product system is connected for this customer.</td></tr>'}</tbody></table></div></div>`;
+  } else {
+    const views = audit.filter(a => a.cid === c.id).slice(0, 6);
+    dyn.innerHTML = `<div class="panel"><h2>KYC and AML</h2><dl class="kv" style="max-width:560px">
+        <div><dt>KYC status</dt><dd>${pill(ks[0], ks[1])}</dd></div><div><dt>Last KYC</dt><dd>${fmtDate(k.last)}</dd></div><div><dt>Re-KYC due</dt><dd>${fmtDate(k.due)}</dd></div>
+        <div><dt>AML risk</dt><dd>${riskPill(k.risk)} ${esc(k.reason)}</dd></div><div><dt>Politically exposed</dt><dd>${esc(k.pep)}</dd></div><div><dt>Sanctions check</dt><dd>Clear · ${fmtDate(k.screened)}</dd></div></dl></div>
+      <div class="panel"><h2>Consent</h2><div class="row">${consent[c.id].map(x => `<span>${esc(x[0])} ${statusPill(x[1])}</span>`).join('')}</div></div>
+      <div class="panel"><h2>Who has touched this record</h2><ul class="timeline">${views.map(a => `<li><span class="when">${fmtTime(a.t)}</span><div class="what"><strong>${esc(a.who)}</strong><span>${esc(a.what)}. ${esc(a.result)}</span></div></li>`).join('') || '<li class="muted">No activity yet.</li>'}</ul></div>`;
+  }
+}
+
+/* ---------- 7. Actions ---------- */
+const scoreNote = (b, a) => (b === a ? `Trust score stays ${a.toFixed(2)}.` : `Trust score ${b.toFixed(2)} to ${a.toFixed(2)}.`);
+function setMsg(el, ok, text) { el.hidden = false; el.className = ok ? 'msg' : 'msg err'; el.textContent = text; }
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act, u = state.user;
+  if (!u) return;
+  if (act === 'logout') { log(u.name, 'signed out', null, ''); state.user = null; state.notice = ''; show('login'); }
+  else if ((act === 'approve' || act === 'reject') && u.approve) {
+    const i = pending.findIndex(p => p.id === b.dataset.id); if (i < 0) return;
+    const p = pending.splice(i, 1)[0], sb = score(p.cid);
+    if (act === 'approve') { ovr[p.cid][p.f] = { v: p.v, ts: Date.now(), ref: p.ref, why: p.why }; refreshScores(); }
+    log(u.name, (act === 'approve' ? 'approved' : 'rejected') + ' a correction to ' + fieldLabel(p.f).toLowerCase(), p.cid, `Proposed by ${p.by}. ` + scoreNote(sb, score(p.cid)));
+    paint();
+  }
+  else if (act === 'nav') show(b.dataset.view);
+  else if (act === 'cat') { state.cat = b.dataset.cat; show('connectors'); }
+  else if (act === 'open') { state.tab = b.dataset.tab || 'brief'; log(u.name, 'opened the customer record', b.dataset.id, 'Allowed.'); show('customer', b.dataset.id); }
+  else if (act === 'tab') { state.tab = b.dataset.tab; show('customer'); }
+  else if (act === 'live') { state.live = !state.live; b.setAttribute('aria-pressed', state.live); b.textContent = 'Live feed: ' + (state.live ? 'on' : 'off'); }
+  else if (act === 'reveal' && u.reveal) {
+    const msg = $('pan-msg'), reason = $('pan-reason').value;
+    if (state.reveal[state.cid]) { state.reveal[state.cid] = false; setMsg(msg, true, 'The PAN is masked again.'); }
+    else if (!reason) return setMsg(msg, false, 'Choose a reason before viewing the full PAN.');
+    else { state.reveal[state.cid] = true; log(u.name, 'viewed the full PAN', state.cid, `Reason: ${reason}.`); setMsg(msg, true, 'The full PAN is shown above. This view is in the audit log.'); }
+    paint();
+  } else if (act === 'toggle' && u.manage) {
+    const s = SRC.find(x => x.id === b.dataset.id); s.on = !s.on; if (s.on) s.lastSync = Date.now();
+    refreshScores(); log(u.name, (s.on ? 'connected ' : 'disconnected ') + s.name, null, 'Trust scores recalculated for all customers.'); paint();
+  } else if (act === 'sync' && u.manage) {
+    const s = SRC.find(x => x.id === b.dataset.id); s.busy = true; paint();
+    setTimeout(() => {
+      let n = 0;
+      C.forEach(c => { const r = recs[c.id][s.id]; if (r && Math.random() < 0.5) { n++; s.has.forEach(f => { if (r[f].v != null) r[f].ts = Date.now(); }); } });
+      s.busy = false; s.lastSync = Date.now(); refreshScores();
+      log(s.name, 'finished a sync', null, `${n} customer record${n === 1 ? '' : 's'} confirmed as current.`); paint();
+    }, 800);
+  }
+});
+document.addEventListener('input', e => { if (e.target.id === 'q') { state.q = e.target.value; paint(); } });
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'login-form') {
+    const msg = $('l-msg');
+    if (Date.now() < state.lockUntil) return setMsg(msg, false, `Sign-in is locked. Try again in ${Math.ceil((state.lockUntil - Date.now()) / 1000)} seconds.`);
+    const un = $('l-user').value.trim().toLowerCase(), found = USERS.find(x => x.un === un && x.pw === $('l-pass').value);
+    if (!found) {
+      state.fails++; log(un || 'Unknown user', 'failed to sign in', null, 'Blocked: wrong username or password.');
+      if (state.fails >= 3) { state.fails = 0; state.lockUntil = Date.now() + 30000; return setMsg(msg, false, 'Three wrong attempts. Sign-in is locked for 30 seconds.'); }
+      return setMsg(msg, false, 'The username or password is wrong.');
+    }
+    state.fails = 0; state.user = found; state.notice = ''; state.reveal = {}; lastActive = Date.now();
+    log(found.name, 'signed in', null, found.role + '.');
+    return show('overview');
+  }
+  const u = state.user, cid = state.cid;
+  if (!u) return;
+  if (e.target.id === 'ovr-form' && u.correct) {
+    const f = $('o-field').value, v = $('o-value').value.trim(), ref = $('o-ref').value.trim(), why = $('o-why').value.trim(), msg = $('o-msg');
+    if (!v || !ref || !why) return setMsg(msg, false, 'Enter the correct value, an evidence reference and a reason.');
+    if (f === 'mobile' && !/^\d{10}$/.test(v)) return setMsg(msg, false, 'Enter the mobile number as 10 digits.');
+    if (f === 'email' && !/^\S+@\S+\.\S+$/.test(v)) return setMsg(msg, false, 'Enter a full email address.');
+    if (f === 'pan' && !/^[A-Z]{5}\d{4}[A-Z]$/.test(v)) return setMsg(msg, false, 'Enter the PAN as five letters, four digits and one letter.');
+    if (f === 'ckyc' && !/^\d{14}$/.test(v)) return setMsg(msg, false, 'Enter the CKYC number as 14 digits.');
+    if (f === 'dob' && !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(v)) return setMsg(msg, false, 'Enter the date of birth as YYYY-MM-DD.');
+    // Maker-checker: the steward proposes, a compliance officer approves.
+    pending.push({ id: String(Date.now()), cid, f, v, ref, why, by: u.name, t: Date.now() });
+    log(u.name, 'proposed a correction to ' + fieldLabel(f).toLowerCase(), cid, `Evidence ${ref}. Waiting for approval.`);
+    setMsg(msg, true, 'Sent for approval. A compliance officer must approve it before the record changes.');
+    $('o-value').value = ''; $('o-ref').value = ''; $('o-why').value = ''; paint();
+  } else if (e.target.id === 'talk-form' && u.log) {
+    const note = $('t-note').value.trim(), msg = $('t-msg');
+    if (!note) return setMsg(msg, false, 'Enter what was said.');
+    talks[cid].unshift({ ts: Date.now(), channel: $('t-channel').value, agent: u.name, topic: $('t-topic').value, mood: $('t-mood').value, outcome: $('t-outcome').value, note });
+    log(u.name, 'logged a conversation', cid, `${$('t-topic').value}, ${$('t-outcome').value.toLowerCase()}.`);
+    setMsg(msg, true, 'Saved to the conversation history.'); $('t-note').value = ''; paint();
+  }
+});
+
+/* ---------- 8. Simulated live feed ---------- */
+function tick() {
+  if (!state.live || !state.user) return;
+  const c = C[Math.floor(Math.random() * C.length)], ss = SRC.filter(s => s.on && recs[c.id][s.id]);
+  if (!ss.length) return;
+  const s = ss[Math.floor(Math.random() * ss.length)], f = s.has[Math.floor(Math.random() * s.has.length)];
+  const x = recs[c.id][s.id][f], vars = variants(c, f), before = field(c.id, f).win, sb = score(c.id);
+  let what = 'confirmed ' + fieldLabel(f).toLowerCase();
+  if (vars.length > 1 && s.id !== 'ckyc' && Math.random() < 0.4) { const o = vars.filter(v => v !== x.v); x.v = o[Math.floor(Math.random() * o.length)]; what = 'sent a new ' + fieldLabel(f).toLowerCase(); }
+  else if (x.v == null) x.v = vars[0];
+  x.ts = Date.now();
+  const after = field(c.id, f).win; refreshScores();
+  const changed = !before || before.sid !== after.sid || norm(before.v) !== norm(after.v);
+  log(s.name, what, c.id, (changed ? `Golden record now uses ${after.src}. ` : 'Golden record unchanged. ') + scoreNote(sb, score(c.id)));
+  paint();
+}
+
+/* ---------- 9. Session timeout ---------- */
+let lastActive = Date.now();
+['click', 'keydown', 'pointermove'].forEach(ev => document.addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true }));
+setInterval(() => {
+  if (state.user && Date.now() - lastActive > 5 * 60e3) {
+    log(state.user.name, 'was signed out', null, 'No activity for 5 minutes.');
+    state.user = null; state.notice = 'You were signed out after 5 minutes without activity.'; show('login');
+  }
+}, 5000);
+
+refreshScores();
+show('login');
+setInterval(tick, 6000);
+</script>
+
+</body></html>
