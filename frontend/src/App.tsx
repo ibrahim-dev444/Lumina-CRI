@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './auth/AuthContext'
 import { Icon } from './components/Icon'
 import { Layout } from './components/Layout'
 import { ToastProvider } from './components/Toasts'
+import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
 import { ConnectorsPage } from './pages/ConnectorsPage'
 import { CustomerDetailPage } from './pages/CustomerDetailPage'
@@ -45,6 +46,9 @@ function Routed() {
         <Route path="/customers/:id" element={<CustomerDetailPage />} />
         {can('view_matches') && <Route path="/review" element={<ReviewPage />} />}
         {can('view_audit') && <Route path="/audit" element={<AuditPage />} />}
+        {(can('approve_corrections') || can('propose_corrections')) && (
+          <Route path="/approvals" element={<ApprovalsPage />} />
+        )}
         <Route path="/connectors" element={<ConnectorsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

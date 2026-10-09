@@ -29,6 +29,10 @@ CAPABILITIES = {
     "view_matches": {STEWARD, COMPLIANCE, ADMIN},
     # Merge or keep apart possible duplicates.
     "decide_matches": {STEWARD, ADMIN},
+    # Propose a fix to a customer's field, with evidence.
+    "propose_corrections": {RELATIONSHIP_MANAGER, STEWARD, ADMIN},
+    # Approve or reject someone else's proposed fix (never your own: maker-checker).
+    "approve_corrections": {STEWARD, COMPLIANCE, ADMIN},
     # Download the customer list as CSV.
     "export": {STEWARD, COMPLIANCE, ADMIN},
     # Read the audit log.

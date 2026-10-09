@@ -18,6 +18,9 @@ class AuditEvent(models.Model):
     MERGE = "merge"
     KEEP_APART = "keep_apart"
     DENIED = "denied"
+    CORRECTION_PROPOSED = "corr_proposed"
+    CORRECTION_APPROVED = "corr_approved"
+    CORRECTION_REJECTED = "corr_rejected"
 
     ACTION_CHOICES = [
         (LOGIN, "Signed in"),
@@ -30,6 +33,9 @@ class AuditEvent(models.Model):
         (MERGE, "Merged records"),
         (KEEP_APART, "Kept records apart"),
         (DENIED, "Access denied"),
+        (CORRECTION_PROPOSED, "Proposed correction"),
+        (CORRECTION_APPROVED, "Approved correction"),
+        (CORRECTION_REJECTED, "Rejected correction"),
     ]
 
     at = models.DateTimeField(auto_now_add=True, db_index=True)

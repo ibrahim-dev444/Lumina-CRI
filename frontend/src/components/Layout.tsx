@@ -9,7 +9,7 @@ import { useAuth } from '../auth/AuthContext'
 import { Icon, type IconName } from './Icon'
 import { Avatar } from './ui'
 
-type NavItem = { to: string; label: string; icon: IconName; end?: boolean; needs?: Capability }
+type NavItem = { to: string; label: string; icon: IconName; end?: boolean; needs?: Capability[] }
 
 const GROUPS: { label: string; items: NavItem[] }[] = [
   {
@@ -17,7 +17,13 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { to: '/', label: 'Overview', icon: 'overview', end: true },
       { to: '/customers', label: 'Customers', icon: 'customers' },
-      { to: '/review', label: 'Match review', icon: 'merge', needs: 'view_matches' },
+      { to: '/review', label: 'Match review', icon: 'merge', needs: ['view_matches'] },
+      {
+        to: '/approvals',
+        label: 'Approvals',
+        icon: 'approve',
+        needs: ['approve_corrections', 'propose_corrections'],
+      },
     ],
   },
   {
@@ -26,7 +32,7 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   },
   {
     label: 'Governance',
-    items: [{ to: '/audit', label: 'Audit log', icon: 'audit', needs: 'view_audit' }],
+    items: [{ to: '/audit', label: 'Audit log', icon: 'audit', needs: ['view_audit'] }],
   },
 ]
 
@@ -36,12 +42,14 @@ const PAGE_TITLES = [
   { path: '/review', title: 'Match review' },
   { path: '/connectors', title: 'Connectors' },
   { path: '/audit', title: 'Audit log' },
+  { path: '/approvals', title: 'Approvals' },
 ]
 
 export function Layout() {
   const { user, logout } = useAuth()
   const location = useLocation()
   const [pending, setPending] = useState<number | null>(null)
+  const [pendingCorrections, setPendingCorrections] = useState<number | null>(null)
   const [sources, setSources] = useState<Source[] | null>(null)
   const [theme, setTheme] = useState<Theme>(getTheme)
 
@@ -53,7 +61,14 @@ export function Layout() {
 
   // Refresh the "Match review" count whenever the user moves between pages.
   const canSeeMatches = !!user?.capabilities.includes('view_matches')
+  const canApprove = !!user?.capabilities.includes('approve_corrections')
   useEffect(() => {
+    if (canApprove) {
+      api
+        .corrections({ status: 'pending' })
+        .then((page) => setPendingCorrections(page.count))
+        .catch(() => setPendingCorrections(null))
+    }
     if (canSeeMatches) {
       api
         .suggestions('pending')
@@ -64,7 +79,7 @@ export function Layout() {
       .sources()
       .then((page) => setSources(page.results))
       .catch(() => setSources(null))
-  }, [location.pathname, canSeeMatches])
+  }, [location.pathname, canSeeMatches, canApprove])
 
   const page = PAGE_TITLES.find((p) => (p.exact ? location.pathname === p.path : location.pathname.startsWith(p.path)))
   const off = sources?.filter((s) => !s.enabled).length ?? 0
@@ -90,7 +105,7 @@ export function Layout() {
           </div>
         </Link>
 
-        {GROUPS.map((group) => ({ ...group, items: group.items.filter((i) => !i.needs || user?.capabilities.includes(i.needs)) }))
+        {GROUPS.map((group) => ({ ...group, items: group.items.filter((i) => !i.needs || i.needs.some((c) => user?.capabilities.includes(c))) }))
           .filter((group) => group.items.length > 0)
           .map((group) => (
           <nav key={group.label} className="nav-group" aria-label={group.label}>
@@ -100,6 +115,9 @@ export function Layout() {
                 <Icon name={item.icon} />
                 {item.label}
                 {item.to === '/review' && pending ? <span className="nav-count">{pending}</span> : null}
+                {item.to === '/approvals' && pendingCorrections ? (
+                  <span className="nav-count">{pendingCorrections}</span>
+                ) : null}
               </NavLink>
             ))}
           </nav>

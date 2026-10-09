@@ -14,18 +14,20 @@ class HasRole(BasePermission):
         return bool(request.user and request.user.is_authenticated and role_of(request.user))
 
 
-def requires(capability):
-    """Permission class for one capability from accounts.roles. Refusals are written to the audit log."""
+def requires(*capabilities):
+    """Permission class: the user needs at least one of these capabilities (see accounts.roles).
+    Refusals are written to the audit log."""
+    capability = " or ".join(capabilities)
 
     class Requires(BasePermission):
         message = "Your role does not allow this."
 
         def has_permission(self, request, view):
-            if can(request.user, capability):
+            if any(can(request.user, c) for c in capabilities):
                 return True
             if request.user and request.user.is_authenticated:
                 record(request, AuditEvent.DENIED, target=request.path, capability=capability)
             return False
 
-    Requires.__name__ = f"Requires_{capability}"
+    Requires.__name__ = "Requires_" + "_or_".join(capabilities)
     return Requires

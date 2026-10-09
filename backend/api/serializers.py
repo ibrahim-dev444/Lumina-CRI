@@ -7,7 +7,7 @@ from accounts.roles import can
 from audit.models import AuditEvent
 
 from ingestion.models import SourceRecord
-from mdm.models import FIELDS, Customer, FieldWeight, GoldenField, MatchSuggestion
+from mdm.models import FIELDS, Customer, FieldCorrection, FieldWeight, GoldenField, MatchSuggestion
 from sources.models import Source
 
 LOW_TRUST = 0.40  # a golden value at or below this trust needs a steward to look at it
@@ -81,19 +81,64 @@ def shows_pii(context):
 
 
 class GoldenFieldSerializer(serializers.ModelSerializer):
-    source_code = serializers.CharField(source="source.code")
-    source_name = serializers.CharField(source="source.name")
-    last_updated = serializers.DateTimeField(source="source_record.source_updated_at")
+    source_code = serializers.SerializerMethodField()
+    source_name = serializers.SerializerMethodField()
+    last_updated = serializers.SerializerMethodField()
+    correction = serializers.SerializerMethodField()
 
     class Meta:
         model = GoldenField
         fields = ["field", "value", "trust", "conflicts", "source_code", "source_name", "source_record_id",
-                  "last_updated"]
+                  "last_updated", "correction"]
+
+    # A golden value comes from a source record, or from an approved correction.
+    def get_source_code(self, obj):
+        return obj.source.code if obj.source_id else "correction"
+
+    def get_source_name(self, obj):
+        return obj.source.name if obj.source_id else "Approved correction"
+
+    def get_last_updated(self, obj):
+        when = obj.source_record.source_updated_at if obj.source_record_id else obj.correction.decided_at
+        return serializers.DateTimeField().to_representation(when) if when else None
+
+    def get_correction(self, obj):
+        c = obj.correction
+        if not c:
+            return None
+        return {"id": c.id, "evidence_ref": c.evidence_ref, "proposed_by": c.proposed_by_name,
+                "approved_by": c.decided_by_name}
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not shows_pii(self.context):
             data["value"] = mask(instance.field, data["value"])
+        return data
+
+
+class FieldCorrectionSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()
+    mine = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FieldCorrection
+        fields = ["id", "customer", "field", "value", "previous_value", "evidence_ref", "reason", "status",
+                  "proposed_by_name", "proposed_at", "decided_by_name", "decided_at", "decision_note", "mine"]
+
+    def get_customer(self, obj):
+        name = next((g.value for g in obj.customer.golden_fields.all() if g.field == "name"), "")
+        return {"id": obj.customer_id, "code": obj.customer.code, "name": name}
+
+    def get_mine(self, obj):
+        """True when the signed-in user proposed it, so the screen can say they cannot approve it."""
+        request = self.context.get("request")
+        return bool(request and obj.proposed_by_id == request.user.id)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not shows_pii(self.context):
+            data["value"] = mask(instance.field, data["value"])
+            data["previous_value"] = mask(instance.field, data["previous_value"])
         return data
 
 
@@ -122,9 +167,15 @@ class CustomerDetailSerializer(CustomerListSerializer):
     records = serializers.SerializerMethodField()
     weights = serializers.SerializerMethodField()
     masked = serializers.SerializerMethodField()
+    corrections = serializers.SerializerMethodField()
 
     class Meta(CustomerListSerializer.Meta):
-        fields = CustomerListSerializer.Meta.fields + ["golden", "records", "weights", "masked"]
+        fields = CustomerListSerializer.Meta.fields + ["golden", "records", "weights", "masked", "corrections"]
+
+    def get_corrections(self, obj):
+        """The 10 most recent corrections for this customer, any status."""
+        latest = obj.corrections.select_related("customer").prefetch_related("customer__golden_fields")[:10]
+        return FieldCorrectionSerializer(latest, many=True, context=self.context).data
 
     def get_masked(self, obj):
         """Tells the screen that mobile, email and date of birth were hidden for this user's role."""

@@ -21,6 +21,7 @@ LUMINA CRI/
 │   ├── sources/       The bank systems we read from, and how much we trust each one
 │   ├── ingestion/     Connectors: read each system, keep the raw copy, save a cleaned copy
 │   ├── mdm/           Matching, golden record and trust score
+│   ├── stewardship/   Corrections with evidence and second-person approval
 │   ├── accounts/      Roles and masking of personal data
 │   ├── audit/         Append-only log of who did what
 │   └── api/           REST endpoints the React app calls

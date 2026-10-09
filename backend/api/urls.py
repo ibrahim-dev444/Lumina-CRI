@@ -8,6 +8,7 @@ router.register("sources", views.SourceViewSet, basename="source")
 router.register("customers", views.CustomerViewSet, basename="customer")
 router.register("suggestions", views.MatchSuggestionViewSet, basename="suggestion")
 router.register("audit", views.AuditEventViewSet, basename="audit")
+router.register("corrections", views.FieldCorrectionViewSet, basename="correction")
 
 urlpatterns = [
     path("auth/csrf/", views.csrf),
