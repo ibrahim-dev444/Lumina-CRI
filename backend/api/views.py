@@ -177,7 +177,28 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
             return [HasRole(), requires("export")()]
         if self.action == "propose_correction":
             return [HasRole(), requires("propose_corrections")()]
+        if self.action == "reveal":
+            return [HasRole(), requires("reveal_identity")()]
         return [HasRole()]
+
+    @action(detail=True, methods=["post"])
+    def reveal(self, request, pk=None):
+        """POST /api/customers/<id>/reveal/  {field: "pan" | "ckyc", reason}
+        Returns the full number once. The reason, who asked and when are written to the audit log."""
+        from security.fields import ENCRYPTED_FIELDS, reveal as reveal_value
+
+        customer = self.get_object()
+        field = request.data.get("field")
+        reason = str(request.data.get("reason", "")).strip()
+        if field not in ENCRYPTED_FIELDS:
+            return Response({"detail": "Only PAN and CKYC number can be revealed."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(reason) < 5:
+            return Response({"detail": "Give a reason for viewing the full number."}, status=status.HTTP_400_BAD_REQUEST)
+        golden = GoldenField.objects.filter(customer=customer, field=field).first()
+        if not golden:
+            return Response({"detail": "No value on file."}, status=status.HTTP_404_NOT_FOUND)
+        record(request, AuditEvent.REVEAL, target=customer.code, field=field, reason=reason)
+        return Response({"field": field, "value": reveal_value(field, golden.value)})
 
     @action(detail=True, methods=["post"], url_path="corrections")
     def propose_correction(self, request, pk=None):
@@ -379,13 +400,13 @@ def overview(request):
 def _quality_breakdown():
     """Numbers for the Overview charts: every customer's score, where sources disagree, and how often each
     source agrees with the golden record (a trusted source that is often outvoted needs a closer look)."""
-    from mdm.golden import normalise
     from mdm.models import FIELDS
+    from security.fields import compare_key
 
     golden = {}
     names = {}
     for g in GoldenField.objects.values("customer_id", "field", "value", "conflicts"):
-        golden[(g["customer_id"], g["field"])] = (normalise(g["value"]), g["conflicts"])
+        golden[(g["customer_id"], g["field"])] = (compare_key(g["field"], g["value"]), g["conflicts"])
         if g["field"] == "name":
             names[g["customer_id"]] = g["value"]
 
@@ -412,7 +433,7 @@ def _quality_breakdown():
             if value in (None, ""):
                 continue
             row["held"] += 1
-            if golden.get((link.customer_id, f), (None,))[0] == normalise(value):
+            if golden.get((link.customer_id, f), (None,))[0] == compare_key(f, value):
                 row["matched"] += 1
 
     return {
@@ -441,6 +462,7 @@ def reference(request):
         "sources": [{"code": s.code, "name": s.name, "trust": str(s.trust), "enabled": s.enabled}
                     for s in Source.objects.order_by("-trust", "name")],
         "matching": {
+            "points_pan": matching.POINTS_PAN,
             "points_mobile": matching.POINTS_MOBILE,
             "points_email": matching.POINTS_EMAIL,
             "points_dob": matching.POINTS_DOB,

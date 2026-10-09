@@ -23,6 +23,8 @@ def normalise(value):
 
 def pick_winner(candidates):
     """candidates: list of dicts with value, trust, updated_at (may be None), record_id, source_id.
+    An optional "compare" key says what to compare when counting conflicts (encrypted values pass
+    their fingerprint here, because two encryptions of the same PAN never look alike).
 
     Returns (winner or None, number of other different values).
     """
@@ -30,7 +32,7 @@ def pick_winner(candidates):
     if not present:
         return None, 0
     winner = max(present, key=lambda c: (c["trust"], c["updated_at"] or OLDEST))
-    conflicts = len({normalise(c["value"]) for c in present}) - 1
+    conflicts = len({c.get("compare") or normalise(c["value"]) for c in present}) - 1
     return winner, conflicts
 
 

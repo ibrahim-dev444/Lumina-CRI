@@ -11,6 +11,10 @@ class BaseConnector:
 
     source_code = None  # must match Source.code in the database, e.g. "flexcube"
 
+    # Raw columns holding identity numbers, mapped to the standard field they feed. Their values are
+    # protected before the raw copy is saved: PAN and CKYC encrypted, Aadhaar cut to the last 4 digits.
+    sensitive_columns = {}
+
     def fetch(self):
         """Return a list of dicts, one per customer row, with the source's own column names."""
         raise NotImplementedError
@@ -20,5 +24,6 @@ class BaseConnector:
         raise NotImplementedError
 
     def to_standard(self, raw):
-        """Return a dict with keys: name, mobile, email, address, dob, source_updated_at."""
+        """Return a dict with Lumina's standard keys (see mdm.models.FIELDS) plus source_updated_at.
+        Keys the source does not have can be left out."""
         raise NotImplementedError

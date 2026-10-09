@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from accounts.masking import MASKERS, mask
+from security.fields import compare_key, display
 from accounts.roles import can
 from audit.models import AuditEvent
 
@@ -111,6 +112,7 @@ class GoldenFieldSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data["value"] = display(instance.field, data["value"])
         if not shows_pii(self.context):
             data["value"] = mask(instance.field, data["value"])
         return data
@@ -136,6 +138,7 @@ class FieldCorrectionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data["value"] = display(instance.field, data["value"])
         if not shows_pii(self.context):
             data["value"] = mask(instance.field, data["value"])
             data["previous_value"] = mask(instance.field, data["previous_value"])
@@ -152,13 +155,23 @@ class SourceRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = SourceRecord
         fields = ["id", "source_code", "source_name", "source_trust", "source_enabled", "source_record_id",
-                  "name", "mobile", "email", "address", "dob", "source_updated_at", "match_reason"]
+                  *FIELDS, "source_updated_at", "match_reason"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        for field in FIELDS:
+            data[field] = display(field, data[field])  # PAN, CKYC, Aadhaar always masked
         if not shows_pii(self.context):
             for field in MASKERS:
                 data[field] = mask(field, data[field])
+        # Does each value agree with the golden record? Worked out here, on the server, because masked
+        # or encrypted values cannot be compared in the browser.
+        golden = self.context.get("golden_keys")
+        if golden is not None:
+            data["agreement"] = {
+                f: None if not getattr(instance, f) else compare_key(f, getattr(instance, f)) == golden.get(f)
+                for f in FIELDS
+            }
         return data
 
 
@@ -192,7 +205,8 @@ class CustomerDetailSerializer(CustomerListSerializer):
 
     def get_records(self, obj):
         records = sorted((link.source_record for link in obj.links.all()), key=lambda r: -r.source.trust)
-        return SourceRecordSerializer(records, many=True, context=self.context).data
+        golden_keys = {g.field: compare_key(g.field, g.value) for g in obj.golden_fields.all()}
+        return SourceRecordSerializer(records, many=True, context={**self.context, "golden_keys": golden_keys}).data
 
 
 class MatchSuggestionSerializer(serializers.ModelSerializer):

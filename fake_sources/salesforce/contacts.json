@@ -3,7 +3,10 @@
   "done": true,
   "records": [
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1001AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1001AAA"
+      },
       "Id": "003Dn00000A1001AAA",
       "FirstName": "Sooresh",
       "LastName": "Kumar",
@@ -13,10 +16,16 @@
       "MailingCity": "Nigdi, Pune",
       "MailingPostalCode": "411044",
       "Birthdate": "1984-07-12",
-      "LastModifiedDate": "2026-02-14T11:32:08.000+0000"
+      "LastModifiedDate": "2026-02-14T11:32:08.000+0000",
+      "Gender__c": "Male",
+      "PAN__c": "ABCPK1234F",
+      "Title": "Business Owner"
     },
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1002AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1002AAA"
+      },
       "Id": "003Dn00000A1002AAA",
       "FirstName": "Aneeta",
       "LastName": "Deshmukh",
@@ -26,10 +35,16 @@
       "MailingCity": "Nashik",
       "MailingPostalCode": "422001",
       "Birthdate": "1990-03-05",
-      "LastModifiedDate": "2026-06-03T09:15:44.000+0000"
+      "LastModifiedDate": "2026-06-03T09:15:44.000+0000",
+      "Gender__c": "Female",
+      "PAN__c": null,
+      "Title": "Manager"
     },
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1003AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1003AAA"
+      },
       "Id": "003Dn00000A1003AAA",
       "FirstName": "Rajesh",
       "LastName": "Aiyar",
@@ -39,10 +54,16 @@
       "MailingCity": "Chennai",
       "MailingPostalCode": "600034",
       "Birthdate": null,
-      "LastModifiedDate": "2025-09-21T16:05:00.000+0000"
+      "LastModifiedDate": "2025-09-21T16:05:00.000+0000",
+      "Gender__c": "Male",
+      "PAN__c": "CFGPI3456H",
+      "Title": "Partner, CA firm"
     },
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1004AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1004AAA"
+      },
       "Id": "003Dn00000A1004AAA",
       "FirstName": "Farha",
       "LastName": "Shaikh",
@@ -52,10 +73,16 @@
       "MailingCity": "Mumbai",
       "MailingPostalCode": "400050",
       "Birthdate": "1993-05-14",
-      "LastModifiedDate": "2026-08-30T13:40:12.000+0000"
+      "LastModifiedDate": "2026-08-30T13:40:12.000+0000",
+      "Gender__c": "Female",
+      "PAN__c": "DGHPS4567J",
+      "Title": null
     },
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1005AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1005AAA"
+      },
       "Id": "003Dn00000A1005AAA",
       "FirstName": "Nandhini",
       "LastName": "Rao",
@@ -65,10 +92,16 @@
       "MailingCity": "Bengaluru",
       "MailingPostalCode": "560003",
       "Birthdate": "1981-09-09",
-      "LastModifiedDate": "2026-04-11T10:00:00.000+0000"
+      "LastModifiedDate": "2026-04-11T10:00:00.000+0000",
+      "Gender__c": "Female",
+      "PAN__c": null,
+      "Title": "Doctor"
     },
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1006AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1006AAA"
+      },
       "Id": "003Dn00000A1006AAA",
       "FirstName": "Mohammad",
       "LastName": "Faizal",
@@ -78,10 +111,16 @@
       "MailingCity": "Hyderabad",
       "MailingPostalCode": "500002",
       "Birthdate": "1989-06-25",
-      "LastModifiedDate": "2026-07-19T18:22:51.000+0000"
+      "LastModifiedDate": "2026-07-19T18:22:51.000+0000",
+      "Gender__c": "Male",
+      "PAN__c": "JMNPF9012P",
+      "Title": "Shop owner"
     },
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1007AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1007AAA"
+      },
       "Id": "003Dn00000A1007AAA",
       "FirstName": "Arjun",
       "LastName": "Menon",
@@ -91,10 +130,16 @@
       "MailingCity": "Kochi",
       "MailingPostalCode": "682031",
       "Birthdate": null,
-      "LastModifiedDate": "2026-09-02T08:45:30.000+0000"
+      "LastModifiedDate": "2026-09-02T08:45:30.000+0000",
+      "Gender__c": "Male",
+      "PAN__c": "LPQPM2345R",
+      "Title": "Software engineer"
     },
     {
-      "attributes": {"type": "Contact", "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1008AAA"},
+      "attributes": {
+        "type": "Contact",
+        "url": "/services/data/v60.0/sobjects/Contact/003Dn00000A1008AAA"
+      },
       "Id": "003Dn00000A1008AAA",
       "FirstName": "Priya",
       "LastName": "Chatterji",
@@ -104,7 +149,10 @@
       "MailingCity": "Kolkata",
       "MailingPostalCode": "700091",
       "Birthdate": "1986-04-03",
-      "LastModifiedDate": "2026-05-27T12:10:05.000+0000"
+      "LastModifiedDate": "2026-05-27T12:10:05.000+0000",
+      "Gender__c": "Female",
+      "PAN__c": "KNPPC0123Q",
+      "Title": "Architect"
     }
   ]
 }

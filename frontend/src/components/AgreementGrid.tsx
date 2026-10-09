@@ -1,16 +1,12 @@
 import type { CustomerDetail } from '../api/types'
-import { FIELD_LABELS, FIELDS, formatFieldValue, formatScore } from '../format'
+import { FIELD_LABELS, FIELD_SHORT, FIELDS, formatFieldValue, formatScore } from '../format'
 import { Icon } from './Icon'
 
 // Agreement grid: every source (rows) against every field (columns) for one customer.
 // A cell says whether that source's value matches the golden record, differs, or is not held.
 // Shape and symbol carry the meaning (✓, ×, empty), colour only reinforces it.
 
-const norm = (v: string | null) => (v ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
-
 export function AgreementGrid({ customer }: { customer: CustomerDetail }) {
-  const golden = Object.fromEntries(customer.golden.map((g) => [g.field, g]))
-
   return (
     <div className="stack" style={{ gap: 12 }}>
       <div className="table-wrap">
@@ -19,8 +15,8 @@ export function AgreementGrid({ customer }: { customer: CustomerDetail }) {
             <tr>
               <th>Source</th>
               {FIELDS.map((f) => (
-                <th key={f} className="center">
-                  {FIELD_LABELS[f]}
+                <th key={f} className="center" title={FIELD_LABELS[f]}>
+                  {FIELD_SHORT[f]}
                 </th>
               ))}
               <th className="right">Agrees</th>
@@ -32,10 +28,10 @@ export function AgreementGrid({ customer }: { customer: CustomerDetail }) {
               let matched = 0
               const cells = FIELDS.map((f) => {
                 const value = r[f]
-                const g = golden[f]
-                if (!value) return { f, kind: 'none' as const, value }
+                const verdict = r.agreement?.[f]
+                if (!value || verdict === null || verdict === undefined) return { f, kind: 'none' as const, value }
                 held += 1
-                const same = !!g && norm(value) === norm(g.value)
+                const same = verdict === true
                 if (same) matched += 1
                 return { f, kind: same ? ('same' as const) : ('diff' as const), value }
               })

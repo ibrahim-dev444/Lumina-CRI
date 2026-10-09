@@ -73,9 +73,13 @@ export function HowItWorksPage() {
         {data ? (
           <div className="hiw-two">
             <div>
-              <p className="lead">Two records are only compared if they share a mobile, an email or a birth date. Then they earn points:</p>
+              <p className="lead">Two records are only compared if they share a PAN, mobile, email or birth date. Then they earn points:</p>
               <table className="table hiw-table">
                 <tbody>
+                  <tr>
+                    <td>Same PAN (compared by fingerprint, never decrypted)</td>
+                    <td className="right mono">+{data.matching.points_pan}</td>
+                  </tr>
                   <tr>
                     <td>Same mobile</td>
                     <td className="right mono">+{data.matching.points_mobile}</td>
@@ -102,6 +106,7 @@ export function HowItWorksPage() {
                 title={`${data.matching.review_threshold} to ${data.matching.match_threshold - 1} points`}
                 text="Probably the same person. A data steward decides in Match review."
               />
+              <Outcome tone="bad" title="Two different PANs" text="Never matched: a PAN belongs to one person." />
               <Outcome
                 tone="bad"
                 title={`Names under ${data.matching.min_name_similarity}% alike`}

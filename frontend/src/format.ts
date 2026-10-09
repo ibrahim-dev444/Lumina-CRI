@@ -1,14 +1,56 @@
 import type { Band, Field } from './api/types'
 
-export const FIELDS: Field[] = ['name', 'mobile', 'email', 'address', 'dob']
+export const FIELDS: Field[] = [
+  'name',
+  'father_name',
+  'dob',
+  'gender',
+  'pan',
+  'aadhaar',
+  'ckyc',
+  'mobile',
+  'email',
+  'address',
+  'perm_address',
+  'occupation',
+  'income',
+]
 
 export const FIELD_LABELS: Record<Field, string> = {
+  name: 'Full name',
+  father_name: "Father's name",
+  dob: 'Date of birth',
+  gender: 'Gender',
+  pan: 'PAN',
+  aadhaar: 'Aadhaar',
+  ckyc: 'CKYC number',
+  mobile: 'Mobile',
+  email: 'Email',
+  address: 'Current address',
+  perm_address: 'Permanent address',
+  occupation: 'Occupation',
+  income: 'Annual income',
+}
+
+// Short labels for narrow table headers
+export const FIELD_SHORT: Record<Field, string> = {
   name: 'Name',
+  father_name: 'Father',
+  dob: 'Birth',
+  gender: 'Gender',
+  pan: 'PAN',
+  aadhaar: 'Aadhaar',
+  ckyc: 'CKYC',
   mobile: 'Mobile',
   email: 'Email',
   address: 'Address',
-  dob: 'Date of birth',
+  perm_address: 'Perm. addr.',
+  occupation: 'Job',
+  income: 'Income',
 }
+
+// Identity numbers and phone numbers read best in the monospaced font
+export const MONO_FIELDS = new Set<Field>(['pan', 'aadhaar', 'ckyc', 'mobile'])
 
 export const BAND_LABELS: Record<Band, string> = { high: 'High', medium: 'Medium', low: 'Low' }
 export const BAND_CLASS: Record<Band, 'good' | 'warn' | 'bad'> = { high: 'good', medium: 'warn', low: 'bad' }
@@ -21,7 +63,7 @@ const SOURCE_LABELS: Record<string, string> = {
 
 // Identity hue (1 to 5, see styles/tokens.css) per source and per field. Fixed: an entity never changes colour.
 const SOURCE_HUES: Record<string, number> = { flexcube: 1, salesforce: 4, branch_csv: 3 }
-export const FIELD_HUES: Record<Field, number> = { name: 1, mobile: 2, email: 3, address: 4, dob: 5 }
+
 
 export function sourceHue(code: string): string {
   return `hue-${SOURCE_HUES[code] ?? 1}`

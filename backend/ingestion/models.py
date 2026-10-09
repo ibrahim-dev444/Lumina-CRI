@@ -26,10 +26,22 @@ class SourceRecord(models.Model):
     source = models.ForeignKey(Source, on_delete=models.PROTECT, related_name="records")
     source_record_id = models.CharField(max_length=64)
     name = models.CharField(max_length=200, blank=True)
+    father_name = models.CharField(max_length=200, blank=True)
+    dob = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=10, blank=True)
+    # PAN and CKYC are encrypted (security/crypto.py). The *_hash columns hold a keyed fingerprint so
+    # records can be matched without decrypting. Aadhaar: last 4 digits only, never the full number.
+    pan = models.TextField(blank=True)
+    pan_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    aadhaar = models.CharField(max_length=4, blank=True)
+    ckyc = models.TextField(blank=True)
+    ckyc_hash = models.CharField(max_length=64, blank=True, db_index=True)
     mobile = models.CharField(max_length=10, blank=True)
     email = models.EmailField(blank=True)
-    address = models.CharField(max_length=300, blank=True)
-    dob = models.DateField(null=True, blank=True)
+    address = models.CharField(max_length=300, blank=True)  # current address
+    perm_address = models.CharField(max_length=300, blank=True)
+    occupation = models.CharField(max_length=100, blank=True)
+    income = models.CharField(max_length=60, blank=True)  # an income band, e.g. "10 to 25 lakh"
     source_updated_at = models.DateTimeField(null=True, blank=True)  # when the source system last changed this row
     synced_at = models.DateTimeField(auto_now=True)  # when Lumina last read it
 

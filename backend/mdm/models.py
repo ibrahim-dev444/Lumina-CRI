@@ -6,8 +6,11 @@ from django.db import models
 from ingestion.models import SourceRecord
 from sources.models import Source
 
-# The fields that make up a golden record, in display order.
-FIELDS = ["name", "mobile", "email", "address", "dob"]
+# The fields that make up a golden record, in display order. "address" is the current address.
+FIELDS = [
+    "name", "father_name", "dob", "gender", "pan", "aadhaar", "ckyc",
+    "mobile", "email", "address", "perm_address", "occupation", "income",
+]
 FIELD_CHOICES = [(f, f) for f in FIELDS]
 
 

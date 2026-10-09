@@ -3,9 +3,11 @@ from dataclasses import dataclass
 from django.db import transaction
 from django.utils import timezone
 
+from security import crypto
+from security.fields import ENCRYPTED_FIELDS
 from sources.models import Source
 
-from .clean import clean_record
+from .clean import clean_aadhaar, clean_record
 from .connectors import CONNECTORS
 from .models import RawRecord, SourceRecord
 
@@ -24,6 +26,30 @@ def _aware(dt):
     return dt
 
 
+def _protect_raw(raw, sensitive_columns):
+    """The raw copy is kept as proof, but never with readable identity numbers."""
+    safe = dict(raw)
+    for column, field in sensitive_columns.items():
+        value = safe.get(column)
+        if value in (None, ""):
+            continue
+        if field == "aadhaar":
+            last4 = clean_aadhaar(value)
+            safe[column] = f"XXXX XXXX {last4}" if last4 else ""
+        else:
+            safe[column] = crypto.encrypt(str(value))
+    return safe
+
+
+def _protect_record(std):
+    """Encrypt PAN and CKYC, and add their fingerprints for matching."""
+    for field in ENCRYPTED_FIELDS:
+        plain = std.get(field) or ""
+        std[f"{field}_hash"] = crypto.fingerprint(plain)
+        std[field] = crypto.encrypt(plain)
+    return std
+
+
 def sync_source(source_code):
     """Pull every customer from one source, keep the raw copy, and save the cleaned version."""
     source = Source.objects.get(code=source_code)
@@ -40,9 +66,11 @@ def sync_source(source_code):
     with transaction.atomic():
         for raw in rows:
             record_id = connector.record_id(raw)
-            RawRecord.objects.create(source=source, source_record_id=record_id, payload=raw)
+            RawRecord.objects.create(
+                source=source, source_record_id=record_id, payload=_protect_raw(raw, connector.sensitive_columns)
+            )
 
-            std = clean_record(connector.to_standard(raw))
+            std = _protect_record(clean_record(connector.to_standard(raw)))
             std["source_updated_at"] = _aware(std.get("source_updated_at"))
             _, created = SourceRecord.objects.update_or_create(
                 source=source, source_record_id=record_id, defaults=std

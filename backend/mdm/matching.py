@@ -5,7 +5,7 @@ Input: a list of records (dicts with id, name, mobile, email, dob).
 Output: groups of record ids, one group per person.
 
 How it works:
-1. Blocking: only compare two records if they share a mobile, an email or a birth date.
+1. Blocking: only compare two records if they share a PAN, a mobile, an email or a birth date.
    Comparing every record with every other would be far too slow for millions of rows.
 2. Scoring: for each such pair, add points for what agrees.
 3. Linking: pairs at or above MATCH_THRESHOLD are the same person. Groups follow chains:
@@ -21,6 +21,7 @@ from itertools import combinations
 from rapidfuzz import fuzz
 
 # Points for each kind of agreement. Tuned on our fake data; revisit with the bank on real data.
+POINTS_PAN = 70  # a PAN belongs to exactly one person
 POINTS_MOBILE = 40
 POINTS_EMAIL = 40
 POINTS_DOB = 20
@@ -41,6 +42,12 @@ def name_similarity(a, b):
 def score_pair(a, b):
     """Return (points, reason) for two records."""
     points, reasons = 0, []
+    # PAN is compared by fingerprint (never decrypted here). Two different PANs = two different people.
+    if a.get("pan") and b.get("pan"):
+        if a["pan"] != b["pan"]:
+            return 0, "different PAN"
+        points += POINTS_PAN
+        reasons.append("same PAN")
     if a["mobile"] and a["mobile"] == b["mobile"]:
         points += POINTS_MOBILE
         reasons.append("same mobile")
@@ -61,8 +68,8 @@ def candidate_pairs(records):
     """Blocking: pairs of records that share at least one key."""
     buckets = defaultdict(list)
     for r in records:
-        for key in ("mobile", "email", "dob"):
-            if r[key]:
+        for key in ("pan", "mobile", "email", "dob"):
+            if r.get(key):
                 buckets[(key, r[key])].append(r["id"])
     pairs = set()
     for ids in buckets.values():

@@ -92,6 +92,7 @@ Each of us has our own Postgres in Docker. We share the **structure** through mi
 - Never paste passwords, secret keys or tokens into code, commits, PRs, screenshots or chat.
 - Added a new setting? Add it to `.env.example` with a fake placeholder value, and mention it in your PR.
 - Only fake data goes in the repo (`fake_sources/`, `docker/postgres/init/`). Never commit real customer data, even for testing.
+- PAN and CKYC numbers are always stored encrypted, and Aadhaar only as its last 4 digits (see `backend/security/`). A new identity field must follow the same rules: add it to `security/fields.py` and to the connector's `sensitive_columns`.
 - If a secret is committed by mistake, tell the team at once. Deleting it in a later commit is not enough: it stays in the history and must be changed.
 
 ## 8. Adding packages

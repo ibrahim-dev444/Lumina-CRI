@@ -8,13 +8,23 @@ import { Icon } from './Icon'
 import { useToast } from './Toasts'
 import { Card, StatusBadge } from './ui'
 
-const PLACEHOLDER: Record<Field, string> = {
+const PLACEHOLDER: Partial<Record<Field, string>> = {
   name: 'Full name as on the ID document',
+  father_name: "Father's full name",
+  dob: 'YYYY-MM-DD or DD/MM/YYYY',
+  gender: 'Male, Female or Other',
+  pan: '10 characters, e.g. ABCPK1234F',
+  ckyc: '14 digits',
   mobile: '10-digit mobile, e.g. 9822104521',
   email: 'name@example.com',
   address: 'Full address with PIN code',
-  dob: 'YYYY-MM-DD or DD/MM/YYYY',
+  perm_address: 'Full address with PIN code',
+  occupation: 'e.g. Salaried, Business owner',
+  income: 'e.g. 10 to 25 lakh',
 }
+
+// Aadhaar is not offered: Lumina only keeps its last 4 digits, so there is nothing to correct.
+const CORRECTABLE = FIELDS.filter((f) => f !== 'aadhaar')
 
 // On the customer profile: propose a fix with evidence, and see this customer's recent corrections.
 export function CorrectionsCard({ customer, onChanged }: { customer: CustomerDetail; onChanged: () => void }) {
@@ -66,7 +76,7 @@ export function CorrectionsCard({ customer, onChanged }: { customer: CustomerDet
                 value={field}
                 onChange={(e) => setField(e.target.value as Field)}
               >
-                {FIELDS.map((f) => (
+                {CORRECTABLE.map((f) => (
                   <option key={f} value={f}>
                     {FIELD_LABELS[f]}
                   </option>

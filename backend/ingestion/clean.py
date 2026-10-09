@@ -8,6 +8,7 @@ import re
 from datetime import date, datetime
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+PAN_RE = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")  # 5 letters, 4 digits, 1 letter, e.g. ABCPK1234F
 
 
 def clean_mobile(value):
@@ -70,13 +71,63 @@ def clean_date(value):
     return None
 
 
+def clean_pan(value):
+    """' abcpk 1234 f ' -> 'ABCPK1234F'. Returns '' if it is not a valid PAN."""
+    if not value:
+        return ""
+    pan = re.sub(r"\s", "", str(value)).upper()
+    return pan if PAN_RE.match(pan) else ""
+
+
+def clean_aadhaar(value):
+    """Keep ONLY the last 4 digits of an Aadhaar number. '1234 5678 9012' -> '9012'.
+
+    Banks may not store full Aadhaar numbers outside a licensed vault, so the rest is dropped here,
+    before anything is saved. Already-masked input like 'XXXX XXXX 9012' also works.
+    """
+    if not value:
+        return ""
+    digits = re.sub(r"\D", "", str(value))
+    return digits[-4:] if len(digits) in (4, 12) else ""
+
+
+def clean_ckyc(value):
+    """CKYC identifiers have 14 digits. Returns '' otherwise."""
+    if not value:
+        return ""
+    digits = re.sub(r"\D", "", str(value))
+    return digits if len(digits) == 14 else ""
+
+
+GENDERS = {"m": "Male", "male": "Male", "f": "Female", "female": "Female", "o": "Other", "other": "Other",
+           "t": "Other", "transgender": "Other"}
+
+
+def clean_gender(value):
+    """'M' / 'male' / 'F' -> 'Male' / 'Female'. Unknown codes become ''."""
+    return GENDERS.get(str(value or "").strip().lower(), "")
+
+
+def clean_text(value):
+    """Collapse spaces; used for occupation and income bands."""
+    return " ".join(str(value).split()) if value else ""
+
+
 def clean_record(record):
     """Clean every standard field of one record produced by a connector's to_standard()."""
     return {
         **record,
         "name": clean_name(record.get("name")),
+        "father_name": clean_name(record.get("father_name")),
+        "dob": clean_date(record.get("dob")),
+        "gender": clean_gender(record.get("gender")),
+        "pan": clean_pan(record.get("pan")),
+        "aadhaar": clean_aadhaar(record.get("aadhaar")),
+        "ckyc": clean_ckyc(record.get("ckyc")),
         "mobile": clean_mobile(record.get("mobile")),
         "email": clean_email(record.get("email")),
         "address": clean_address(record.get("address")),
-        "dob": clean_date(record.get("dob")),
+        "perm_address": clean_address(record.get("perm_address")),
+        "occupation": clean_text(record.get("occupation")),
+        "income": clean_text(record.get("income")),
     }

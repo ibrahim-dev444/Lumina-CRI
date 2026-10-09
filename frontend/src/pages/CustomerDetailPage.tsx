@@ -7,6 +7,7 @@ import { useCan } from '../auth/AuthContext'
 import { AgreementGrid } from '../components/AgreementGrid'
 import { CorrectionsCard } from '../components/CorrectionsCard'
 import { GoldenFieldRow } from '../components/GoldenFieldRow'
+import { RevealPanel } from '../components/RevealPanel'
 import { Icon } from '../components/Icon'
 import { ScoreBreakdown } from '../components/ScoreBreakdown'
 import {
@@ -20,7 +21,7 @@ import {
   SourceChips,
   StatusBadge,
 } from '../components/ui'
-import { FIELD_LABELS, FIELDS, formatDateTime, formatFieldValue, formatRelative, formatScore } from '../format'
+import { FIELD_LABELS, FIELD_SHORT, FIELDS, MONO_FIELDS, formatDateTime, formatFieldValue, formatRelative, formatScore } from '../format'
 
 type Tab = 'identity' | 'sources' | 'activity'
 
@@ -112,7 +113,7 @@ export function CustomerDetailPage() {
           <Icon name="lock" size={16} />
           <span>
             <strong>Some details are hidden for your role.</strong> Mobile, email and date of birth show only enough to
-            confirm the customer on a call.
+            confirm the customer on a call. PAN, CKYC and Aadhaar are masked for every role.
           </span>
         </div>
       )}
@@ -139,6 +140,7 @@ function IdentityTab({ c, onChanged }: { c: CustomerDetail; onChanged: () => voi
           <ScoreBreakdown golden={c.golden} weights={c.weights} score={c.trust_score} />
         </Card>
       </div>
+      <RevealPanel customer={c} />
       <CorrectionsCard customer={c} onChanged={onChanged} />
     </>
   )
@@ -153,12 +155,14 @@ function SourcesTab({ c }: { c: CustomerDetail }) {
 
       <Card title="What each source says" description="Highlighted values are the ones in use." flush>
         <div className="table-wrap">
-          <table className="table" style={{ minWidth: 1000 }}>
+          <table className="table" style={{ minWidth: 1700 }}>
             <thead>
               <tr>
                 <th>Source</th>
                 {FIELDS.map((f) => (
-                  <th key={f}>{FIELD_LABELS[f]}</th>
+                  <th key={f} title={FIELD_LABELS[f]}>
+                    {FIELD_SHORT[f]}
+                  </th>
                 ))}
                 <th>Why linked</th>
               </tr>
@@ -189,7 +193,10 @@ function SourcesTab({ c }: { c: CustomerDetail }) {
                       )
                     const used = c.golden.some((g) => g.field === f && g.source_record_id === r.id)
                     return (
-                      <td key={f} className={used ? 'win' : undefined}>
+                      <td
+                        key={f}
+                        className={[used ? 'win' : '', MONO_FIELDS.has(f) ? 'mono nowrap' : ''].join(' ').trim() || undefined}
+                      >
                         {formatFieldValue(f, value)}
                       </td>
                     )
