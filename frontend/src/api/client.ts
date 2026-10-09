@@ -9,6 +9,7 @@ import type {
   MatchSuggestion,
   Overview,
   Page,
+  Reference,
   Source,
   SyncResult,
   User,
@@ -65,6 +66,7 @@ export const api = {
   me: () => get<User>('/auth/me/'),
 
   overview: () => get<Overview>('/overview/'),
+  reference: () => get<Reference>('/reference/'),
 
   // Connectors
   sources: () => get<Page<Source>>('/sources/'),

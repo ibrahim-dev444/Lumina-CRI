@@ -75,8 +75,10 @@ export function formatRelative(value: string | null): string {
   return formatDate(value)
 }
 
-export function formatScore(value: string | null): string {
-  return value === null ? '-' : Number(value).toFixed(2)
+// Scores and trust are stored from 0 to 1 and shown from 0 to 100: 0.85 is shown as 85.
+export function formatScore(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === '') return '-'
+  return String(Math.round(Number(value) * 100))
 }
 
 export function formatFieldValue(field: Field, value: string | null): string {

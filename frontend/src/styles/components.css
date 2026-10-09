@@ -7,30 +7,56 @@
 .hue-5 { --h: var(--c5); --h-soft: var(--c5-soft); --h-ink: var(--c5-ink); }
 
 /* ============ App shell ============ */
+/*
+ * The sidebar is a slim icon rail fixed on the left. Hovering it (or moving keyboard focus into it)
+ * expands it over the page, so the content keeps its full width. On narrow screens it becomes a
+ * top bar instead.
+ */
 
 .shell {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   min-height: 100vh;
 }
 
 .sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  width: var(--rail-width);
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 20px 12px 16px;
-  border-width: 0 1px 0 0;
-  border-radius: 0;
+  gap: 20px;
+  padding: 16px 12px;
+  overflow: hidden auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  transition: width 180ms ease, box-shadow 180ms ease;
+}
+
+.sidebar:hover,
+.sidebar:focus-within {
+  width: var(--sidebar-width);
+  box-shadow: 12px 0 32px -16px rgb(16 24 40 / 0.22);
+}
+
+/* Words that only appear while the rail is open */
+.rail-text {
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.sidebar:hover .rail-text,
+.sidebar:focus-within .rail-text {
+  opacity: 1;
+  transition-delay: 60ms;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 8px;
+  gap: 12px;
+  height: 40px;
+  padding: 0 4px;
 }
 
 .brand-mark {
@@ -38,34 +64,29 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-md);
-  background: var(--brand-gradient);
-  color: var(--on-accent);
   flex: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .brand-name {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.2;
-  background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-a.brand:hover .brand-name {
-  filter: brightness(0.92);
-}
-
-.topbar-home:hover {
-  color: var(--accent-text);
+  line-height: 1.15;
+  color: var(--text);
 }
 
 .brand-sub {
   font-size: var(--text-xs);
   color: var(--text-3);
+}
+
+.topbar-home:hover {
+  color: var(--accent-text);
 }
 
 .nav-group {
@@ -75,22 +96,31 @@ a.brand:hover .brand-name {
 }
 
 .nav-label {
-  padding: 0 10px 6px;
-  font-size: var(--text-xs);
-  font-weight: 500;
+  height: 18px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--text-4);
 }
 
 .nav-link {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 36px;
-  padding: 0 10px;
+  gap: 14px;
+  height: 40px;
+  padding: 0 11px;
   border-radius: var(--radius-md);
   color: var(--text-2);
   font-weight: 500;
+  white-space: nowrap;
   transition: background 120ms, color 120ms;
+}
+
+.nav-link svg {
+  flex: none;
 }
 
 .nav-link:hover {
@@ -109,20 +139,26 @@ a.brand:hover .brand-name {
 
 .nav-count {
   margin-left: auto;
-  min-width: 22px;
-  padding: 0 7px;
+  min-width: 20px;
+  padding: 0 6px;
   border-radius: 999px;
-  background: var(--surface-sunken);
-  color: var(--text-2);
-  font-size: var(--text-xs);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 11px;
   font-weight: 600;
   text-align: center;
-  line-height: 20px;
+  line-height: 18px;
 }
 
-.nav-link.active .nav-count {
-  background: var(--surface);
-  color: var(--accent-text);
+/* Closed rail: the count shrinks to a small badge on the icon */
+.sidebar:not(:hover):not(:focus-within) .nav-count {
+  position: absolute;
+  top: 5px;
+  left: 25px;
+  min-width: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  line-height: 16px;
 }
 
 .theme-toggle {
@@ -134,8 +170,16 @@ a.brand:hover .brand-name {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 8px 0;
+  padding: 12px 4px 0;
   border-top: 1px solid var(--border);
+}
+
+.sidebar-foot .btn-icon {
+  flex: none;
+}
+
+.sidebar:not(:hover):not(:focus-within) .sidebar-foot .btn-icon {
+  visibility: hidden;
 }
 
 .sidebar-user {
@@ -149,20 +193,19 @@ a.brand:hover .brand-name {
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .sidebar-user span {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: var(--text-xs);
   color: var(--text-3);
 }
 
 .content {
   min-width: 0;
+  margin-left: var(--rail-width);
 }
 
 .content-inner {
@@ -178,20 +221,29 @@ a.brand:hover .brand-name {
 }
 
 @media (max-width: 900px) {
-  .shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .sidebar {
+  .sidebar,
+  .sidebar:hover,
+  .sidebar:focus-within {
     position: static;
-    height: auto;
+    width: auto;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    padding: 12px 16px;
+    padding: 10px 16px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
+    box-shadow: none;
+  }
+
+  .rail-text {
+    opacity: 1;
+  }
+
+  .brand-sub,
+  .nav-label,
+  .sidebar-user {
+    display: none;
   }
 
   .nav-group {
@@ -199,8 +251,12 @@ a.brand:hover .brand-name {
     flex-wrap: wrap;
   }
 
-  .nav-label {
-    display: none;
+  .sidebar:not(:hover):not(:focus-within) .nav-count {
+    position: static;
+  }
+
+  .sidebar:not(:hover):not(:focus-within) .sidebar-foot .btn-icon {
+    visibility: visible;
   }
 
   .sidebar-foot {
@@ -209,8 +265,8 @@ a.brand:hover .brand-name {
     border: 0;
   }
 
-  .sidebar-user {
-    display: none;
+  .content {
+    margin-left: 0;
   }
 
   .content-inner {
@@ -271,8 +327,7 @@ a.brand:hover .brand-name {
  * headline KPI tiles, the sign-in card and toasts. They sit directly on the gradient and hold
  * little text, so the blur adds depth without hurting legibility.
  */
-.glass,
-.card.glass {
+.glass {
   background: var(--glass-sheen), var(--glass);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-highlight), var(--glass-shadow);
@@ -448,8 +503,8 @@ a.brand:hover .brand-name {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: var(--h-soft);
-  color: var(--h);
+  background: var(--surface-sunken);
+  color: var(--text-3);
   flex: none;
 }
 
@@ -837,17 +892,6 @@ a.kpi:hover {
 
 .chip.hued {
   gap: 6px;
-  border-color: transparent;
-  background: var(--h-soft);
-  color: var(--h-ink);
-}
-
-.chip.hued::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--h);
 }
 
 .dot {
@@ -872,8 +916,8 @@ a.kpi:hover {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--h-soft, var(--accent-soft));
-  color: var(--h-ink, var(--accent-text));
+  background: var(--surface-sunken);
+  color: var(--text-2);
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1044,11 +1088,11 @@ a.kpi:hover {
 }
 
 .breakdown-row .bar .track {
-  background: var(--h-soft, var(--chart-track));
+  background: var(--chart-track);
 }
 
 .breakdown-row .bar .fill {
-  background: var(--h, var(--chart-1));
+  background: var(--chart-1);
 }
 
 .breakdown-row .label {
@@ -1057,13 +1101,7 @@ a.kpi:hover {
   gap: 8px;
 }
 
-.breakdown-row .label::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: var(--h, var(--chart-1));
-}
+
 
 .breakdown-row .note {
   grid-column: 1 / -1;
@@ -1420,8 +1458,8 @@ a.kpi:hover {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--h-soft, var(--surface-2));
-  color: var(--h, var(--text-2));
+  background: var(--surface-sunken);
+  color: var(--text-2);
   flex: none;
 }
 
@@ -1878,4 +1916,512 @@ a.kpi:hover {
 .kv dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+
+/* Trust in tables: a coloured dot, the number, and the band word. Nothing else. */
+.trust-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.trust-dot i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.trust-dot .band-word {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* Profile header score */
+.score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.score-block .score-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.score-block .score-value {
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .score-block {
+    align-items: flex-start;
+  }
+}
+
+/* Compact tables */
+.table td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+
+/* ============ How it works ============ */
+
+.lead {
+  color: var(--text-2);
+  max-width: 760px;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface-sunken);
+}
+
+.hiw-n {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.hiw-problem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hiw-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hiw-node {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+}
+
+.hiw-node span {
+  color: var(--text-3);
+}
+
+.hiw-node.accent {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.hiw-node.accent strong {
+  color: var(--accent-text);
+}
+
+.hiw-score {
+  margin-top: 4px;
+  color: var(--good-text) !important;
+  font-weight: 600;
+}
+
+.hiw-arrow {
+  color: var(--text-4);
+}
+
+.hiw-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.hiw-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  counter-increment: step;
+}
+
+.hiw-step::after {
+  content: counter(step);
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-4);
+}
+
+.hiw-step span:last-child {
+  color: var(--text-3);
+}
+
+.hiw-step-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.hiw-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.hiw-table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.hiw-total td {
+  font-weight: 700;
+  background: var(--surface-2);
+}
+
+.hiw-outcomes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hiw-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-left: 3px solid;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+}
+
+.hiw-outcome.good {
+  border-color: var(--good-dot);
+}
+
+.hiw-outcome.warn {
+  border-color: var(--warn-dot);
+}
+
+.hiw-outcome.bad {
+  border-color: var(--bad-dot);
+}
+
+.hiw-outcome span {
+  color: var(--text-3);
+}
+
+.hiw-vflow {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: v;
+}
+
+.hiw-vflow li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 18px 44px;
+  font-size: var(--text-sm);
+  counter-increment: v;
+}
+
+.hiw-vflow li::before {
+  content: counter(v);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  color: var(--accent-text);
+  background: var(--surface);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.hiw-vflow li::after {
+  content: '';
+  position: absolute;
+  left: 13.5px;
+  top: 30px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.hiw-vflow li:last-child::after {
+  display: none;
+}
+
+.hiw-vflow li span {
+  color: var(--text-3);
+}
+
+.hiw-matrix .center {
+  text-align: center;
+}
+
+.hiw-matrix .yes {
+  color: var(--good-dot);
+}
+
+.hiw-matrix .no {
+  color: var(--text-4);
+}
+
+.hiw-glossary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+}
+
+.hiw-glossary dt {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.hiw-glossary dd {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+
+/* ============ Phase A ============ */
+
+.score-of {
+  margin-left: 2px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+/* Underlined tabs inside the customer header card */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 20px;
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab {
+  position: relative;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected='true'] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.grid-halves {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+/* Ranked bars */
+.barlist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barlist li {
+  display: grid;
+  grid-template-columns: minmax(110px, 160px) 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--text-sm);
+}
+
+.barlist-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--chart-track);
+  overflow: hidden;
+}
+
+.barlist-track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--chart-1);
+}
+
+.barlist-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 64px;
+  justify-content: flex-end;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* Agreement grid */
+.agree {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+  min-width: 640px;
+  width: 100%;
+}
+
+.agree th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.agree td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.agree .center {
+  text-align: center;
+}
+
+.agree .right {
+  text-align: right;
+}
+
+.agree-cell {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.agree-cell.same {
+  background: var(--good-bg);
+  color: var(--good-text);
+}
+
+.agree-cell.diff {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.agree-cell.none {
+  border: 1.5px dashed var(--border-strong);
+}
+
+.agree-cell.small {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+
+/* Activity timeline */
+.timeline {
+  margin: 0;
+  padding: 8px 20px 16px;
+  list-style: none;
+}
+
+.timeline li {
+  display: grid;
+  grid-template-columns: 130px 16px 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: var(--text-sm);
+}
+
+.timeline-when {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--surface);
 }

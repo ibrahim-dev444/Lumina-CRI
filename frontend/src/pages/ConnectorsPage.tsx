@@ -7,7 +7,7 @@ import { useCan } from '../auth/AuthContext'
 import { Icon, type IconName } from '../components/Icon'
 import { useToast } from '../components/Toasts'
 import { Card, ErrorAlert, PageHeader, Skeleton, StatusBadge } from '../components/ui'
-import { formatRelative, sourceHue, sourceTier } from '../format'
+import { formatRelative, formatScore, sourceHue, sourceTier } from '../format'
 
 const CATEGORY_ICON: Record<string, IconName> = {
   'Core banking': 'connectors',
@@ -17,9 +17,9 @@ const CATEGORY_ICON: Record<string, IconName> = {
 
 // Source trust tiers: why one system's value beats another's when they disagree.
 const TIERS = [
-  { tone: 'good' as const, name: 'Tier 1 · Core systems', range: '0.80 and above', min: 0.8, max: 1.01 },
-  { tone: 'warn' as const, name: 'Tier 2 · Staff-entered', range: '0.50 to 0.79', min: 0.5, max: 0.8 },
-  { tone: 'bad' as const, name: 'Tier 3 · Files and manual', range: 'below 0.50', min: 0, max: 0.5 },
+  { tone: 'good' as const, name: 'Tier 1 · Core systems', range: '80 and above', min: 0.8, max: 1.01 },
+  { tone: 'warn' as const, name: 'Tier 2 · Staff-entered', range: '50 to 79', min: 0.5, max: 0.8 },
+  { tone: 'bad' as const, name: 'Tier 3 · Files and manual', range: 'below 50', min: 0, max: 0.5 },
 ]
 
 export function ConnectorsPage() {
@@ -54,7 +54,7 @@ export function ConnectorsPage() {
     <>
       <PageHeader
         title="Connectors"
-        description="Each connector reads customer data from one bank system. Lumina only reads; it never writes back. Syncing or switching a source rebuilds every golden record and trust score."
+        description="Bank systems Lumina reads from. Read-only: Lumina never writes back."
         actions={
           canManage ? (
             <button type="button" className="btn btn-primary" onClick={syncAll} disabled={syncingAll || !enabled.length}>
@@ -71,7 +71,7 @@ export function ConnectorsPage() {
       {error && <ErrorAlert message={error} />}
 
       {data && (
-        <section className="card glass">
+        <section className="card">
           <dl className="status-strip">
             <div>
               <dt>Connected</dt>
@@ -140,9 +140,8 @@ export function ConnectorsPage() {
 
       {data && (
         <Card
-          glass
           title="Which source wins"
-          description="When sources disagree on a field, the value from the higher trust source is used. On a tie, the most recent value wins."
+          description="Higher trust wins a field. On a tie, the newest value wins."
         >
           <div className="tiers">
             {TIERS.map((t) => {
@@ -155,7 +154,7 @@ export function ConnectorsPage() {
                   </div>
                   <span className="text-sm">
                     {members.length ? (
-                      members.map((s) => `${s.name} (${s.trust})`).join(', ')
+                      members.map((s) => `${s.name} (${formatScore(s.trust)})`).join(', ')
                     ) : (
                       <span className="muted">No sources yet</span>
                     )}
@@ -215,7 +214,7 @@ function ConnectorCard({
   }
 
   return (
-    <article className={`card glass connector${s.enabled ? '' : ' off'}`}>
+    <article className={`card connector${s.enabled ? '' : ' off'}`}>
       <div className="connector-head">
         <span className={`connector-icon ${sourceHue(s.code)}`}>
           <Icon name={CATEGORY_ICON[s.category] ?? 'connectors'} size={20} />
@@ -230,7 +229,7 @@ function ConnectorCard({
         <div>
           <dt>Trust</dt>
           <dd className="row" style={{ gap: 6 }}>
-            <span className="mono">{s.trust}</span>
+            <span className="mono">{formatScore(s.trust)}</span>
             <span className={`badge-dot`} style={{ background: `var(--${tier.tone}-dot)` }} title={`${tier.label} tier`} />
           </dd>
         </div>

@@ -104,10 +104,10 @@ export function Meter({ value, label, band }: { value: number; label?: string; b
 
 export function TrustCell({ score, band }: { score: string | null; band: Band }) {
   return (
-    <span className="trust">
-      <Meter value={score === null ? 0 : Number(score)} label="Trust score" band={band} />
+    <span className="trust-dot">
+      <i style={{ background: `var(--band-${band})` }} aria-hidden="true" />
       <span className="mono">{formatScore(score)}</span>
-      <BandBadge band={band} />
+      <span className="band-word">{BAND_LABELS[band]}</span>
     </span>
   )
 }

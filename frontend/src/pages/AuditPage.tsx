@@ -75,7 +75,7 @@ export function AuditPage() {
     <>
       <PageHeader
         title="Audit log"
-        description="Every sign-in, customer view, export, merge and source change, newest first. Entries cannot be edited or deleted."
+        description="Who did what, and when. Entries cannot be edited or deleted."
       />
 
       <div className="toolbar">

@@ -6,24 +6,24 @@
   color-scheme: light;
 
   /* Surfaces */
-  --bg: #f7f6fb; /* faint lavender, not grey */
+  --bg: #f6f6f8;
   --surface: #ffffff;
-  --surface-2: #faf9fd; /* table headers, hovered rows */
-  --surface-sunken: #f2f0f9; /* tracks, skeletons, inset areas */
-  --border: #e8e5f0;
-  --border-strong: #d6d1e4;
+  --surface-2: #fafafb; /* table headers, hovered rows */
+  --surface-sunken: #f1f1f4; /* tracks, skeletons, inset areas */
+  --border: #e6e6eb;
+  --border-strong: #d4d4dc;
 
   /* Text */
-  --text: #17142b;
-  --text-2: #4a4763;
-  --text-3: #6b6886;
-  --text-4: #9d99b5;
+  --text: #16161d;
+  --text-2: #464655;
+  --text-3: #6b6b7b;
+  --text-4: #9a9aa8;
 
   /* Brand accent: soft violet */
-  --accent: #6f55f0;
-  --accent-hover: #5b43d6;
-  --accent-soft: #f0edfe;
-  --accent-text: #4b37c4;
+  --accent: #5b47e0;
+  --accent-hover: #4a37c9;
+  --accent-soft: #efedfc;
+  --accent-text: #4434b8;
   --on-accent: #ffffff;
 
   /* Status: always shown with a dot or icon AND a label, never colour alone */
@@ -41,9 +41,9 @@
   --neutral-dot: #98a2b3;
 
   /* Charts: one hue for single-series charts, its soft step for tracks */
-  --chart-1: #6f55f0;
-  --chart-track: #f0edfe;
-  --chart-grid: #ece9f3;
+  --chart-1: #5b47e0;
+  --chart-track: #ececf2;
+  --chart-grid: #ececf1;
   --chart-axis: #a6a2bd;
   /* Trust bands as chart marks: softer than the status dots, still clearly rose / amber / green */
   --band-low: #e5677c;
@@ -74,13 +74,9 @@
   --c5-ink: #136a4a;
 
   /* Page background: blush pink at the top, lavender grey in the middle, aqua at the bottom */
-  --page-bg: radial-gradient(1200px 700px at 0% 0%, #ddd6ff 0%, transparent 60%),
-    radial-gradient(1000px 700px at 100% 0%, #ffd9ec 0%, transparent 55%),
-    radial-gradient(1100px 800px at 100% 100%, #cfe1ff 0%, transparent 60%),
-    radial-gradient(1000px 800px at 0% 100%, #cbf3ee 0%, transparent 60%),
-    linear-gradient(135deg, #f1efff 0%, #f6f1fb 50%, #eef4ff 100%);
+  --page-bg: linear-gradient(var(--bg), var(--bg));
   /* Frosted glass: cards and the sidebar let the gradient glow through */
-  --glass: rgb(255 255 255 / 0.3);
+  --glass: rgb(255 255 255 / 0.82);
   --glass-strong: rgb(255 255 255 / 0.9);
   --glass-sheen: linear-gradient(135deg, rgb(255 255 255 / 0.5) 0%, rgb(255 255 255 / 0.08) 60%, rgb(255 255 255 / 0.2) 100%);
   --glass-border: rgb(255 255 255 / 0.65);
@@ -97,8 +93,9 @@
   --aqua-soft: #def3f4;
 
   /* Type */
-  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Google Sans; on Apple devices without it, the system font (San Francisco) */
+  --font: 'Google Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Google Sans Code', ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;
   --text-xs: 12px;
   --text-sm: 13px;
   --text-md: 14px;
@@ -114,7 +111,8 @@
   --shadow-pop: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 2px 6px rgb(16 24 40 / 0.06);
   --focus: 0 0 0 3px rgb(111 85 240 / 0.25);
 
-  --sidebar-width: 248px;
+  --sidebar-width: 240px; /* open rail */
+  --rail-width: 64px; /* closed rail */
 }
 
 /* Dark theme: only when the user picks it with the sun/moon button. Light is the default. */
@@ -167,11 +165,8 @@
     --c5: #2fa77a;
     --c5-soft: rgb(47 167 122 / 0.16);
     --c5-ink: #7fd8b0;
-    --page-bg: radial-gradient(1200px 700px at 0% 0%, #2b1f5c 0%, transparent 60%),
-      radial-gradient(1000px 700px at 100% 0%, #4a1d4a 0%, transparent 55%),
-      radial-gradient(1100px 800px at 100% 100%, #13305a 0%, transparent 60%),
-      linear-gradient(135deg, #0f0c29 0%, #1d1a3f 50%, #12152e 100%);
-    --glass: rgb(255 255 255 / 0.06);
+    --page-bg: linear-gradient(var(--bg), var(--bg));
+    --glass: rgb(21 19 31 / 0.82);
     --glass-strong: rgb(24 21 34 / 0.92);
     --glass-sheen: linear-gradient(135deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0.02) 60%, rgb(255 255 255 / 0.05) 100%);
     --glass-border: rgb(255 255 255 / 0.14);

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import type { Field, GoldenField, SourceRecord } from '../api/types'
-import { FIELD_LABELS, formatDate, formatFieldValue } from '../format'
+import { FIELD_LABELS, formatDate, formatFieldValue, formatScore } from '../format'
 import { Icon } from './Icon'
 import { StatusBadge } from './ui'
 
@@ -71,7 +71,7 @@ export function GoldenFieldRow({
           </div>
         ) : (
           <div className="field-source">
-            From <strong>{golden.source_name}</strong> · trust {golden.trust}
+            From <strong>{golden.source_name}</strong> · trust {formatScore(golden.trust)}
             {golden.last_updated && ` · updated ${formatDate(golden.last_updated)}`}
           </div>
         )}
@@ -101,7 +101,7 @@ export function GoldenFieldRow({
                     <li key={g.value}>
                       <span className="alt-value">{formatFieldValue(field, g.value)}</span>
                       <span className="alt-meta">
-                        {g.records.map((r) => `${r.source_name} (${r.source_trust})`).join(', ')}
+                        {g.records.map((r) => `${r.source_name} (${formatScore(r.source_trust)})`).join(', ')}
                         {' · '}
                         {golden.correction ? 'replaced by the approved correction' : lowerTrust ? 'lower trust' : 'same trust, older update'}
                       </span>

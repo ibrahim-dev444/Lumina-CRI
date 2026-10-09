@@ -138,6 +138,26 @@ export interface Overview {
   last_synced_at: string | null
   sources: Source[]
   lowest_trust: CustomerSummary[]
+  scores: { id: number; code: string; name: string; score: string }[]
+  conflicts_by_field: { field: Field; customers: number }[]
+  source_agreement: { code: string; name: string; trust: string; held: number; matched: number }[]
+}
+
+export interface Reference {
+  roles: { role: string; label: string; capabilities: Capability[] }[]
+  weights: Partial<Record<Field, string>>
+  sources: { code: string; name: string; trust: string; enabled: boolean }[]
+  matching: {
+    points_mobile: number
+    points_email: number
+    points_dob: number
+    points_name_max: number
+    match_threshold: number
+    review_threshold: number
+    min_name_similarity: number
+  }
+  bands: { medium: string; high: string }
+  correction_trust: string
 }
 
 export interface MatchSuggestion {

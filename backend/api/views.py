@@ -372,4 +372,83 @@ def overview(request):
             Source.objects.annotate(record_count=Count("records")).order_by("-trust", "name"), many=True
         ).data,
         "lowest_trust": CustomerListSerializer(lowest, many=True).data,
+        **_quality_breakdown(),
+    })
+
+
+def _quality_breakdown():
+    """Numbers for the Overview charts: every customer's score, where sources disagree, and how often each
+    source agrees with the golden record (a trusted source that is often outvoted needs a closer look)."""
+    from mdm.golden import normalise
+    from mdm.models import FIELDS
+
+    golden = {}
+    names = {}
+    for g in GoldenField.objects.values("customer_id", "field", "value", "conflicts"):
+        golden[(g["customer_id"], g["field"])] = (normalise(g["value"]), g["conflicts"])
+        if g["field"] == "name":
+            names[g["customer_id"]] = g["value"]
+
+    scores = [
+        {"id": c.id, "code": c.code, "name": names.get(c.id, ""), "score": str(c.trust_score)}
+        for c in Customer.objects.exclude(trust_score=None).order_by("trust_score", "id")[:2000]
+    ]
+
+    conflicts = {f: 0 for f in FIELDS}
+    for (_, field), (_, n) in golden.items():
+        if n:
+            conflicts[field] += 1
+
+    agreement = {}
+    records = SourceRecord.objects.filter(source__enabled=True).select_related("source", "customer_link")
+    for r in records:
+        link = getattr(r, "customer_link", None)
+        if not link:
+            continue
+        row = agreement.setdefault(r.source_id, {"code": r.source.code, "name": r.source.name,
+                                                 "trust": str(r.source.trust), "held": 0, "matched": 0})
+        for f in FIELDS:
+            value = getattr(r, f)
+            if value in (None, ""):
+                continue
+            row["held"] += 1
+            if golden.get((link.customer_id, f), (None,))[0] == normalise(value):
+                row["matched"] += 1
+
+    return {
+        "scores": scores,
+        "conflicts_by_field": [{"field": f, "customers": conflicts[f]} for f in FIELDS],
+        "source_agreement": sorted(agreement.values(), key=lambda x: x["matched"] / max(x["held"], 1)),
+    }
+
+
+# ---------- Reference (powers the "How Lumina works" page) ----------
+
+@api_view(["GET"])
+def reference(request):
+    """The live rules of the system, read from the code and the database, so the help page never drifts."""
+    from accounts import roles as r
+    from mdm import matching
+    from mdm.models import FieldWeight
+
+    return Response({
+        "roles": [
+            {"role": role, "label": r.LABELS[role],
+             "capabilities": sorted(c for c, members in r.CAPABILITIES.items() if role in members)}
+            for role in [r.RELATIONSHIP_MANAGER, r.AGENT, r.STEWARD, r.COMPLIANCE, r.ADMIN]
+        ],
+        "weights": {f: str(w) for f, w in FieldWeight.objects.values_list("field", "weight")},
+        "sources": [{"code": s.code, "name": s.name, "trust": str(s.trust), "enabled": s.enabled}
+                    for s in Source.objects.order_by("-trust", "name")],
+        "matching": {
+            "points_mobile": matching.POINTS_MOBILE,
+            "points_email": matching.POINTS_EMAIL,
+            "points_dob": matching.POINTS_DOB,
+            "points_name_max": matching.POINTS_NAME_MAX,
+            "match_threshold": matching.MATCH_THRESHOLD,
+            "review_threshold": matching.REVIEW_THRESHOLD,
+            "min_name_similarity": matching.MIN_NAME_SIMILARITY,
+        },
+        "bands": {"medium": "0.6", "high": "0.8"},
+        "correction_trust": str(FieldCorrection.TRUST),
     })
