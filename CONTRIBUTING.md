@@ -108,7 +108,8 @@ The backend is a **modular monolith**: one Django project split into apps with c
 |---|---|
 | `sources` | The list of bank systems and their trust |
 | `ingestion` | Connectors, raw records, cleaned records |
-| `mdm` | Matching, golden records, trust scores, match suggestions |
+| `mdm` | Matching, golden records, trust scores, match suggestions, stored corrections |
+| `stewardship` | The corrections workflow: propose with evidence, approve or reject (maker-checker) |
 | `accounts` | Roles, permissions, masking |
 | `audit` | The audit log |
 | `api` | HTTP endpoints only; it calls the other apps' functions |
@@ -116,7 +117,7 @@ The backend is a **modular monolith**: one Django project split into apps with c
 Rules:
 - Each app writes only its own tables.
 - Business logic lives in service files (`sync.py`, `services.py`, `matching.py`), not in views or management commands, so it can be tested and reused.
-- Dependencies point one way: `sources` ← `ingestion` ← `mdm` ← `api`. An app never imports from an app that depends on it.
+- Dependencies point one way: `sources` ← `ingestion` ← `mdm` ← `stewardship` ← `api`. An app never imports from an app that depends on it.
 - Who may do what is defined in one place, `backend/accounts/roles.py`. Change permissions there, and add a test.
 
 Frontend:

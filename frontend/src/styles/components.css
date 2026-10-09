@@ -649,6 +649,66 @@ a.kpi:hover {
   gap: 6px;
 }
 
+.textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--text-sm);
+  resize: vertical;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 16px;
+}
+
+.form-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+
+.change .old {
+  color: var(--text-3);
+  text-decoration: line-through;
+  overflow-wrap: anywhere;
+}
+
+.change .new {
+  font-weight: 600;
+  color: var(--good-text);
+  overflow-wrap: anywhere;
+}
+
+.correction-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.correction-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 16px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
 .form-field label {
   font-size: var(--text-sm);
   font-weight: 500;
@@ -1796,4 +1856,26 @@ a.kpi:hover {
 .notice svg {
   flex: none;
   color: var(--accent);
+}
+
+/* Label / value pairs (evidence, reason, ...) */
+.kv {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.kv > div {
+  display: contents;
+}
+
+.kv dt {
+  color: var(--text-3);
+}
+
+.kv dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }

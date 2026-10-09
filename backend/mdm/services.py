@@ -10,7 +10,7 @@ from ingestion.models import SourceRecord
 
 from .golden import pick_winner, trust_score
 from .matching import find_groups
-from .models import FIELDS, Customer, CustomerLink, FieldWeight, GoldenField, MatchSuggestion
+from .models import FIELDS, Customer, CustomerLink, FieldCorrection, FieldWeight, GoldenField, MatchSuggestion
 
 
 @dataclass
@@ -58,7 +58,15 @@ def match_records():
             )
 
     # Customers left with no records (because they were merged into another) are removed.
-    Customer.objects.filter(links__isnull=True).delete()
+    # Their corrections move to the customer their records went to, so no approved fix is lost.
+    empty = list(Customer.objects.filter(links__isnull=True).values_list("id", flat=True))
+    if empty:
+        now_linked = dict(CustomerLink.objects.values_list("source_record_id", "customer_id"))
+        for old_id in empty:
+            moved_to = next((now_linked[r] for r, c in current.items() if c == old_id and r in now_linked), None)
+            if moved_to:
+                FieldCorrection.objects.filter(customer_id=old_id).update(customer_id=moved_to)
+        Customer.objects.filter(id__in=empty, corrections__isnull=True).delete()
 
     # A pending suggestion is stale once both records already belong to the same customer
     # (for example, a steward merged them through a different pair). Nothing is left to decide.
@@ -89,6 +97,11 @@ def rebuild_golden_record(customer):
         if link.source_record.source.enabled
     ]
 
+    # The latest approved correction per field joins the candidates at trust 1.00.
+    corrections = {}
+    for c in customer.corrections.filter(status=FieldCorrection.APPROVED).order_by("decided_at", "id"):
+        corrections[c.field] = c
+
     winners = {}
     for field in FIELDS:
         candidates = [
@@ -98,9 +111,20 @@ def rebuild_golden_record(customer):
                 "updated_at": r.source_updated_at,
                 "record_id": r.id,
                 "source_id": r.source_id,
+                "correction_id": None,
             }
             for r in records
         ]
+        if field in corrections:
+            c = corrections[field]
+            candidates.append({
+                "value": c.value,
+                "trust": FieldCorrection.TRUST,
+                "updated_at": c.decided_at,
+                "record_id": None,
+                "source_id": None,
+                "correction_id": c.id,
+            })
         winner, conflicts = pick_winner(candidates)
         winners[field] = winner
         if winner:
@@ -112,6 +136,7 @@ def rebuild_golden_record(customer):
                     "trust": winner["trust"],
                     "source_id": winner["source_id"],
                     "source_record_id": winner["record_id"],
+                    "correction_id": winner["correction_id"],
                     "conflicts": conflicts,
                 },
             )

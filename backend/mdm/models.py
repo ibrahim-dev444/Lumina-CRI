@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.conf import settings
 from django.db import models
 
 from ingestion.models import SourceRecord
@@ -42,14 +45,59 @@ class CustomerLink(models.Model):
         return f"{self.source_record} -> {self.customer}"
 
 
+class FieldCorrection(models.Model):
+    """A person's fix to one field of one customer, backed by evidence.
+
+    Maker-checker: one person proposes, a different person approves or rejects. Only approved
+    corrections feed the golden record, where they win over every source (trust 1.00).
+    The rules for who may do what live in stewardship/services.py.
+    """
+
+    PENDING, APPROVED, REJECTED = "pending", "approved", "rejected"
+    STATUS_CHOICES = [(PENDING, "Pending"), (APPROVED, "Approved"), (REJECTED, "Rejected")]
+    TRUST = Decimal("1.00")  # an approved correction outranks every source
+
+    # PROTECT: a customer with corrections is never deleted by accident; merges move them instead.
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="corrections")
+    field = models.CharField(max_length=20, choices=FIELD_CHOICES)
+    value = models.TextField()
+    previous_value = models.TextField(blank=True)  # the golden value when the fix was proposed
+    evidence_ref = models.CharField(max_length=120)  # e.g. "KYC form #4471" or "call recording 2026-10-09"
+    reason = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING, db_index=True)
+
+    proposed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    proposed_by_name = models.CharField(max_length=150)
+    proposed_at = models.DateTimeField(auto_now_add=True)
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    decided_by_name = models.CharField(max_length=150, blank=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+    decision_note = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-proposed_at", "-id"]
+
+    def __str__(self):
+        return f"{self.customer} {self.field} -> {self.value} ({self.status})"
+
+
 class GoldenField(models.Model):
-    """The value Lumina believes for one field of one customer, and where it came from."""
+    """The value Lumina believes for one field of one customer, and where it came from.
+
+    It comes either from a source record, or from an approved correction (then source and
+    source_record are empty).
+    """
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="golden_fields")
     field = models.CharField(max_length=20, choices=FIELD_CHOICES)
     value = models.TextField()
-    source = models.ForeignKey(Source, on_delete=models.PROTECT)
-    source_record = models.ForeignKey(SourceRecord, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.PROTECT, null=True, blank=True)
+    source_record = models.ForeignKey(SourceRecord, on_delete=models.CASCADE, null=True, blank=True)
+    correction = models.ForeignKey(FieldCorrection, on_delete=models.CASCADE, null=True, blank=True)
     trust = models.DecimalField(max_digits=3, decimal_places=2)
     conflicts = models.PositiveSmallIntegerField(default=0)  # how many OTHER different values sources hold
 

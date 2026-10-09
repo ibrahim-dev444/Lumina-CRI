@@ -4,6 +4,8 @@ import type {
   AuditEvent,
   CustomerDetail,
   CustomerSummary,
+  Field,
+  FieldCorrection,
   MatchSuggestion,
   Overview,
   Page,
@@ -74,6 +76,14 @@ export const api = {
   customers: (params: { search?: string; ordering?: string; band?: string; page?: string }) =>
     get<Page<CustomerSummary>>(`/customers/${query(params)}`),
   customer: (id: number) => get<CustomerDetail>(`/customers/${id}/`),
+
+  // Corrections (maker-checker)
+  proposeCorrection: (customerId: number, body: { field: Field; value: string; evidence_ref: string; reason: string }) =>
+    post<FieldCorrection>(`/customers/${customerId}/corrections/`, body),
+  corrections: (params: { status?: string; customer?: string; page?: string }) =>
+    get<Page<FieldCorrection>>(`/corrections/${query(params)}`),
+  approveCorrection: (id: number) => post<FieldCorrection>(`/corrections/${id}/approve/`),
+  rejectCorrection: (id: number, note: string) => post<FieldCorrection>(`/corrections/${id}/reject/`, { note }),
 
   // Audit log
   audit: (params: { action?: string; search?: string; page?: string }) =>

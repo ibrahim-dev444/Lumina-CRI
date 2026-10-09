@@ -63,10 +63,18 @@ export function GoldenFieldRow({
       <dt>{FIELD_LABELS[field]}</dt>
       <dd>
         <div className="field-value">{formatFieldValue(field, golden.value)}</div>
-        <div className="field-source">
-          From <strong>{golden.source_name}</strong> · trust {golden.trust}
-          {golden.last_updated && ` · updated ${formatDate(golden.last_updated)}`}
-        </div>
+        {golden.correction ? (
+          <div className="field-source">
+            <strong>Approved correction</strong> · evidence {golden.correction.evidence_ref} · proposed by{' '}
+            {golden.correction.proposed_by}, approved by {golden.correction.approved_by}
+            {golden.last_updated && ` on ${formatDate(golden.last_updated)}`}
+          </div>
+        ) : (
+          <div className="field-source">
+            From <strong>{golden.source_name}</strong> · trust {golden.trust}
+            {golden.last_updated && ` · updated ${formatDate(golden.last_updated)}`}
+          </div>
+        )}
         {agreeing.length > 0 && (
           <div className="field-source">
             <Icon name="check" size={12} /> Also in {agreeing.map((r) => r.source_name).join(', ')}
@@ -95,7 +103,7 @@ export function GoldenFieldRow({
                       <span className="alt-meta">
                         {g.records.map((r) => `${r.source_name} (${r.source_trust})`).join(', ')}
                         {' · '}
-                        {lowerTrust ? 'lower trust' : 'same trust, older update'}
+                        {golden.correction ? 'replaced by the approved correction' : lowerTrust ? 'lower trust' : 'same trust, older update'}
                       </span>
                     </li>
                   )
@@ -106,7 +114,9 @@ export function GoldenFieldRow({
         )}
       </dd>
       <dd>
-        {Number(golden.trust) <= 0.4 ? (
+        {golden.correction ? (
+          <StatusBadge tone="good">Corrected</StatusBadge>
+        ) : Number(golden.trust) <= 0.4 ? (
           <StatusBadge tone="bad">Low trust</StatusBadge>
         ) : others.length ? (
           <StatusBadge tone="warn">Sources disagree</StatusBadge>

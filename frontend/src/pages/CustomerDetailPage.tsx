@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import { useApi } from '../api/useApi'
 import { GoldenFieldRow } from '../components/GoldenFieldRow'
 import { Icon } from '../components/Icon'
+import { CorrectionsCard } from '../components/CorrectionsCard'
 import { ScoreBreakdown } from '../components/ScoreBreakdown'
 import { ScoreGauge } from '../components/ScoreGauge'
 import {
@@ -19,7 +20,7 @@ import { FIELD_LABELS, FIELDS, formatFieldValue, formatRelative } from '../forma
 
 export function CustomerDetailPage() {
   const id = Number(useParams().id)
-  const { data: c, error } = useApi(() => api.customer(id), [id])
+  const { data: c, error, reload } = useApi(() => api.customer(id), [id])
 
   const crumbs = [{ label: 'Customers', to: '/customers' }, { label: c?.code ?? '...' }]
 
@@ -97,6 +98,8 @@ export function CustomerDetailPage() {
           <ScoreBreakdown golden={c.golden} weights={c.weights} score={c.trust_score} />
         </Card>
       </div>
+
+      <CorrectionsCard customer={c} onChanged={reload} />
 
       <Card
         title="What each source says"

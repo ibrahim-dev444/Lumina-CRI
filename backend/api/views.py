@@ -18,13 +18,15 @@ from audit.models import AuditEvent
 from audit.services import record
 from ingestion.models import SourceRecord
 from ingestion.sync import sync_source
-from mdm.models import Customer, GoldenField, MatchSuggestion
+from mdm.models import Customer, FieldCorrection, GoldenField, MatchSuggestion
 from mdm.services import build_customers, decide_suggestion
 from sources.models import Source
+from stewardship.services import CorrectionError, decide, propose
 
 from .permissions import HasRole, requires
 from .serializers import (
     AuditEventSerializer,
+    FieldCorrectionSerializer,
     CustomerDetailSerializer,
     CustomerListSerializer,
     MatchSuggestionSerializer,
@@ -137,6 +139,7 @@ def customers_with_details():
     return Customer.objects.annotate(golden_name=Subquery(golden_name)).prefetch_related(
         "golden_fields__source",
         "golden_fields__source_record",
+        "golden_fields__correction",
         "links__source_record__source",
     )
 
@@ -172,7 +175,29 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
     def get_permissions(self):
         if self.action == "export":
             return [HasRole(), requires("export")()]
+        if self.action == "propose_correction":
+            return [HasRole(), requires("propose_corrections")()]
         return [HasRole()]
+
+    @action(detail=True, methods=["post"], url_path="corrections")
+    def propose_correction(self, request, pk=None):
+        """POST /api/customers/<id>/corrections/  {field, value, evidence_ref, reason}"""
+        customer = self.get_object()
+        try:
+            correction = propose(
+                customer,
+                field=request.data.get("field"),
+                value=request.data.get("value"),
+                evidence_ref=request.data.get("evidence_ref"),
+                reason=request.data.get("reason"),
+                user=request.user,
+            )
+        except CorrectionError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        record(request, AuditEvent.CORRECTION_PROPOSED, target=customer.code, field=correction.field,
+               evidence=correction.evidence_ref, correction=correction.id)
+        return Response(FieldCorrectionSerializer(correction, context={"request": request}).data,
+                        status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
@@ -250,6 +275,54 @@ class MatchSuggestionViewSet(viewsets.ReadOnlyModelViewSet):
         return self._decide(accept=False)
 
 
+# ---------- Corrections (maker-checker) ----------
+
+class FieldCorrectionViewSet(viewsets.ReadOnlyModelViewSet):
+    """GET /api/corrections/?status=pending&customer=<id>, POST /api/corrections/<id>/approve/ or /reject/"""
+
+    serializer_class = FieldCorrectionSerializer
+
+    def get_permissions(self):
+        if self.action in ("approve", "reject"):
+            return [HasRole(), requires("approve_corrections")()]
+        return [HasRole(), requires("propose_corrections", "approve_corrections")()]
+
+    def get_queryset(self):
+        qs = FieldCorrection.objects.select_related("customer").prefetch_related("customer__golden_fields")
+        wanted = self.request.query_params.get("status")
+        if wanted:
+            qs = qs.filter(status=wanted)
+        customer = self.request.query_params.get("customer")
+        if customer and customer.isdigit():
+            qs = qs.filter(customer_id=int(customer))
+        return qs
+
+    def _decide(self, approve):
+        correction = self.get_object()
+        try:
+            correction = decide(correction, approve=approve, user=self.request.user,
+                                note=self.request.data.get("note", ""))
+        except CorrectionError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        record(
+            self.request,
+            AuditEvent.CORRECTION_APPROVED if approve else AuditEvent.CORRECTION_REJECTED,
+            target=correction.customer.code,
+            field=correction.field,
+            correction=correction.id,
+            proposed_by=correction.proposed_by_name,
+        )
+        return Response(self.get_serializer(correction).data)
+
+    @action(detail=True, methods=["post"])
+    def approve(self, request, pk=None):
+        return self._decide(approve=True)
+
+    @action(detail=True, methods=["post"])
+    def reject(self, request, pk=None):
+        return self._decide(approve=False)
+
+
 # ---------- Audit log ----------
 
 class AuditEventViewSet(viewsets.ReadOnlyModelViewSet):
@@ -293,6 +366,7 @@ def overview(request):
         "bands": {band: customers.filter(q).count() for band, q in BAND_FILTERS.items()},
         "histogram": [{"from": i / 10, "to": (i + 1) / 10, "count": n} for i, n in enumerate(histogram)],
         "pending_reviews": MatchSuggestion.objects.filter(status=MatchSuggestion.PENDING).count(),
+        "pending_corrections": FieldCorrection.objects.filter(status=FieldCorrection.PENDING).count(),
         "last_synced_at": Source.objects.aggregate(m=Max("last_synced_at"))["m"],
         "sources": SourceSerializer(
             Source.objects.annotate(record_count=Count("records")).order_by("-trust", "name"), many=True

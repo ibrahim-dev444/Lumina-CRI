@@ -12,6 +12,9 @@ const ACTIONS: { value: string; label: string }[] = [
   { value: 'export', label: 'Exported customers' },
   { value: 'merge', label: 'Merged records' },
   { value: 'keep_apart', label: 'Kept records apart' },
+  { value: 'corr_proposed', label: 'Proposed correction' },
+  { value: 'corr_approved', label: 'Approved correction' },
+  { value: 'corr_rejected', label: 'Rejected correction' },
   { value: 'sync_source', label: 'Synced source' },
   { value: 'update_source', label: 'Changed source' },
   { value: 'login', label: 'Signed in' },
@@ -22,7 +25,9 @@ const ACTIONS: { value: string; label: string }[] = [
 
 // How loud each kind of event should look. Failures and refusals stand out; routine reads stay quiet.
 function tone(action: string): 'good' | 'warn' | 'bad' | 'neutral' {
-  if (action === 'login_failed' || action === 'denied') return 'bad'
+  if (action === 'login_failed' || action === 'denied' || action === 'corr_rejected') return 'bad'
+  if (action === 'corr_approved') return 'good'
+  if (action === 'corr_proposed') return 'warn'
   if (action === 'merge' || action === 'keep_apart' || action === 'update_source' || action === 'export') return 'warn'
   if (action === 'login') return 'good'
   return 'neutral'
@@ -42,6 +47,7 @@ function describe(e: AuditEvent): string {
   if (e.action === 'export') return `${d.rows ?? 0} rows`
   if (e.action === 'sync_source') return `${d.fetched ?? 0} records read`
   if (e.action === 'update_source') return Object.entries((d.changes as object) ?? {}).map(([k, v]) => `${k} → ${v}`).join(', ')
+  if (e.action.startsWith('corr_')) return `${String(d.field ?? '')} · ${String(d.evidence ?? d.proposed_by ?? '')}`
   if (e.action === 'denied') return `Needed: ${String(d.capability ?? '').replace('_', ' ')}`
   return ''
 }
