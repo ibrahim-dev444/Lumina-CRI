@@ -2,15 +2,15 @@ import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { api } from '../api/client'
-import type { Source } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { Icon, type IconName } from '../components/Icon'
 import { useToast } from '../components/Toasts'
-import { TrustHistogram } from '../components/TrustHistogram'
+import { BarList } from '../components/BarList'
+import { TrustRunway } from '../components/TrustRunway'
 import { Avatar, Card, ErrorAlert, PageHeader, Skeleton, SourceChips, StatusBadge, TrustCell } from '../components/ui'
 import { exportCustomersCsv } from '../exportCsv'
-import { formatRelative, formatScore, sourceTier } from '../format'
+import { FIELD_LABELS, formatRelative, formatScore } from '../format'
 
 const TARGET = 0.85 // the average trust the data team is working towards
 
@@ -94,8 +94,8 @@ export function OverviewPage() {
             <b style={{ left: `${TARGET * 100}%` }} />
           </div>
           <div className="kpi-foot">
-            <span>Target {TARGET.toFixed(2)}</span>
-            <span className="num">{Math.round(average * 100)}%</span>
+            <span>Target {Math.round(TARGET * 100)}</span>
+            <span className="num">{Math.round(average * 100)} of 100</span>
           </div>
         </Kpi>
 
@@ -128,58 +128,75 @@ export function OverviewPage() {
         </Kpi>
       </div>
 
-      <div className="grid-2">
-        <Card
-          title="Trust score distribution"
-          description="Customers per 0.1 of trust score"
-          actions={
-            <div className="legend" aria-hidden="true">
-              <span>
-                <i style={{ background: 'var(--band-low)' }} />
-                Low &lt; 0.6
-              </span>
-              <span>
-                <i style={{ background: 'var(--band-medium)' }} />
-                Medium 0.6–0.8
-              </span>
-              <span>
-                <i style={{ background: 'var(--band-high)' }} />
-                High ≥ 0.8
-              </span>
-            </div>
-          }
-        >
+      <Card
+        title="Trust runway"
+        description="Every customer on one line, by trust score. Select a dot to open the customer."
+        actions={
+          data && (
+            <span className="text-sm muted num">
+              {data.bands.low} low · {data.bands.medium} medium · {data.bands.high} high
+            </span>
+          )
+        }
+      >
+        {data ? <TrustRunway scores={data.scores} /> : <Skeleton height={150} />}
+      </Card>
+
+      <div className="grid-halves">
+        <Card title="Where records disagree" description="Customers whose sources hold different values, by field.">
           {data ? (
-            <>
-              <TrustHistogram buckets={data.histogram} />
-              <div className="chart-foot">
-                <span className="num">
-                  {data.customers} customers · {data.bands.low} low · {data.bands.medium} medium · {data.bands.high}{' '}
-                  high
-                </span>
-                <span>Bin width 0.1</span>
-              </div>
-            </>
+            <BarList
+              ariaLabel="Customers with conflicting values, by field"
+              max={data.customers}
+              rows={[...data.conflicts_by_field]
+                .sort((x, y) => y.customers - x.customers)
+                .map((r) => ({
+                  key: r.field,
+                  label: FIELD_LABELS[r.field],
+                  value: r.customers,
+                  shown: `${r.customers} of ${data.customers}`,
+                }))}
+            />
           ) : (
-            <Skeleton height={240} />
+            <Skeleton height={160} />
           )}
         </Card>
 
         <Card
-          title="Sources"
-          description={data ? `${data.sources.length} configured` : undefined}
-          flush
+          title="Trusted, but is it right?"
+          description="How often each source's values match the golden record."
           footer={
             <Link to="/connectors" className="link row" style={{ gap: 4 }}>
               Manage connectors <Icon name="chevronRight" size={14} />
             </Link>
           }
         >
-          <div>
-            {data?.sources.map((s) => (
-              <SourceRow key={s.code} s={s} />
-            ))}
-          </div>
+          {data ? (
+            <BarList
+              ariaLabel="Share of each source's values that match the golden record"
+              max={100}
+              rows={data.source_agreement.map((s) => {
+                const pct = s.held ? Math.round((s.matched / s.held) * 100) : 0
+                return {
+                  key: s.code,
+                  label: (
+                    <span className="stack" style={{ gap: 0 }}>
+                      <span>{s.name}</span>
+                      <span className="text-xs muted">trust {formatScore(s.trust)}</span>
+                    </span>
+                  ),
+                  value: pct,
+                  shown: `${pct}%`,
+                  extra:
+                    Number(s.trust) >= 0.8 && pct < 80 ? (
+                      <StatusBadge tone="warn">Check</StatusBadge>
+                    ) : undefined,
+                }
+              })}
+            />
+          ) : (
+            <Skeleton height={160} />
+          )}
         </Card>
       </div>
 
@@ -277,32 +294,5 @@ function Kpi({
     </Link>
   ) : (
     <div className={className}>{body}</div>
-  )
-}
-
-function SourceRow({ s }: { s: Source }) {
-  const tier = sourceTier(Number(s.trust))
-  return (
-    <div
-      className="row"
-      style={{ justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}
-    >
-      <div className="stack" style={{ gap: 2 }}>
-        <span className="row" style={{ gap: 8, fontWeight: 600 }}>
-          {s.name}
-        </span>
-        <span className="text-xs muted mono">{s.record_count} records</span>
-      </div>
-      <div className="stack" style={{ gap: 4, alignItems: 'flex-end' }}>
-        {s.enabled ? (
-          <StatusBadge tone={tier.tone}>
-            <span className="mono">{s.trust}</span> {tier.label}
-          </StatusBadge>
-        ) : (
-          <StatusBadge tone="neutral">Disconnected</StatusBadge>
-        )}
-        <span className="text-xs muted">Synced {formatRelative(s.last_synced_at).toLowerCase()}</span>
-      </div>
-    </div>
   )
 }

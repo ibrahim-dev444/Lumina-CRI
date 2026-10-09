@@ -138,6 +138,9 @@ export interface Overview {
   last_synced_at: string | null
   sources: Source[]
   lowest_trust: CustomerSummary[]
+  scores: { id: number; code: string; name: string; score: string }[]
+  conflicts_by_field: { field: Field; customers: number }[]
+  source_agreement: { code: string; name: string; trust: string; held: number; matched: number }[]
 }
 
 export interface Reference {

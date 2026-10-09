@@ -93,8 +93,9 @@
   --aqua-soft: #def3f4;
 
   /* Type */
-  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Google Sans; on Apple devices without it, the system font (San Francisco) */
+  --font: 'Google Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Google Sans Code', ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;
   --text-xs: 12px;
   --text-sm: 13px;
   --text-md: 14px;

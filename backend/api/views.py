@@ -372,7 +372,54 @@ def overview(request):
             Source.objects.annotate(record_count=Count("records")).order_by("-trust", "name"), many=True
         ).data,
         "lowest_trust": CustomerListSerializer(lowest, many=True).data,
+        **_quality_breakdown(),
     })
+
+
+def _quality_breakdown():
+    """Numbers for the Overview charts: every customer's score, where sources disagree, and how often each
+    source agrees with the golden record (a trusted source that is often outvoted needs a closer look)."""
+    from mdm.golden import normalise
+    from mdm.models import FIELDS
+
+    golden = {}
+    names = {}
+    for g in GoldenField.objects.values("customer_id", "field", "value", "conflicts"):
+        golden[(g["customer_id"], g["field"])] = (normalise(g["value"]), g["conflicts"])
+        if g["field"] == "name":
+            names[g["customer_id"]] = g["value"]
+
+    scores = [
+        {"id": c.id, "code": c.code, "name": names.get(c.id, ""), "score": str(c.trust_score)}
+        for c in Customer.objects.exclude(trust_score=None).order_by("trust_score", "id")[:2000]
+    ]
+
+    conflicts = {f: 0 for f in FIELDS}
+    for (_, field), (_, n) in golden.items():
+        if n:
+            conflicts[field] += 1
+
+    agreement = {}
+    records = SourceRecord.objects.filter(source__enabled=True).select_related("source", "customer_link")
+    for r in records:
+        link = getattr(r, "customer_link", None)
+        if not link:
+            continue
+        row = agreement.setdefault(r.source_id, {"code": r.source.code, "name": r.source.name,
+                                                 "trust": str(r.source.trust), "held": 0, "matched": 0})
+        for f in FIELDS:
+            value = getattr(r, f)
+            if value in (None, ""):
+                continue
+            row["held"] += 1
+            if golden.get((link.customer_id, f), (None,))[0] == normalise(value):
+                row["matched"] += 1
+
+    return {
+        "scores": scores,
+        "conflicts_by_field": [{"field": f, "customers": conflicts[f]} for f in FIELDS],
+        "source_agreement": sorted(agreement.values(), key=lambda x: x["matched"] / max(x["held"], 1)),
+    }
 
 
 # ---------- Reference (powers the "How Lumina works" page) ----------

@@ -2231,3 +2231,197 @@ code {
   font-size: var(--text-sm);
   color: var(--text-3);
 }
+
+
+/* ============ Phase A ============ */
+
+.score-of {
+  margin-left: 2px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+/* Underlined tabs inside the customer header card */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 20px;
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab {
+  position: relative;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected='true'] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.grid-halves {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+/* Ranked bars */
+.barlist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barlist li {
+  display: grid;
+  grid-template-columns: minmax(110px, 160px) 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--text-sm);
+}
+
+.barlist-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--chart-track);
+  overflow: hidden;
+}
+
+.barlist-track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--chart-1);
+}
+
+.barlist-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 64px;
+  justify-content: flex-end;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* Agreement grid */
+.agree {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+  min-width: 640px;
+  width: 100%;
+}
+
+.agree th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.agree td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.agree .center {
+  text-align: center;
+}
+
+.agree .right {
+  text-align: right;
+}
+
+.agree-cell {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.agree-cell.same {
+  background: var(--good-bg);
+  color: var(--good-text);
+}
+
+.agree-cell.diff {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.agree-cell.none {
+  border: 1.5px dashed var(--border-strong);
+}
+
+.agree-cell.small {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+
+/* Activity timeline */
+.timeline {
+  margin: 0;
+  padding: 8px 20px 16px;
+  list-style: none;
+}
+
+.timeline li {
+  display: grid;
+  grid-template-columns: 130px 16px 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: var(--text-sm);
+}
+
+.timeline-when {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+}

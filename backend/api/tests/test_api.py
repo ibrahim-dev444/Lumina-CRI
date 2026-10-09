@@ -117,3 +117,13 @@ def test_band_filter_and_detail_extras(client, data):
     assert suresh["sources"] == ["flexcube", "branch_csv"]
     detail = client.get(f"/api/customers/{suresh['id']}/").json()
     assert detail["weights"]["name"] == "0.25"
+
+
+def test_overview_quality_breakdown(client, data):
+    body = client.get("/api/overview/").json()
+    assert len(body["scores"]) == 3
+    assert {r["field"] for r in body["conflicts_by_field"]} == {"name", "mobile", "email", "address", "dob"}
+    suresh_mobile = next(r for r in body["conflicts_by_field"] if r["field"] == "mobile")
+    assert suresh_mobile["customers"] >= 1  # FLEXCUBE and branch disagree on Suresh's mobile
+    flex = next(s for s in body["source_agreement"] if s["code"] == "flexcube")
+    assert flex["held"] > 0 and flex["matched"] == flex["held"]  # FLEXCUBE wins every field it holds here

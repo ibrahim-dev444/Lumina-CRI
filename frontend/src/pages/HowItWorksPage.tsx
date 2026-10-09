@@ -5,7 +5,7 @@ import type { Capability, Field } from '../api/types'
 import { useApi } from '../api/useApi'
 import { Icon, type IconName } from '../components/Icon'
 import { Card, ErrorAlert, PageHeader, Skeleton } from '../components/ui'
-import { FIELD_LABELS, FIELDS } from '../format'
+import { FIELD_LABELS, FIELDS, formatScore } from '../format'
 
 // "How Lumina works": a guide for new team members and staff. Numbers on this page (weights, trust,
 // matching points, permissions) come from /api/reference/, so they always match the running system.
@@ -49,7 +49,7 @@ export function HowItWorksPage() {
           <div className="hiw-node">
             <strong>Golden record</strong>
             <span>Suresh Kumar · 9822104521</span>
-            <span className="hiw-score">Trust 0.85 · High</span>
+            <span className="hiw-score">Trust 85 · High</span>
           </div>
         </div>
       </Section>
@@ -61,7 +61,7 @@ export function HowItWorksPage() {
           <Step icon="check" title="Clean" text="+91 98221 04521 becomes 9822104521." />
           <Step icon="merge" title="Match" text="Records that belong to the same person are grouped." />
           <Step icon="shield" title="Decide" text="For each field, the most trusted source wins." />
-          <Step icon="overview" title="Score" text="A trust score from 0 to 1 says how reliable the record is." />
+          <Step icon="overview" title="Score" text="A trust score from 0 to 100 says how reliable the record is." />
         </ol>
         <p className="muted text-sm">
           Steps 1 to 6 run when someone clicks <strong>Sync</strong> on Connectors, or a developer runs{' '}
@@ -181,7 +181,7 @@ export function HowItWorksPage() {
         <ol className="hiw-steps">
           <Step icon="edit" title="Propose" text="Someone enters the right value, an evidence reference and a reason." />
           <Step icon="approve" title="Check" text="A different person approves or rejects it. Nobody approves their own." />
-          <Step icon="shield" title="Apply" text={`Approved values win at trust ${data?.correction_trust ?? '1.00'} and the score is recalculated.`} />
+          <Step icon="shield" title="Apply" text={`Approved values win at trust ${formatScore(data?.correction_trust ?? '1')} and the score is recalculated.`} />
           <Step icon="audit" title="Record" text="Proposal and decision are written to the audit log." />
         </ol>
       </Section>
@@ -189,9 +189,9 @@ export function HowItWorksPage() {
       <Section n={8} title="Words used in Lumina">
         <dl className="hiw-glossary">
           <Term word="Source" meaning="A bank system Lumina reads from, such as FLEXCUBE or Salesforce." />
-          <Term word="Source trust" meaning="How much a source is believed, from 0 to 1. Set by the bank." />
+          <Term word="Source trust" meaning="How much a source is believed, from 0 to 100. Set by the bank." />
           <Term word="Golden record" meaning="The single best value for each field of a customer." />
-          <Term word="Trust score" meaning="How reliable a customer's golden record is, from 0 to 1." />
+          <Term word="Trust score" meaning="How reliable a customer's golden record is, from 0 to 100." />
           <Term word="Match review" meaning="Pairs of records that are probably the same person, waiting for a decision." />
           <Term word="Correction" meaning="A fix backed by evidence, applied only after a second person approves it." />
           <Term word="Masking" meaning="Hiding part of a value, like 98xxxx4521, from roles that do not need it." />
@@ -297,7 +297,7 @@ function TrustExample({
       <div className="stack" style={{ gap: 12 }}>
         <p className="lead">
           Each source has a trust level. For each field, the value from the most trusted source wins; on a tie, the
-          newest value wins. An approved correction counts as trust {correctionTrust}.
+          newest value wins. An approved correction counts as trust {formatScore(correctionTrust)}.
         </p>
         <table className="table hiw-table">
           <thead>
@@ -310,7 +310,7 @@ function TrustExample({
             {sources.map((s) => (
               <tr key={s.code}>
                 <td>{s.name}</td>
-                <td className="right mono">{s.trust}</td>
+                <td className="right mono">{formatScore(s.trust)}</td>
               </tr>
             ))}
           </tbody>
@@ -318,34 +318,35 @@ function TrustExample({
       </div>
       <div className="stack" style={{ gap: 12 }}>
         <p className="lead">
-          The score adds up <strong>field weight × trust of the winning source</strong>. Example: every field comes from{' '}
+          Each field is worth some points (its weight). It earns that share of points matching its source's trust.
+          Example: every field comes from{' '}
           {best?.name}:
         </p>
         <table className="table hiw-table">
           <thead>
             <tr>
               <th>Field</th>
-              <th className="right">Weight</th>
+              <th className="right">Worth</th>
               <th className="right">× Trust</th>
-              <th className="right">Adds</th>
+              <th className="right">Points</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.f}>
                 <td>{FIELD_LABELS[r.f]}</td>
-                <td className="right mono">{r.w.toFixed(2)}</td>
-                <td className="right mono">{best?.trust}</td>
-                <td className="right mono">{r.adds.toFixed(3)}</td>
+                <td className="right mono">{Math.round(r.w * 100)}</td>
+                <td className="right mono">{best ? formatScore(best.trust) : '-'}%</td>
+                <td className="right mono">{(r.adds * 100).toFixed(1)}</td>
               </tr>
             ))}
             <tr className="hiw-total">
               <td colSpan={3}>Trust score</td>
-              <td className="right mono">{total.toFixed(2)}</td>
+              <td className="right mono">{Math.round(total * 100)}</td>
             </tr>
           </tbody>
         </table>
-        <p className="muted text-sm">Below 0.6 is Low, 0.6 to 0.8 is Medium, 0.8 and above is High.</p>
+        <p className="muted text-sm">Below 60 is Low, 60 to 79 is Medium, 80 and above is High.</p>
       </div>
     </div>
   )
