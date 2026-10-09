@@ -7,9 +7,20 @@ make a change and sign it off.
 from django.db import transaction
 from django.utils import timezone
 
-from ingestion.clean import clean_address, clean_date, clean_email, clean_mobile, clean_name
+from ingestion.clean import (
+    clean_address,
+    clean_ckyc,
+    clean_date,
+    clean_email,
+    clean_gender,
+    clean_mobile,
+    clean_name,
+    clean_pan,
+    clean_text,
+)
 from mdm.models import FIELDS, FieldCorrection, GoldenField
 from mdm.services import rebuild_golden_record
+from security.fields import compare_key, display, protect
 
 
 class CorrectionError(ValueError):
@@ -34,7 +45,29 @@ def _clean_value(field, raw):
         if not value:
             raise CorrectionError("Enter the date of birth as YYYY-MM-DD or DD/MM/YYYY.")
         return value.isoformat()
-    value = clean_name(raw) if field == "name" else clean_address(raw)
+    if field == "aadhaar":
+        raise CorrectionError("Aadhaar cannot be corrected here: Lumina only keeps its last 4 digits.")
+    if field == "pan":
+        value = clean_pan(raw)
+        if not value:
+            raise CorrectionError("Enter the PAN as 5 letters, 4 digits and 1 letter, e.g. ABCPK1234F.")
+        return value
+    if field == "ckyc":
+        value = clean_ckyc(raw)
+        if not value:
+            raise CorrectionError("Enter the CKYC number as 14 digits.")
+        return value
+    if field == "gender":
+        value = clean_gender(raw)
+        if not value:
+            raise CorrectionError("Enter Male, Female or Other.")
+        return value
+    if field in ("name", "father_name"):
+        value = clean_name(raw)
+    elif field in ("address", "perm_address"):
+        value = clean_address(raw)
+    else:
+        value = clean_text(raw)
     if not value:
         raise CorrectionError("Enter the correct value.")
     return value
@@ -53,16 +86,16 @@ def propose(customer, field, value, evidence_ref, reason, user):
     if customer.corrections.filter(field=field, status=FieldCorrection.PENDING).exists():
         raise CorrectionError("A correction for this field is already waiting for approval.")
 
-    cleaned = _clean_value(field, value)
+    cleaned = protect(field, _clean_value(field, value))  # PAN and CKYC are stored encrypted
     current = GoldenField.objects.filter(customer=customer, field=field).values_list("value", flat=True).first()
-    if current == cleaned:
+    if current and compare_key(field, current) == compare_key(field, cleaned):
         raise CorrectionError("That is already the value in the golden record.")
 
     return FieldCorrection.objects.create(
         customer=customer,
         field=field,
         value=cleaned,
-        previous_value=current or "",
+        previous_value=display(field, current) or "",  # identity numbers kept masked
         evidence_ref=evidence_ref,
         reason=reason,
         proposed_by=user,

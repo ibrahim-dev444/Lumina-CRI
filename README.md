@@ -57,6 +57,14 @@ python -c "import secrets; print(secrets.token_urlsafe(50))"
 
 `.env` stays on your machine. Never commit it and never paste it into chat.
 
+`FIELD_ENCRYPTION_KEY` encrypts PAN and CKYC numbers. In development you can leave it empty (a key is derived from your secret key). Any shared or production server must set its own:
+
+```
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+If this key is lost, encrypted numbers cannot be read again. Changing it means re-syncing every source.
+
 **3. Start the database.** Open Docker Desktop and wait until it is running, then:
 
 ```
@@ -81,6 +89,7 @@ Mac or Linux: the same, but activate with `source .venv/bin/activate`.
 **5. Load the fake bank data and build customers.**
 
 ```
+python manage.py load_fake_flexcube
 python manage.py sync flexcube
 python manage.py sync salesforce
 python manage.py sync branch_csv
@@ -120,6 +129,16 @@ cd backend && .venv\Scripts\activate && python manage.py runserver
 cd frontend && npm run dev           # second terminal
 ```
 
+After a pull that changed the fake data (files in `fake_sources/` or `docker/postgres/init/`), reload and re-sync:
+
+```
+python manage.py load_fake_flexcube
+python manage.py sync flexcube
+python manage.py sync salesforce
+python manage.py sync branch_csv
+python manage.py build_customers
+```
+
 After every `git pull`, also run:
 
 ```
@@ -134,6 +153,7 @@ npm install
 
 | Command (inside `backend/`) | What it does |
 |---|---|
+| `python manage.py load_fake_flexcube` | Re-create the fake FLEXCUBE table from `docker/postgres/init/01-flexcube.sql` |
 | `python manage.py sync <source>` | Read one source: `flexcube`, `salesforce` or `branch_csv` |
 | `python manage.py build_customers` | Re-run matching, golden records and trust scores |
 | `python manage.py seed_demo_users` | Create or reset one demo login per role |

@@ -13,6 +13,7 @@ class FlexcubeConnector(BaseConnector):
     """
 
     source_code = "flexcube"
+    sensitive_columns = {"PAN_NO": "pan", "AADHAAR_NO": "aadhaar", "CKYC_NO": "ckyc"}
 
     def fetch(self):
         if not settings.FLEXCUBE_DB_URL:
@@ -26,9 +27,17 @@ class FlexcubeConnector(BaseConnector):
     def to_standard(self, raw):
         return {
             "name": raw["CUST_NAME"],
+            "father_name": raw.get("FATHER_NAME"),
+            "dob": raw["DOB"],
+            "gender": raw.get("GENDER"),
+            "pan": raw.get("PAN_NO"),
+            "aadhaar": raw.get("AADHAAR_NO"),
+            "ckyc": raw.get("CKYC_NO"),
             "mobile": raw["MOB_NO"],
             "email": raw["EMAIL_ID"],
             "address": raw["ADDR1"],
-            "dob": raw["DOB"],
+            "perm_address": raw.get("PERM_ADDR"),
+            "occupation": raw.get("OCCUPATION"),
+            "income": raw.get("ANNUAL_INCOME"),
             "source_updated_at": raw["LAST_UPD_DT"],
         }

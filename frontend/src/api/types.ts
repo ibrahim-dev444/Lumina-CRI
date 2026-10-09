@@ -1,7 +1,20 @@
 // Shapes of the JSON our Django API returns. Keep in sync with backend/api/serializers.py.
 // Decimals (trust, trust_score) arrive as strings like "0.85" so no precision is lost.
 
-export type Field = 'name' | 'mobile' | 'email' | 'address' | 'dob'
+export type Field =
+  | 'name'
+  | 'father_name'
+  | 'dob'
+  | 'gender'
+  | 'pan'
+  | 'aadhaar'
+  | 'ckyc'
+  | 'mobile'
+  | 'email'
+  | 'address'
+  | 'perm_address'
+  | 'occupation'
+  | 'income'
 export type Band = 'high' | 'medium' | 'low'
 
 export interface Page<T> {
@@ -18,6 +31,7 @@ export type Capability =
   | 'decide_matches'
   | 'propose_corrections'
   | 'approve_corrections'
+  | 'reveal_identity'
   | 'export'
   | 'view_audit'
 
@@ -111,12 +125,23 @@ export interface SourceRecord {
   source_enabled: boolean
   source_record_id: string
   name: string
+  father_name: string
+  dob: string | null
+  gender: string
+  pan: string // always masked, e.g. XXXXX1234X
+  aadhaar: string // always masked, e.g. XXXX XXXX 4521
+  ckyc: string // always masked
   mobile: string
   email: string
   address: string
-  dob: string | null
+  perm_address: string
+  occupation: string
+  income: string
   source_updated_at: string | null
   match_reason: string
+  // Per field: true = agrees with the golden record, false = differs, null = not held. Worked out by
+  // the server, because masked or encrypted values cannot be compared in the browser.
+  agreement?: Partial<Record<Field, boolean | null>>
 }
 
 export interface CustomerDetail extends CustomerSummary {
@@ -148,6 +173,7 @@ export interface Reference {
   weights: Partial<Record<Field, string>>
   sources: { code: string; name: string; trust: string; enabled: boolean }[]
   matching: {
+    points_pan: number
     points_mobile: number
     points_email: number
     points_dob: number

@@ -33,6 +33,8 @@ CAPABILITIES = {
     "propose_corrections": {RELATIONSHIP_MANAGER, STEWARD, ADMIN},
     # Approve or reject someone else's proposed fix (never your own: maker-checker).
     "approve_corrections": {STEWARD, COMPLIANCE, ADMIN},
+    # See a full PAN or CKYC number, with a reason that goes to the audit log.
+    "reveal_identity": {COMPLIANCE, ADMIN},
     # Download the customer list as CSV.
     "export": {STEWARD, COMPLIANCE, ADMIN},
     # Read the audit log.

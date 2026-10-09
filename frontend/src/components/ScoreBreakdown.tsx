@@ -1,5 +1,5 @@
 import type { Field, GoldenField } from '../api/types'
-import { FIELD_HUES, FIELD_LABELS, FIELDS, formatScore } from '../format'
+import { FIELD_LABELS, FIELDS, formatScore } from '../format'
 
 // "Why this score": each field's share of the trust score.
 // The light track is the most the field can add (its weight); the solid bar is what it adds now
@@ -24,7 +24,7 @@ export function ScoreBreakdown({
         const trust = g ? Number(g.trust) : 0
         const adds = weight * trust
         return (
-          <div key={f} className={`breakdown-row hue-${FIELD_HUES[f]}`}>
+          <div key={f} className="breakdown-row">
             <span className="label">{FIELD_LABELS[f]}</span>
             <span className="value mono">
               {(adds * 100).toFixed(1)} <span className="muted">/ {Math.round(weight * 100)} pts</span>

@@ -79,6 +79,10 @@ export const api = {
     get<Page<CustomerSummary>>(`/customers/${query(params)}`),
   customer: (id: number) => get<CustomerDetail>(`/customers/${id}/`),
 
+  // Full PAN or CKYC number, with an audited reason (compliance officers and admins)
+  reveal: (customerId: number, field: 'pan' | 'ckyc', reason: string) =>
+    post<{ field: 'pan' | 'ckyc'; value: string }>(`/customers/${customerId}/reveal/`, { field, reason }),
+
   // Corrections (maker-checker)
   proposeCorrection: (customerId: number, body: { field: Field; value: string; evidence_ref: string; reason: string }) =>
     post<FieldCorrection>(`/customers/${customerId}/corrections/`, body),

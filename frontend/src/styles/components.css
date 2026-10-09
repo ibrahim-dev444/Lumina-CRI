@@ -2425,3 +2425,26 @@ code {
   border: 2px solid var(--accent);
   background: var(--surface);
 }
+
+
+/* Revealed identity number */
+.reveal-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--warn-dot);
+  border-radius: var(--radius-md);
+  background: var(--warn-bg);
+}
+
+.reveal-value {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.nowrap {
+  white-space: nowrap;
+}

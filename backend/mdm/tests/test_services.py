@@ -42,9 +42,9 @@ def test_three_records_become_one_customer_with_golden_record(suresh):
     assert golden(customer, "name").value == "Suresh Kumar"  # FLEXCUBE 0.85 beats Salesforce 0.55
     assert golden(customer, "mobile").value == "9822104521"
     assert golden(customer, "mobile").conflicts == 1
-    # name, mobile, email, dob from FLEXCUBE (0.85); no address anywhere:
-    # 0.25*0.85 + 0.25*0.85 + 0.15*0.85 + 0.15*0.85 = 0.680
-    assert customer.trust_score == Decimal("0.680")
+    # name 0.14, mobile 0.14, email 0.07 and dob 0.10 come from FLEXCUBE (trust 0.85); the other
+    # 9 fields are empty: (0.14 + 0.14 + 0.07 + 0.10) * 0.85 = 0.3825, rounded half up to 0.383
+    assert customer.trust_score == Decimal("0.383")
 
 
 def test_rerun_keeps_the_same_customer_id(suresh):
@@ -62,7 +62,7 @@ def test_disabling_a_source_changes_the_golden_record_and_score(suresh):
 
     customer = Customer.objects.get()
     assert golden(customer, "name").value == "Sooresh Kumar"  # Salesforce now the most trusted left
-    assert customer.trust_score < Decimal("0.680")
+    assert customer.trust_score < Decimal("0.383")
 
 
 @pytest.mark.django_db
@@ -100,3 +100,18 @@ def test_pending_suggestion_is_cleared_once_records_are_in_one_customer():
     # All three are one customer now, so the B-C question no longer needs a decision.
     assert Customer.objects.count() == 1
     assert not MatchSuggestion.objects.filter(status=MatchSuggestion.PENDING).exists()
+
+
+@pytest.mark.django_db
+def test_merge_keeps_the_older_customer_id():
+    first = add_record("flexcube", "FX7", "Joseph Mathew", "9447011882", "joseph@mail.example", date(1987, 12, 1))
+    build_customers()
+    older = Customer.objects.get().id
+    # A new record arrives that is only linked later (here: by a confirmed pair), creating a second customer first.
+    second = add_record("branch_csv", "BR6", "Jose Mathew", "9447066120", "jmathew@web.example", None)
+    build_customers()
+    assert Customer.objects.count() == 2
+    MatchSuggestion.objects.create(record_a=first, record_b=second, points=60, reason="test",
+                                   status=MatchSuggestion.ACCEPTED)
+    build_customers()
+    assert list(Customer.objects.values_list("id", flat=True)) == [older]

@@ -16,6 +16,7 @@ class SalesforceConnector(BaseConnector):
     """
 
     source_code = "salesforce"
+    sensitive_columns = {"PAN__c": "pan"}
 
     def fetch(self):
         path = Path(settings.SALESFORCE_MOCK_FILE)
@@ -38,6 +39,9 @@ class SalesforceConnector(BaseConnector):
             "email": raw.get("Email"),
             "address": address,
             "dob": raw.get("Birthdate"),
+            "gender": raw.get("Gender__c"),
+            "pan": raw.get("PAN__c"),  # custom field the bank added to Contact
+            "occupation": raw.get("Title"),
             # Salesforce sends times like 2026-02-14T11:32:08.000+0000 (always UTC).
             "source_updated_at": datetime.strptime(modified, "%Y-%m-%dT%H:%M:%S.%f%z") if modified else None,
         }

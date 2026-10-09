@@ -7,6 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from ingestion.models import SourceRecord
+from security.fields import compare_key
 
 from .golden import pick_winner, trust_score
 from .matching import find_groups
@@ -23,7 +24,7 @@ class BuildResult:
 
 
 def _record_dict(r):
-    return {"id": r.id, "name": r.name, "mobile": r.mobile, "email": r.email, "dob": r.dob}
+    return {"id": r.id, "name": r.name, "mobile": r.mobile, "email": r.email, "dob": r.dob, "pan": r.pan_hash}
 
 
 @transaction.atomic
@@ -43,7 +44,8 @@ def match_records():
         # Reuse the customer most of these records already belong to, so C-10001 stays C-10001.
         # A customer ID goes to one group only; if a group split, the other part gets a new ID.
         existing = Counter(current[r] for r in group if r in current)
-        free = [c for c, _ in existing.most_common() if c not in used]
+        # Most records first; on a tie the older customer (lower ID) keeps its number.
+        free = [c for c, _ in sorted(existing.items(), key=lambda kv: (-kv[1], kv[0])) if c not in used]
         if free:
             customer_id = free[0]
             result.merged += len(free) - 1
@@ -112,6 +114,7 @@ def rebuild_golden_record(customer):
                 "record_id": r.id,
                 "source_id": r.source_id,
                 "correction_id": None,
+                "compare": compare_key(field, getattr(r, field)),
             }
             for r in records
         ]
@@ -124,6 +127,7 @@ def rebuild_golden_record(customer):
                 "record_id": None,
                 "source_id": None,
                 "correction_id": c.id,
+                "compare": compare_key(field, c.value),
             })
         winner, conflicts = pick_winner(candidates)
         winners[field] = winner

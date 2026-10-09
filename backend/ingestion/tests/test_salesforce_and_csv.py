@@ -31,7 +31,8 @@ CSV_ROW = {
 def test_salesforce_maps_contact_to_standard_fields():
     connector = SalesforceConnector()
     assert connector.record_id(SALESFORCE_ROW) == "003Dn00000A1001AAA"
-    assert clean_record(connector.to_standard(SALESFORCE_ROW)) == {
+    std = clean_record(connector.to_standard(SALESFORCE_ROW))
+    assert {k: std[k] for k in ["name", "mobile", "email", "address", "dob", "source_updated_at"]} == {
         "name": "Sooresh Kumar",
         "mobile": "9822107788",
         "email": "skumar84@webmail.example",

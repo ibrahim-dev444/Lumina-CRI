@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import type { Field, GoldenField, SourceRecord } from '../api/types'
-import { FIELD_LABELS, formatDate, formatFieldValue, formatScore } from '../format'
+import { FIELD_LABELS, formatDate, formatFieldValue, formatScore, MONO_FIELDS } from '../format'
 import { Icon } from './Icon'
 import { StatusBadge } from './ui'
 
@@ -13,7 +13,8 @@ interface ValueGroup {
   records: SourceRecord[] // every source holding this value, most trusted first
 }
 
-// Every distinct value any connected source holds for this field, grouped by value.
+// Every distinct value any connected source holds for this field, grouped by value. Records the server
+// marked as agreeing with the golden record form one group; masked identity numbers are never compared here.
 function groupValues(field: Field, records: SourceRecord[]): ValueGroup[] {
   const holding = records
     .filter((r) => r.source_enabled && r[field])
@@ -21,7 +22,8 @@ function groupValues(field: Field, records: SourceRecord[]): ValueGroup[] {
   const groups = new Map<string, ValueGroup>()
   for (const r of holding) {
     const value = r[field] as string
-    const key = normalise(value)
+    const agrees = r.agreement?.[field]
+    const key = agrees === true ? '__golden__' : normalise(value)
     if (!groups.has(key)) groups.set(key, { value, records: [] })
     groups.get(key)!.records.push(r)
   }
@@ -54,7 +56,9 @@ export function GoldenFieldRow({
     )
   }
 
-  const winner = groups.find((g) => g.records.some((r) => r.id === golden.source_record_id))
+  const winner =
+    groups.find((g) => g.records.some((r) => r.id === golden.source_record_id)) ??
+    groups.find((g) => g.records.some((r) => r.agreement?.[field] === true))
   const agreeing = winner?.records.filter((r) => r.id !== golden.source_record_id) ?? []
   const others = groups.filter((g) => g !== winner)
 
@@ -62,7 +66,7 @@ export function GoldenFieldRow({
     <div className="field-row">
       <dt>{FIELD_LABELS[field]}</dt>
       <dd>
-        <div className="field-value">{formatFieldValue(field, golden.value)}</div>
+        <div className={`field-value${MONO_FIELDS.has(field) ? ' mono' : ''}`}>{formatFieldValue(field, golden.value)}</div>
         {golden.correction ? (
           <div className="field-source">
             <strong>Approved correction</strong> · evidence {golden.correction.evidence_ref} · proposed by{' '}

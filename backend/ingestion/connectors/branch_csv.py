@@ -16,6 +16,7 @@ class BranchCsvConnector(BaseConnector):
     """
 
     source_code = "branch_csv"
+    sensitive_columns = {"PAN": "pan", "Aadhaar": "aadhaar"}
 
     def fetch(self):
         folder = Path(settings.BRANCH_CSV_DIR)
@@ -40,6 +41,13 @@ class BranchCsvConnector(BaseConnector):
             "email": raw.get("Email"),
             "address": raw.get("Address"),
             "dob": raw.get("DOB"),
+            "father_name": raw.get("Father Name"),
+            "gender": raw.get("Gender"),
+            "pan": raw.get("PAN"),
+            "aadhaar": raw.get("Aadhaar"),
+            "perm_address": raw.get("Permanent Address"),
+            "occupation": raw.get("Occupation"),
+            "income": raw.get("Annual Income"),
             # The sheet has only a date, so we take the start of that day.
             "source_updated_at": datetime.combine(updated, time.min) if updated else None,
         }

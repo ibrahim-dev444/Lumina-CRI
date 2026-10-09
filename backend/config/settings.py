@@ -103,6 +103,11 @@ DATABASES = {
 # Fake FLEXCUBE core banking system. Connectors read it with raw SQL; Django never migrates it.
 FLEXCUBE_DB_URL = os.getenv('FLEXCUBE_DB_URL', '')
 
+# Key for encrypting PAN and CKYC numbers (Fernet key). Generate one with:
+#   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# Required when DJANGO_DEBUG is false; in development a key is derived from DJANGO_SECRET_KEY if missing.
+FIELD_ENCRYPTION_KEY = os.getenv('FIELD_ENCRYPTION_KEY', '')
+
 # Fake Salesforce API response and branch CSV uploads, kept in the repo under fake_sources/.
 SALESFORCE_MOCK_FILE = os.getenv('SALESFORCE_MOCK_FILE') or str(BASE_DIR.parent / 'fake_sources' / 'salesforce' / 'contacts.json')
 BRANCH_CSV_DIR = os.getenv('BRANCH_CSV_DIR') or str(BASE_DIR.parent / 'fake_sources' / 'branch_csv')

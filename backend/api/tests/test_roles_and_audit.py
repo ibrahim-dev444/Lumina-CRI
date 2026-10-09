@@ -141,6 +141,6 @@ def test_reference_reflects_the_live_rules(suresh):
     body = client_for("Contact centre agent").get("/api/reference/").json()
     agent = next(r for r in body["roles"] if r["role"] == "agent")
     assert "view_pii" not in agent["capabilities"]
-    assert body["weights"]["name"] == "0.25"
+    assert body["weights"]["name"] == "0.14"
     assert body["matching"]["match_threshold"] == 70
     assert body["sources"][0]["code"] == "flexcube"
