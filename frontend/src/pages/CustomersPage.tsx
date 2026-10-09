@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Band } from '../api/types'
 import { useApi } from '../api/useApi'
+import { KycBadge } from '../components/ComplianceTab'
 import { Icon } from '../components/Icon'
 import {
   Avatar,
@@ -138,11 +139,12 @@ export function CustomersPage() {
                 <th>Found in</th>
                 <th className="right">Conflicts</th>
                 <th>Review</th>
+                <th>KYC</th>
                 <th className="right">Updated</th>
               </tr>
             </thead>
             {loading && !data ? (
-              <SkeletonRows columns={6} />
+              <SkeletonRows columns={7} />
             ) : (
               <tbody>
                 {data?.results.map((c) => (
@@ -173,6 +175,9 @@ export function CustomersPage() {
                       ) : (
                         <span className="muted">-</span>
                       )}
+                    </td>
+                    <td>
+                      <KycBadge status={c.kyc_status} />
                     </td>
                     <td className="right text-sm muted">{formatRelative(c.score_updated_at)}</td>
                   </tr>

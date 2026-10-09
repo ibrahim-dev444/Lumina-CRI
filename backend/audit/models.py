@@ -22,6 +22,7 @@ class AuditEvent(models.Model):
     CORRECTION_APPROVED = "corr_approved"
     CORRECTION_REJECTED = "corr_rejected"
     REVEAL = "reveal"
+    CONSENT = "consent"
 
     ACTION_CHOICES = [
         (LOGIN, "Signed in"),
@@ -38,6 +39,7 @@ class AuditEvent(models.Model):
         (CORRECTION_APPROVED, "Approved correction"),
         (CORRECTION_REJECTED, "Rejected correction"),
         (REVEAL, "Revealed identity number"),
+        (CONSENT, "Recorded consent"),
     ]
 
     at = models.DateTimeField(auto_now_add=True, db_index=True)

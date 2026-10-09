@@ -21,6 +21,8 @@ from ingestion.sync import sync_source
 from mdm.models import Customer, FieldCorrection, GoldenField, MatchSuggestion
 from mdm.services import build_customers, decide_suggestion
 from sources.models import Source
+from compliance.models import KycRecord
+from compliance.services import ConsentError, record_consent
 from stewardship.services import CorrectionError, decide, propose
 
 from .permissions import HasRole, requires
@@ -179,7 +181,22 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
             return [HasRole(), requires("propose_corrections")()]
         if self.action == "reveal":
             return [HasRole(), requires("reveal_identity")()]
+        if self.action == "consent":
+            return [HasRole(), requires("record_consent")()]
         return [HasRole()]
+
+    @action(detail=True, methods=["post"])
+    def consent(self, request, pk=None):
+        """POST /api/customers/<id>/consent/  {purpose, status, channel, note}"""
+        customer = self.get_object()
+        try:
+            c = record_consent(customer.pan_hash, request.data.get("purpose"), request.data.get("status"),
+                               request.data.get("channel"), request.data.get("note"), request.user.get_username())
+        except ConsentError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        record(request, AuditEvent.CONSENT, target=customer.code, purpose=c.purpose, status=c.status,
+               channel=c.channel)
+        return Response({"purpose": c.purpose, "status": c.status}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"])
     def reveal(self, request, pk=None):
@@ -342,6 +359,56 @@ class FieldCorrectionViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=["post"])
     def reject(self, request, pk=None):
         return self._decide(approve=False)
+
+
+# ---------- Compliance queue ----------
+
+RISK_ORDER = {"high": 0, "medium": 1, "low": 2}
+
+
+@api_view(["GET"])
+@permission_classes([HasRole, requires("view_compliance")])
+def compliance_queue(request):
+    """GET /api/compliance/?status=overdue|due_soon|verified|no_record&risk=high|medium|low
+    Every customer with KYC and AML status, highest risk and earliest due date first."""
+    names = dict(GoldenField.objects.filter(field="name").values_list("customer_id", "value"))
+    kyc = {k.pan_hash: k for k in KycRecord.objects.all()}
+    rows = []
+    for c in Customer.objects.all():
+        k = kyc.get(c.pan_hash) if c.pan_hash else None
+        rows.append({
+            "id": c.id, "code": c.code, "name": names.get(c.id, ""),
+            "trust_score": str(c.trust_score) if c.trust_score is not None else None,
+            "kyc_status": k.status() if k else "no_record",
+            "re_kyc_due": k.re_kyc_due.isoformat() if k else None,
+            "last_kyc": k.last_kyc.isoformat() if k else None,
+            "risk": k.risk if k else None,
+            "risk_reason": k.risk_reason if k else "",
+            "pep": k.pep if k else False,
+            "sanctions": k.sanctions if k else None,
+        })
+
+    counts = {
+        "customers": len(rows),
+        "overdue": sum(r["kyc_status"] == "overdue" for r in rows),
+        "due_soon": sum(r["kyc_status"] == "due_soon" for r in rows),
+        "verified": sum(r["kyc_status"] == "verified" for r in rows),
+        "no_record": sum(r["kyc_status"] == "no_record" for r in rows),
+        "high_risk": sum(r["risk"] == "high" for r in rows),
+        "medium_risk": sum(r["risk"] == "medium" for r in rows),
+        "low_risk": sum(r["risk"] == "low" for r in rows),
+        "pep": sum(r["pep"] for r in rows),
+        "sanctions_review": sum(r["sanctions"] == "potential_match" for r in rows),
+    }
+
+    wanted_status = request.query_params.get("status")
+    wanted_risk = request.query_params.get("risk")
+    if wanted_status:
+        rows = [r for r in rows if r["kyc_status"] == wanted_status]
+    if wanted_risk:
+        rows = [r for r in rows if r["risk"] == wanted_risk]
+    rows.sort(key=lambda r: (RISK_ORDER.get(r["risk"], 3), r["re_kyc_due"] or "9999-12-31", r["code"]))
+    return Response({"summary": counts, "results": rows})
 
 
 # ---------- Audit log ----------

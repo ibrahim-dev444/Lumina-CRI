@@ -111,6 +111,7 @@ The backend is a **modular monolith**: one Django project split into apps with c
 | `ingestion` | Connectors, raw records, cleaned records |
 | `mdm` | Matching, golden records, trust scores, match suggestions, stored corrections |
 | `stewardship` | The corrections workflow: propose with evidence, approve or reject (maker-checker) |
+| `compliance` | KYC, AML risk, PEP, sanctions and consent, linked to customers by PAN fingerprint |
 | `accounts` | Roles, permissions, masking |
 | `audit` | The audit log |
 | `api` | HTTP endpoints only; it calls the other apps' functions |

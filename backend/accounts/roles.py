@@ -35,6 +35,12 @@ CAPABILITIES = {
     "approve_corrections": {STEWARD, COMPLIANCE, ADMIN},
     # See a full PAN or CKYC number, with a reason that goes to the audit log.
     "reveal_identity": {COMPLIANCE, ADMIN},
+    # See AML risk, politically exposed person flags and sanctions results, and the compliance queue.
+    # Front-line roles never see these: hinting to a customer that they are under suspicion
+    # ("tipping off") is an offence.
+    "view_compliance": {STEWARD, COMPLIANCE, ADMIN},
+    # Record that a customer gave or withdrew consent for a purpose.
+    "record_consent": {AGENT, RELATIONSHIP_MANAGER, COMPLIANCE, ADMIN},
     # Download the customer list as CSV.
     "export": {STEWARD, COMPLIANCE, ADMIN},
     # Read the audit log.

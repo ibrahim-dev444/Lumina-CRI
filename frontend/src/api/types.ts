@@ -32,6 +32,8 @@ export type Capability =
   | 'propose_corrections'
   | 'approve_corrections'
   | 'reveal_identity'
+  | 'view_compliance'
+  | 'record_consent'
   | 'export'
   | 'view_audit'
 
@@ -83,6 +85,7 @@ export interface CustomerSummary {
   record_count: number
   sources: string[]
   conflict_fields: number
+  kyc_status: 'verified' | 'due_soon' | 'overdue' | 'no_record'
   needs_review: number
   score_updated_at: string | null
 }
@@ -150,6 +153,57 @@ export interface CustomerDetail extends CustomerSummary {
   weights: Partial<Record<Field, string>>
   masked: boolean // mobile, email and date of birth were hidden for this user's role
   corrections: FieldCorrection[]
+  compliance: {
+    kyc_status: 'verified' | 'due_soon' | 'overdue' | 'no_record'
+    re_kyc_due: string | null
+    has_pan: boolean
+    consents: {
+      purpose: string
+      label: string
+      status: 'granted' | 'revoked' | 'pending' | 'unknown'
+      channel: string
+      recorded_by: string
+      recorded_at: string | null
+    }[]
+    // Only for compliance roles; null for everyone else
+    aml: {
+      risk: 'low' | 'medium' | 'high'
+      risk_reason: string
+      last_kyc: string
+      pep: boolean
+      pep_note: string
+      sanctions: 'clear' | 'potential_match'
+      sanctions_checked: string | null
+    } | null
+  }
+}
+
+export interface ComplianceQueue {
+  summary: {
+    customers: number
+    overdue: number
+    due_soon: number
+    verified: number
+    no_record: number
+    high_risk: number
+    medium_risk: number
+    low_risk: number
+    pep: number
+    sanctions_review: number
+  }
+  results: {
+    id: number
+    code: string
+    name: string
+    trust_score: string | null
+    kyc_status: string
+    re_kyc_due: string | null
+    last_kyc: string | null
+    risk: 'low' | 'medium' | 'high' | null
+    risk_reason: string
+    pep: boolean
+    sanctions: 'clear' | 'potential_match' | null
+  }[]
 }
 
 export interface Overview {

@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'api',
     'accounts',
     'audit',
+    'stewardship',
+    'compliance',
 ]
 
 MIDDLEWARE = [

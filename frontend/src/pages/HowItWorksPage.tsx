@@ -18,6 +18,9 @@ const CAPABILITY_LABELS: { key: Capability; label: string }[] = [
   { key: 'decide_matches', label: 'Merge or keep apart duplicates' },
   { key: 'manage_sources', label: 'Sync or switch sources' },
   { key: 'export', label: 'Export customer list' },
+  { key: 'record_consent', label: 'Record customer consent' },
+  { key: 'view_compliance', label: 'See AML risk, PEP and sanctions' },
+  { key: 'reveal_identity', label: 'Reveal full PAN or CKYC (with reason)' },
   { key: 'view_audit', label: 'Read the audit log' },
 ]
 
