@@ -8,6 +8,7 @@ import { Layout } from './components/Layout'
 import { ToastProvider } from './components/Toasts'
 import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
+import { CompliancePage } from './pages/CompliancePage'
 import { ConnectorsPage } from './pages/ConnectorsPage'
 import { CustomerDetailPage } from './pages/CustomerDetailPage'
 import { CustomersPage } from './pages/CustomersPage'
@@ -47,6 +48,7 @@ function Routed() {
         <Route path="/customers/:id" element={<CustomerDetailPage />} />
         {can('view_matches') && <Route path="/review" element={<ReviewPage />} />}
         {can('view_audit') && <Route path="/audit" element={<AuditPage />} />}
+        {can('view_compliance') && <Route path="/compliance" element={<CompliancePage />} />}
         {(can('approve_corrections') || can('propose_corrections')) && (
           <Route path="/approvals" element={<ApprovalsPage />} />
         )}

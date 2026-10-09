@@ -2,6 +2,7 @@
 
 import type {
   AuditEvent,
+  ComplianceQueue,
   CustomerDetail,
   CustomerSummary,
   Field,
@@ -82,6 +83,11 @@ export const api = {
   // Full PAN or CKYC number, with an audited reason (compliance officers and admins)
   reveal: (customerId: number, field: 'pan' | 'ckyc', reason: string) =>
     post<{ field: 'pan' | 'ckyc'; value: string }>(`/customers/${customerId}/reveal/`, { field, reason }),
+
+  // Compliance
+  compliance: (params: { status?: string; risk?: string }) => get<ComplianceQueue>(`/compliance/${query(params)}`),
+  recordConsent: (customerId: number, body: { purpose: string; status: string; channel: string; note: string }) =>
+    post<{ purpose: string; status: string }>(`/customers/${customerId}/consent/`, body),
 
   // Corrections (maker-checker)
   proposeCorrection: (customerId: number, body: { field: Field; value: string; evidence_ref: string; reason: string }) =>

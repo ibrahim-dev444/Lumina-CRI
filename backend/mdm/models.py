@@ -20,6 +20,9 @@ class Customer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     trust_score = models.DecimalField(max_digits=4, decimal_places=3, null=True, blank=True)  # 0.000 to 1.000
     score_updated_at = models.DateTimeField(null=True, blank=True)
+    # Fingerprint of the golden PAN. Compliance data (KYC, AML, consent) is keyed by it, so it follows
+    # the person through merges. Empty when no PAN is on file.
+    pan_hash = models.CharField(max_length=64, blank=True, db_index=True)
 
     class Meta:
         ordering = ["id"]

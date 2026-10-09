@@ -2448,3 +2448,19 @@ code {
 .nowrap {
   white-space: nowrap;
 }
+
+
+/* Parts-of-a-whole bar */
+.composition {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+
+.composition i {
+  display: block;
+  height: 100%;
+}

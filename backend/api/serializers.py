@@ -5,6 +5,8 @@ from rest_framework import serializers
 from accounts.masking import MASKERS, mask
 from security.fields import compare_key, display
 from accounts.roles import can
+from compliance.models import PURPOSES, KycRecord
+from compliance.services import current_consents, summary as kyc_summary
 from audit.models import AuditEvent
 
 from ingestion.models import SourceRecord
@@ -41,10 +43,12 @@ class CustomerListSerializer(serializers.ModelSerializer):
     sources = serializers.SerializerMethodField()
     conflict_fields = serializers.SerializerMethodField()
     needs_review = serializers.SerializerMethodField()
+    kyc_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
         fields = ["id", "code", "name", "trust_score", "band", "record_count", "sources", "conflict_fields",
+                  "kyc_status",
                   "needs_review", "score_updated_at"]
 
     # These read from prefetched golden_fields and links (see CustomerViewSet), so no extra queries.
@@ -54,6 +58,13 @@ class CustomerListSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         g = self._golden(obj).get("name")
         return g.value if g else ""
+
+    def get_kyc_status(self, obj):
+        """'verified', 'due_soon', 'overdue' or 'no_record'. KYC rows are loaded once per request."""
+        cache = self.context.setdefault("_kyc", {})
+        if obj.pan_hash and obj.pan_hash not in cache:
+            cache.update({k.pan_hash: k for k in KycRecord.objects.filter(pan_hash=obj.pan_hash)})
+        return kyc_summary(cache.get(obj.pan_hash))["kyc_status"]
 
     def get_band(self, obj):
         return trust_band(obj.trust_score)
@@ -181,9 +192,44 @@ class CustomerDetailSerializer(CustomerListSerializer):
     weights = serializers.SerializerMethodField()
     masked = serializers.SerializerMethodField()
     corrections = serializers.SerializerMethodField()
+    compliance = serializers.SerializerMethodField()
 
     class Meta(CustomerListSerializer.Meta):
-        fields = CustomerListSerializer.Meta.fields + ["golden", "records", "weights", "masked", "corrections"]
+        fields = CustomerListSerializer.Meta.fields + ["golden", "records", "weights", "masked", "corrections",
+                                                       "compliance"]
+
+    def get_compliance(self, obj):
+        """KYC status and consent for everyone; AML risk, PEP and sanctions only for compliance roles."""
+        kyc = KycRecord.objects.filter(pan_hash=obj.pan_hash).first() if obj.pan_hash else None
+        current = current_consents(obj.pan_hash)
+        data = {
+            **kyc_summary(kyc),
+            "has_pan": bool(obj.pan_hash),
+            "consents": [
+                {
+                    "purpose": key,
+                    "label": label,
+                    "status": current[key].status if current[key] else "unknown",
+                    "channel": current[key].channel if current[key] else "",
+                    "recorded_by": current[key].recorded_by_name if current[key] else "",
+                    "recorded_at": current[key].recorded_at.isoformat() if current[key] else None,
+                }
+                for key, label in PURPOSES
+            ],
+            "aml": None,
+        }
+        request = self.context.get("request")
+        if kyc and request and can(request.user, "view_compliance"):
+            data["aml"] = {
+                "risk": kyc.risk,
+                "risk_reason": kyc.risk_reason,
+                "last_kyc": kyc.last_kyc.isoformat(),
+                "pep": kyc.pep,
+                "pep_note": kyc.pep_note,
+                "sanctions": kyc.sanctions,
+                "sanctions_checked": kyc.sanctions_checked.isoformat() if kyc.sanctions_checked else None,
+            }
+        return data
 
     def get_corrections(self, obj):
         """The 10 most recent corrections for this customer, any status."""

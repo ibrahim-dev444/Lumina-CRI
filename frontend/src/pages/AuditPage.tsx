@@ -15,6 +15,8 @@ const ACTIONS: { value: string; label: string }[] = [
   { value: 'corr_proposed', label: 'Proposed correction' },
   { value: 'corr_approved', label: 'Approved correction' },
   { value: 'corr_rejected', label: 'Rejected correction' },
+  { value: 'consent', label: 'Recorded consent' },
+  { value: 'reveal', label: 'Revealed identity number' },
   { value: 'sync_source', label: 'Synced source' },
   { value: 'update_source', label: 'Changed source' },
   { value: 'login', label: 'Signed in' },

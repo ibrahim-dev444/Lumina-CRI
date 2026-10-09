@@ -1,0 +1,11 @@
+PAN,AML Risk,Risk Reason,Last KYC,PEP,PEP Note,Sanctions,Sanctions Checked,Consent Servicing,Consent Marketing,Consent Analytics,Consent Cross-sell,Consent Account Aggregator
+ABCPK1234F,Medium,High-value account,2019-03-12,No,,Clear,2026-09-30,granted,granted,granted,pending,revoked
+BDEPD2345G,Low,Standard profile,2021-06-04,No,,Clear,2026-09-28,granted,revoked,granted,granted,pending
+CFGPI3456H,Medium,High-value account,2018-12-20,No,,Clear,2026-09-30,granted,granted,revoked,granted,granted
+DGHPS4567J,Low,Standard profile,2017-02-15,No,,Clear,2026-10-01,granted,pending,granted,revoked,pending
+EHJPS5678K,High,Cash-intensive business,2024-01-10,Yes,Related to a politically exposed person,Potential match,2026-10-02,granted,revoked,revoked,revoked,revoked
+FJKPR6789L,Medium,High-value account,2018-11-01,No,,Clear,2026-09-29,granted,granted,granted,granted,pending
+GKLPM7890M,Low,Standard profile,2022-08-19,No,,Clear,2026-09-27,granted,granted,pending,granted,pending
+HLMPJ8901N,Low,Standard profile,2016-04-11,No,,Clear,2026-09-26,granted,granted,granted,pending,pending
+JMNPF9012P,Medium,Retail cash business,2020-07-07,No,,Clear,2026-10-01,granted,revoked,granted,granted,granted
+KNPPC0123Q,Low,Standard profile,2023-05-30,No,,Clear,2026-09-30,granted,granted,granted,granted,granted

@@ -5,6 +5,8 @@ import type { CustomerDetail } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { AgreementGrid } from '../components/AgreementGrid'
+import { ComplianceTab, KycBadge } from '../components/ComplianceTab'
+import { RISK_LABEL } from '../compliance'
 import { CorrectionsCard } from '../components/CorrectionsCard'
 import { GoldenFieldRow } from '../components/GoldenFieldRow'
 import { RevealPanel } from '../components/RevealPanel'
@@ -23,7 +25,7 @@ import {
 } from '../components/ui'
 import { FIELD_LABELS, FIELD_SHORT, FIELDS, MONO_FIELDS, formatDateTime, formatFieldValue, formatRelative, formatScore } from '../format'
 
-type Tab = 'identity' | 'sources' | 'activity'
+type Tab = 'identity' | 'sources' | 'compliance' | 'activity'
 
 export function CustomerDetailPage() {
   const id = Number(useParams().id)
@@ -34,6 +36,7 @@ export function CustomerDetailPage() {
   const tabs: { value: Tab; label: string }[] = [
     { value: 'identity', label: 'Identity' },
     { value: 'sources', label: 'Sources' },
+    { value: 'compliance', label: 'Compliance' },
     ...(canSeeAudit ? [{ value: 'activity' as Tab, label: 'Activity' }] : []),
   ]
   const wanted = params.get('tab') as Tab | null
@@ -80,6 +83,18 @@ export function CustomerDetailPage() {
                 </span>
               </div>
               <SourceChips codes={c.sources} />
+              <div className="row" style={{ gap: 6 }}>
+                <KycBadge status={c.compliance.kyc_status} />
+                {c.compliance.aml && (
+                  <StatusBadge tone={RISK_LABEL[c.compliance.aml.risk].tone}>
+                    {RISK_LABEL[c.compliance.aml.risk].label}
+                  </StatusBadge>
+                )}
+                {c.compliance.aml?.pep && <StatusBadge tone="bad">Politically exposed</StatusBadge>}
+                {c.compliance.aml?.sanctions === 'potential_match' && (
+                  <StatusBadge tone="bad">Sanctions review</StatusBadge>
+                )}
+              </div>
             </div>
           </div>
           <div className="score-block">
@@ -120,6 +135,7 @@ export function CustomerDetailPage() {
 
       {tab === 'identity' && <IdentityTab c={c} onChanged={reload} />}
       {tab === 'sources' && <SourcesTab c={c} />}
+      {tab === 'compliance' && <ComplianceTab c={c} onChanged={reload} />}
       {tab === 'activity' && <ActivityTab c={c} />}
     </>
   )

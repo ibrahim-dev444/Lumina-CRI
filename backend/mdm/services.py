@@ -149,7 +149,8 @@ def rebuild_golden_record(customer):
 
     customer.trust_score = trust_score(winners, weights)
     customer.score_updated_at = timezone.now()
-    customer.save(update_fields=["trust_score", "score_updated_at"])
+    customer.pan_hash = winners["pan"]["compare"] if winners.get("pan") else ""
+    customer.save(update_fields=["trust_score", "score_updated_at", "pan_hash"])
 
 
 def build_customers():

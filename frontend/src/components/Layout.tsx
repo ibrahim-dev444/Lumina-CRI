@@ -32,7 +32,10 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   },
   {
     label: 'Governance',
-    items: [{ to: '/audit', label: 'Audit log', icon: 'audit', needs: ['view_audit'] }],
+    items: [
+      { to: '/compliance', label: 'Compliance', icon: 'shield', needs: ['view_compliance'] },
+      { to: '/audit', label: 'Audit log', icon: 'audit', needs: ['view_audit'] },
+    ],
   },
   {
     label: 'Help',
@@ -48,6 +51,7 @@ const PAGE_TITLES = [
   { path: '/audit', title: 'Audit log' },
   { path: '/approvals', title: 'Approvals' },
   { path: '/how-it-works', title: 'How it works' },
+  { path: '/compliance', title: 'Compliance' },
 ]
 
 export function Layout() {

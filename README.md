@@ -94,6 +94,7 @@ python manage.py sync flexcube
 python manage.py sync salesforce
 python manage.py sync branch_csv
 python manage.py build_customers
+python manage.py sync_compliance
 ```
 
 **6. Create logins.**
@@ -137,6 +138,7 @@ python manage.py sync flexcube
 python manage.py sync salesforce
 python manage.py sync branch_csv
 python manage.py build_customers
+python manage.py sync_compliance
 ```
 
 After every `git pull`, also run:
@@ -156,6 +158,7 @@ npm install
 | `python manage.py load_fake_flexcube` | Re-create the fake FLEXCUBE table from `docker/postgres/init/01-flexcube.sql` |
 | `python manage.py sync <source>` | Read one source: `flexcube`, `salesforce` or `branch_csv` |
 | `python manage.py build_customers` | Re-run matching, golden records and trust scores |
+| `python manage.py sync_compliance` | Import KYC, AML and consent from `fake_sources/compliance/kyc_aml.csv` |
 | `python manage.py seed_demo_users` | Create or reset one demo login per role |
 | `pytest` | Run all backend tests |
 
