@@ -11,6 +11,7 @@ import { AuditPage } from './pages/AuditPage'
 import { ConnectorsPage } from './pages/ConnectorsPage'
 import { CustomerDetailPage } from './pages/CustomerDetailPage'
 import { CustomersPage } from './pages/CustomersPage'
+import { HowItWorksPage } from './pages/HowItWorksPage'
 import { LoginPage } from './pages/LoginPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { ReviewPage } from './pages/ReviewPage'
@@ -50,6 +51,7 @@ function Routed() {
           <Route path="/approvals" element={<ApprovalsPage />} />
         )}
         <Route path="/connectors" element={<ConnectorsPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

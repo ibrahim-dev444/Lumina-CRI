@@ -7,20 +7,10 @@ import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { Icon, type IconName } from '../components/Icon'
 import { useToast } from '../components/Toasts'
-import { TrustDonut } from '../components/TrustDonut'
 import { TrustHistogram } from '../components/TrustHistogram'
-import {
-  Avatar,
-  Card,
-  ErrorAlert,
-  PageHeader,
-  Skeleton,
-  SourceChips,
-  StatusBadge,
-  TrustCell,
-} from '../components/ui'
+import { Avatar, Card, ErrorAlert, PageHeader, Skeleton, SourceChips, StatusBadge, TrustCell } from '../components/ui'
 import { exportCustomersCsv } from '../exportCsv'
-import { formatRelative, formatScore, sourceHue, sourceTier } from '../format'
+import { formatRelative, formatScore, sourceTier } from '../format'
 
 const TARGET = 0.85 // the average trust the data team is working towards
 
@@ -140,9 +130,8 @@ export function OverviewPage() {
 
       <div className="grid-2">
         <Card
-          glass
           title="Trust score distribution"
-          description="Customers per 0.1 of trust score, from 0 to 1"
+          description="Customers per 0.1 of trust score"
           actions={
             <div className="legend" aria-hidden="true">
               <span>
@@ -176,64 +165,7 @@ export function OverviewPage() {
           )}
         </Card>
 
-        <Card glass title="Trust mix" description="Share of customers in each band">
-          {data ? <TrustDonut bands={data.bands} average={data.average_trust} /> : <Skeleton height={168} />}
-        </Card>
-      </div>
-
-      <div className="grid-2">
         <Card
-          title="Lowest trust customers"
-          description="Start clean-up here: these records need a source checked or a match decided"
-          flush
-          actions={
-            <Link to="/customers" className="link text-sm">
-              View all
-            </Link>
-          }
-        >
-          <div className="table-wrap">
-            <table className="table" style={{ minWidth: 600 }}>
-              <thead>
-                <tr>
-                  <th>Customer</th>
-                  <th>Trust</th>
-                  <th>Found in</th>
-                  <th className="right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.lowest_trust.map((c) => (
-                  <tr key={c.id} className="clickable" onClick={() => navigate(`/customers/${c.id}`)}>
-                    <td>
-                      <div className="cell-person">
-                        <Avatar name={c.name} />
-                        <div>
-                          <strong>{c.name || 'Unnamed'}</strong>
-                          <span className="mono">{c.code}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <TrustCell score={c.trust_score} band={c.band} />
-                    </td>
-                    <td>
-                      <SourceChips codes={c.sources} />
-                    </td>
-                    <td className="right">
-                      <Link to={`/customers/${c.id}`} className="btn btn-sm" onClick={(e) => e.stopPropagation()}>
-                        Review
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        <Card
-          glass
           title="Sources"
           description={data ? `${data.sources.length} configured` : undefined}
           flush
@@ -250,6 +182,56 @@ export function OverviewPage() {
           </div>
         </Card>
       </div>
+
+      <Card
+        title="Lowest trust customers"
+        description="Start clean-up here"
+        flush
+        actions={
+          <Link to="/customers" className="link text-sm">
+            View all
+          </Link>
+        }
+      >
+        <div className="table-wrap">
+          <table className="table" style={{ minWidth: 600 }}>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Trust</th>
+                <th>Found in</th>
+                <th className="right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.lowest_trust.map((c) => (
+                <tr key={c.id} className="clickable" onClick={() => navigate(`/customers/${c.id}`)}>
+                  <td>
+                    <div className="cell-person">
+                      <Avatar name={c.name} />
+                      <div>
+                        <strong>{c.name || 'Unnamed'}</strong>
+                        <span className="mono">{c.code}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <TrustCell score={c.trust_score} band={c.band} />
+                  </td>
+                  <td>
+                    <SourceChips codes={c.sources} />
+                  </td>
+                  <td className="right">
+                    <Link to={`/customers/${c.id}`} className="btn btn-sm" onClick={(e) => e.stopPropagation()}>
+                      Review
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </>
   )
 }
@@ -288,7 +270,7 @@ function Kpi({
       {children}
     </>
   )
-  const className = `glass kpi hue-${hue}`
+  const className = `card kpi hue-${hue}`
   return to ? (
     <Link to={to} className={className}>
       {body}
@@ -307,7 +289,6 @@ function SourceRow({ s }: { s: Source }) {
     >
       <div className="stack" style={{ gap: 2 }}>
         <span className="row" style={{ gap: 8, fontWeight: 600 }}>
-          <span className={`dot ${sourceHue(s.code)}`} aria-hidden="true" />
           {s.name}
         </span>
         <span className="text-xs muted mono">{s.record_count} records</span>

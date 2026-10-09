@@ -56,7 +56,7 @@ export function ReviewPage() {
     <>
       <PageHeader
         title="Match review"
-        description="These records look like the same person, but not with enough certainty to merge automatically. Merging two different people is the costliest mistake, so a person decides."
+        description="Probably the same person, but not certain. You decide."
       />
 
       <div className="segmented" role="group" aria-label="Show">

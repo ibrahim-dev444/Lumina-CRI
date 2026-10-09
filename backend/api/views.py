@@ -373,3 +373,35 @@ def overview(request):
         ).data,
         "lowest_trust": CustomerListSerializer(lowest, many=True).data,
     })
+
+
+# ---------- Reference (powers the "How Lumina works" page) ----------
+
+@api_view(["GET"])
+def reference(request):
+    """The live rules of the system, read from the code and the database, so the help page never drifts."""
+    from accounts import roles as r
+    from mdm import matching
+    from mdm.models import FieldWeight
+
+    return Response({
+        "roles": [
+            {"role": role, "label": r.LABELS[role],
+             "capabilities": sorted(c for c, members in r.CAPABILITIES.items() if role in members)}
+            for role in [r.RELATIONSHIP_MANAGER, r.AGENT, r.STEWARD, r.COMPLIANCE, r.ADMIN]
+        ],
+        "weights": {f: str(w) for f, w in FieldWeight.objects.values_list("field", "weight")},
+        "sources": [{"code": s.code, "name": s.name, "trust": str(s.trust), "enabled": s.enabled}
+                    for s in Source.objects.order_by("-trust", "name")],
+        "matching": {
+            "points_mobile": matching.POINTS_MOBILE,
+            "points_email": matching.POINTS_EMAIL,
+            "points_dob": matching.POINTS_DOB,
+            "points_name_max": matching.POINTS_NAME_MAX,
+            "match_threshold": matching.MATCH_THRESHOLD,
+            "review_threshold": matching.REVIEW_THRESHOLD,
+            "min_name_similarity": matching.MIN_NAME_SIMILARITY,
+        },
+        "bands": {"medium": "0.6", "high": "0.8"},
+        "correction_trust": str(FieldCorrection.TRUST),
+    })

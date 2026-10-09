@@ -135,3 +135,12 @@ def test_repeat_views_within_a_minute_are_logged_once(suresh):
     c.get(f"/api/customers/{suresh.id}/")
     c.get(f"/api/customers/{suresh.id}/")
     assert AuditEvent.objects.filter(action="view_customer").count() == 1
+
+
+def test_reference_reflects_the_live_rules(suresh):
+    body = client_for("Contact centre agent").get("/api/reference/").json()
+    agent = next(r for r in body["roles"] if r["role"] == "agent")
+    assert "view_pii" not in agent["capabilities"]
+    assert body["weights"]["name"] == "0.25"
+    assert body["matching"]["match_threshold"] == 70
+    assert body["sources"][0]["code"] == "flexcube"

@@ -6,7 +6,6 @@ import { GoldenFieldRow } from '../components/GoldenFieldRow'
 import { Icon } from '../components/Icon'
 import { CorrectionsCard } from '../components/CorrectionsCard'
 import { ScoreBreakdown } from '../components/ScoreBreakdown'
-import { ScoreGauge } from '../components/ScoreGauge'
 import {
   Avatar,
   Card,
@@ -14,9 +13,10 @@ import {
   PageHeader,
   Skeleton,
   SourceChips,
+  TrustCell,
   StatusBadge,
 } from '../components/ui'
-import { FIELD_LABELS, FIELDS, formatFieldValue, formatRelative } from '../format'
+import { FIELD_LABELS, FIELDS, formatFieldValue, formatRelative, formatScore } from '../format'
 
 export function CustomerDetailPage() {
   const id = Number(useParams().id)
@@ -48,7 +48,7 @@ export function CustomerDetailPage() {
     <>
       <PageHeader crumbs={crumbs} title="Customer profile" />
 
-      <section className="card glass">
+      <section className="card">
         <div className="card-body row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
           <div className="row" style={{ gap: 16, flexWrap: 'nowrap', minWidth: 0 }}>
             <Avatar name={c.name} large />
@@ -64,9 +64,11 @@ export function CustomerDetailPage() {
               <SourceChips codes={c.sources} />
             </div>
           </div>
-          <div className="stack profile-score">
-            <ScoreGauge score={c.trust_score} band={c.band} />
-            <span className="text-xs muted">Trust score · recalculated {formatRelative(c.score_updated_at).toLowerCase()}</span>
+          <div className="score-block">
+            <span className="score-label">Trust score</span>
+            <span className="score-value">{formatScore(c.trust_score)}</span>
+            <TrustCell score={c.trust_score} band={c.band} />
+            <span className="text-xs muted">Recalculated {formatRelative(c.score_updated_at).toLowerCase()}</span>
           </div>
         </div>
       </section>
@@ -84,7 +86,7 @@ export function CustomerDetailPage() {
       <div className="grid-2">
         <Card
           title="Golden record"
-          description="Each field uses the value from the most trusted source; on a tie, the most recent wins. Open a field to see what the other sources hold."
+          description="The value we use for each field, and where it came from."
           flush
         >
           <dl className="fields">
@@ -94,7 +96,7 @@ export function CustomerDetailPage() {
           </dl>
         </Card>
 
-        <Card glass title="Why this score" description="What each field adds: its weight × the trust of its source">
+        <Card title="Why this score" description="Each field adds its weight × its source's trust.">
           <ScoreBreakdown golden={c.golden} weights={c.weights} score={c.trust_score} />
         </Card>
       </div>
@@ -103,7 +105,7 @@ export function CustomerDetailPage() {
 
       <Card
         title="What each source says"
-        description="Every record linked to this customer. Highlighted values are the ones used in the golden record."
+        description="Highlighted values are the ones in use."
         flush
       >
         <div className="table-wrap">

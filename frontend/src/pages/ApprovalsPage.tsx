@@ -33,7 +33,7 @@ export function ApprovalsPage() {
     <>
       <PageHeader
         title="Approvals"
-        description="Corrections to customer data, each backed by evidence. The person who proposes a change can never approve it: a second person checks every one (maker-checker)."
+        description="Corrections waiting for a second person. Nobody approves their own change."
       />
 
       <div className="segmented" role="group" aria-label="Show">

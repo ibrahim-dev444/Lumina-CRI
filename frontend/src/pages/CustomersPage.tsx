@@ -13,7 +13,6 @@ import {
   PageHeader,
   SkeletonRows,
   SourceChips,
-  StatusBadge,
   TrustCell,
 } from '../components/ui'
 import { formatRelative } from '../format'
@@ -60,7 +59,7 @@ export function CustomersPage() {
     <>
       <PageHeader
         title="Customers"
-        description="One record per real customer, built from every connected source. Lowest trust is shown first so clean-up starts where it matters."
+        description="Lowest trust first, so clean-up starts where it matters."
       />
 
       <div className="toolbar">
@@ -168,11 +167,11 @@ export function CustomersPage() {
                     <td className="right mono">{c.conflict_fields ? c.conflict_fields : <span className="muted">-</span>}</td>
                     <td>
                       {c.needs_review ? (
-                        <StatusBadge tone="bad">
+                        <span className="text-sm">
                           {c.needs_review} field{c.needs_review > 1 ? 's' : ''}
-                        </StatusBadge>
+                        </span>
                       ) : (
-                        <StatusBadge tone="good">Complete</StatusBadge>
+                        <span className="muted">-</span>
                       )}
                     </td>
                     <td className="right text-sm muted">{formatRelative(c.score_updated_at)}</td>

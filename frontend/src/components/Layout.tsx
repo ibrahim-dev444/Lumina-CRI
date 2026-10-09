@@ -34,6 +34,10 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
     label: 'Governance',
     items: [{ to: '/audit', label: 'Audit log', icon: 'audit', needs: ['view_audit'] }],
   },
+  {
+    label: 'Help',
+    items: [{ to: '/how-it-works', label: 'How it works', icon: 'info' }],
+  },
 ]
 
 const PAGE_TITLES = [
@@ -43,6 +47,7 @@ const PAGE_TITLES = [
   { path: '/connectors', title: 'Connectors' },
   { path: '/audit', title: 'Audit log' },
   { path: '/approvals', title: 'Approvals' },
+  { path: '/how-it-works', title: 'How it works' },
 ]
 
 export function Layout() {
@@ -91,15 +96,12 @@ export function Layout() {
 
   return (
     <div className="shell">
-      <div className="orbs" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-      </div>
-      <aside className="sidebar glass">
+      <aside className="sidebar" aria-label="Main navigation">
         <Link to="/" className="brand" title="Go to Overview">
-          <div>
+          <span className="brand-mark" aria-hidden="true">
+            L
+          </span>
+          <div className="rail-text">
             <div className="brand-name">Lumina</div>
             <div className="brand-sub">Customer data platform</div>
           </div>
@@ -109,11 +111,13 @@ export function Layout() {
           .filter((group) => group.items.length > 0)
           .map((group) => (
           <nav key={group.label} className="nav-group" aria-label={group.label}>
-            <div className="nav-label">{group.label}</div>
+            <div className="nav-label">
+              <span className="rail-text">{group.label}</span>
+            </div>
             {group.items.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className="nav-link">
                 <Icon name={item.icon} />
-                {item.label}
+                <span className="rail-text">{item.label}</span>
                 {item.to === '/review' && pending ? <span className="nav-count">{pending}</span> : null}
                 {item.to === '/approvals' && pendingCorrections ? (
                   <span className="nav-count">{pendingCorrections}</span>
@@ -125,7 +129,7 @@ export function Layout() {
 
         <div className="sidebar-foot">
           <Avatar name={user?.name ?? ''} />
-          <div className="sidebar-user">
+          <div className="sidebar-user rail-text">
             <strong>{user?.name}</strong>
             <span>{user?.role_label}</span>
           </div>

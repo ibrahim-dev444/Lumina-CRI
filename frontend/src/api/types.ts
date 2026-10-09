@@ -140,6 +140,23 @@ export interface Overview {
   lowest_trust: CustomerSummary[]
 }
 
+export interface Reference {
+  roles: { role: string; label: string; capabilities: Capability[] }[]
+  weights: Partial<Record<Field, string>>
+  sources: { code: string; name: string; trust: string; enabled: boolean }[]
+  matching: {
+    points_mobile: number
+    points_email: number
+    points_dob: number
+    points_name_max: number
+    match_threshold: number
+    review_threshold: number
+    min_name_similarity: number
+  }
+  bands: { medium: string; high: string }
+  correction_trust: string
+}
+
 export interface MatchSuggestion {
   id: number
   points: number

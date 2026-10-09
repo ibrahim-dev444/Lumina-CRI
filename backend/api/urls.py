@@ -16,5 +16,6 @@ urlpatterns = [
     path("auth/logout/", views.logout_view),
     path("auth/me/", views.me),
     path("overview/", views.overview),
+    path("reference/", views.reference),
     path("", include(router.urls)),
 ]

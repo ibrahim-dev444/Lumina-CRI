@@ -54,7 +54,7 @@ export function ConnectorsPage() {
     <>
       <PageHeader
         title="Connectors"
-        description="Each connector reads customer data from one bank system. Lumina only reads; it never writes back. Syncing or switching a source rebuilds every golden record and trust score."
+        description="Bank systems Lumina reads from. Read-only: Lumina never writes back."
         actions={
           canManage ? (
             <button type="button" className="btn btn-primary" onClick={syncAll} disabled={syncingAll || !enabled.length}>
@@ -71,7 +71,7 @@ export function ConnectorsPage() {
       {error && <ErrorAlert message={error} />}
 
       {data && (
-        <section className="card glass">
+        <section className="card">
           <dl className="status-strip">
             <div>
               <dt>Connected</dt>
@@ -140,9 +140,8 @@ export function ConnectorsPage() {
 
       {data && (
         <Card
-          glass
           title="Which source wins"
-          description="When sources disagree on a field, the value from the higher trust source is used. On a tie, the most recent value wins."
+          description="Higher trust wins a field. On a tie, the newest value wins."
         >
           <div className="tiers">
             {TIERS.map((t) => {
@@ -215,7 +214,7 @@ function ConnectorCard({
   }
 
   return (
-    <article className={`card glass connector${s.enabled ? '' : ' off'}`}>
+    <article className={`card connector${s.enabled ? '' : ' off'}`}>
       <div className="connector-head">
         <span className={`connector-icon ${sourceHue(s.code)}`}>
           <Icon name={CATEGORY_ICON[s.category] ?? 'connectors'} size={20} />
