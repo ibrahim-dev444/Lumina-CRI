@@ -1,6 +1,8 @@
 # Lumina CRI
 
-Bank customer data platform. Lumina reads customer data from several bank systems, cleans it, works out which records belong to the same person, builds one **golden record** per customer, and gives each customer a **trust score** from 0 to 1.
+Bank customer data platform. Lumina reads customer data from several bank systems, cleans it, works out which records belong to the same person, builds one **golden record** per customer, and gives each customer a **trust score** from 0 to 100.
+
+Live demo: https://lumina-cri.vercel.app (see [Hosted demo](#hosted-demo)).
 
 Team rules (branches, pull requests, migrations, secrets) are in [CONTRIBUTING.md](CONTRIBUTING.md). Read it before your first change.
 
@@ -22,19 +24,22 @@ LUMINA CRI/
 │   ├── ingestion/     Connectors: read each system, keep the raw copy, save a cleaned copy
 │   ├── mdm/           Matching, golden record and trust score
 │   ├── stewardship/   Corrections with evidence and second-person approval
+│   ├── compliance/    KYC, AML risk, PEP, sanctions and consent
 │   ├── accounts/      Roles and masking of personal data
 │   ├── audit/         Append-only log of who did what
 │   └── api/           REST endpoints the React app calls
 ├── frontend/src/
 │   ├── api/           API client and TypeScript types
 │   ├── auth/          Sign-in state and role checks
-│   ├── components/    Reusable pieces (charts, badges, layout)
+│   ├── components/    Reusable pieces (charts, badges, layout, logo and loaders)
 │   ├── pages/         One file per screen
 │   └── styles/        Design tokens and CSS
-├── fake_sources/      Fake Salesforce export and branch CSV files
+├── fake_sources/      Fake Salesforce export, branch CSV files and compliance feed
 ├── docker/postgres/init/   Creates the fake FLEXCUBE database on first start
-├── docs/design/       Design references and Stitch prompts
+├── docs/design/       Design references, Stitch prompts and loaders-preview.html
+├── docs/prototypes/   The original HTML prototypes this app was built from
 ├── docker-compose.yml
+├── render.yaml        Hosted demo backend (Render)
 └── .env.example       Template for your own .env
 ```
 

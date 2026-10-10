@@ -93,15 +93,6 @@ export function StatusBadge({ tone, children }: { tone: 'good' | 'warn' | 'bad' 
   )
 }
 
-export function Meter({ value, label, band }: { value: number; label?: string; band?: Band }) {
-  const percent = Math.max(0, Math.min(1, value)) * 100
-  return (
-    <span className="meter" role="meter" aria-valuemin={0} aria-valuemax={1} aria-valuenow={value} aria-label={label}>
-      <i style={{ width: `${percent}%`, background: band ? `var(--band-${band})` : undefined }} />
-    </span>
-  )
-}
-
 export function TrustCell({ score, band }: { score: string | null; band: Band }) {
   return (
     <span className="trust-dot">
@@ -150,22 +141,6 @@ export function ErrorAlert({ message }: { message: string }) {
       <Icon name="alert" size={18} />
       <span>{message}</span>
     </div>
-  )
-}
-
-export function SkeletonRows({ rows = 6, columns = 5 }: { rows?: number; columns?: number }) {
-  return (
-    <tbody aria-busy="true">
-      {Array.from({ length: rows }, (_, r) => (
-        <tr key={r}>
-          {Array.from({ length: columns }, (_, c) => (
-            <td key={c}>
-              <span className="skeleton" style={{ width: c === 0 ? '70%' : '50%' }} />
-            </td>
-          ))}
-        </tr>
-      ))}
-    </tbody>
   )
 }
 
