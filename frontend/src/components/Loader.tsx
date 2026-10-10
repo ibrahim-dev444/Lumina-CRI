@@ -6,8 +6,21 @@ import { useId } from 'react'
 //   stack    - record cards settle into one pile; customer lists
 //   orbit    - arcs lock into a ring around a core; source system connections
 //   converge - rays meet in one bright point; building a golden record
+//   pair     - two record cards slide together and link; match review
+//   pingpong - a ball bounces between maker and checker; approvals (maker-checker)
+//   shield   - a shield draws itself and a check appears; compliance
+//   trail    - steps light up one after another along a line; audit log and activity
 // With "reduce motion" switched on in the operating system, the finished picture shows without movement.
-export type LoaderKind = 'overlap' | 'stack' | 'orbit' | 'converge'
+export type LoaderKind =
+  | 'overlap'
+  | 'stack'
+  | 'orbit'
+  | 'converge'
+  | 'pair'
+  | 'shield'
+  | 'trail'
+  | 'pingpong'
+
 
 // Gradient ids must be unique on the page; useId gives ":r1:"-style values, which url(#...) cannot use.
 function useSvgId() {
@@ -16,7 +29,7 @@ function useSvgId() {
 
 export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: number; animated: boolean }) {
   const id = useSvgId()
-  const bg = kind === 'overlap' || kind === 'orbit' ? `${id}-bg1` : `${id}-bg2`
+  const bg = ['overlap', 'orbit', 'shield'].includes(kind) ? `${id}-bg1` : `${id}-bg2`
   return (
     <svg
       className={`logo-art logo-${kind}${animated ? ' is-animated' : ''}`}
@@ -110,6 +123,84 @@ export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: numb
           </g>
           <circle className="halo" cx="45" cy="32" r="14" fill={`url(#${id}-glow)`} />
           <circle className="core" cx="45" cy="32" r="7" fill={`url(#${id}-orb)`} />
+        </>
+      )}
+
+      {kind === 'pair' && (
+        <>
+          <g className="part p1">
+            <rect x="7" y="18" width="20" height="28" rx="4" fill="#fff" />
+            <rect x="11" y="24" width="12" height="2.5" rx="1.25" fill="#5b47e0" fillOpacity="0.55" />
+            <rect x="11" y="30" width="8" height="2.5" rx="1.25" fill="#5b47e0" fillOpacity="0.35" />
+            <rect x="11" y="36" width="10" height="2.5" rx="1.25" fill="#5b47e0" fillOpacity="0.35" />
+          </g>
+          <g className="part p2">
+            <rect x="37" y="18" width="20" height="28" rx="4" fill="#fff" fillOpacity="0.85" />
+            <rect x="41" y="24" width="12" height="2.5" rx="1.25" fill="#5b47e0" fillOpacity="0.55" />
+            <rect x="41" y="30" width="8" height="2.5" rx="1.25" fill="#5b47e0" fillOpacity="0.35" />
+            <rect x="41" y="36" width="10" height="2.5" rx="1.25" fill="#5b47e0" fillOpacity="0.35" />
+          </g>
+          <g className="core">
+            <circle cx="32" cy="32" r="7" fill={`url(#${id}-glow)`} />
+            <rect x="27" y="30.75" width="10" height="2.5" rx="1.25" fill="#fff" />
+            <circle cx="32" cy="32" r="3" fill="#fff" stroke="#5b47e0" strokeWidth="1.4" />
+          </g>
+        </>
+      )}
+
+      {kind === 'shield' && (
+        <>
+          <path
+            className="core"
+            d="M32 12L48 18V31C48 41.5 41 48.5 32 52C23 48.5 16 41.5 16 31V18Z"
+            fill="#fff"
+            fillOpacity="0.16"
+          />
+          <g fill="none" stroke="#fff" strokeLinecap="round" strokeLinejoin="round">
+            <path
+              className="ray p1"
+              pathLength={1}
+              d="M32 12L48 18V31C48 41.5 41 48.5 32 52C23 48.5 16 41.5 16 31V18Z"
+              strokeWidth="3.5"
+            />
+            <path className="ray seal" pathLength={1} d="M25 32l5 5 9.5-10" strokeWidth="4" />
+          </g>
+        </>
+      )}
+
+      {kind === 'trail' && (
+        <>
+          <path className="ray p1" pathLength={1} d="M13 32H51" stroke="#fff" strokeOpacity="0.4" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <circle className="step s1" cx="14" cy="32" r="3.2" fill="#fff" fillOpacity="0.6" />
+          <circle className="step s2" cx="26" cy="32" r="3.2" fill="#fff" fillOpacity="0.7" />
+          <circle className="step s3" cx="38" cy="32" r="3.2" fill="#fff" fillOpacity="0.85" />
+          <g className="step s4">
+            <circle cx="50" cy="32" r="9" fill={`url(#${id}-glow)`} />
+            <circle cx="50" cy="32" r="4.2" fill="#fff" />
+          </g>
+          <rect className="step s1" x="11" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fillOpacity="0.45" />
+          <rect className="step s2" x="23" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fillOpacity="0.45" />
+          <rect className="step s3" x="35" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fillOpacity="0.45" />
+          <rect className="step s4" x="47" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fillOpacity="0.6" />
+        </>
+      )}
+
+      {kind === 'pingpong' && (
+        <>
+          <path d="M16 42Q32 16 48 42" fill="none" stroke="#fff" strokeOpacity="0.18" strokeWidth="1.5" strokeDasharray="2 3" />
+          <g className="node-maker">
+            <circle cx="16" cy="44" r="6.5" fill="#fff" fillOpacity="0.25" stroke="#fff" strokeOpacity="0.7" strokeWidth="1.6" />
+          </g>
+          <g className="node-checker">
+            <circle cx="48" cy="44" r="6.5" fill="#5eead4" stroke="#fff" strokeWidth="1.6" />
+            <path d="M45.4 44.1l1.8 1.8 3.5-3.7" fill="none" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <g className="ball-x">
+            <g className="ball-y">
+              <circle cx="16" cy="36" r="9" fill={`url(#${id}-glow)`} />
+              <circle cx="16" cy="36" r="4" fill="#fff" />
+            </g>
+          </g>
         </>
       )}
 

@@ -98,7 +98,7 @@ export function CompliancePage() {
               </tr>
             </thead>
             {loading && !data ? (
-              <LoaderRow kind="overlap" label="Loading KYC and risk" columns={8} />
+              <LoaderRow kind="shield" label="Loading KYC and risk" columns={8} />
             ) : (
               <tbody>
                 {data?.results.map((r) => (

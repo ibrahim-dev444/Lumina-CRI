@@ -143,7 +143,7 @@ export function AuditPage() {
               </tr>
             </thead>
             {loading && !data ? (
-              <LoaderRow kind="overlap" label="Loading the audit log" columns={6} />
+              <LoaderRow kind="trail" label="Loading the audit log" columns={6} />
             ) : (
               <tbody>
                 {data?.results.map((e) => (
