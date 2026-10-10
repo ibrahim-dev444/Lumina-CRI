@@ -1,0 +1,33 @@
+# Render blueprint for the hosted demo backend (Django API).
+# The database is on Neon; the React frontend is on Vercel, which forwards /api here.
+# Secrets are marked "sync: false": Render asks for them once and never reads them from this file.
+services:
+  - type: web
+    name: lumina-cri-api
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    # Free plan has no pre-deploy step, so migrations and the one-time demo data load run at start.
+    startCommand: python manage.py migrate --noinput && python manage.py bootstrap_demo && gunicorn config.wsgi --bind 0.0.0.0:$PORT
+    healthCheckPath: /admin/login/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: DEMO_PASSWORD
+        sync: false
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false

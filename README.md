@@ -151,6 +151,28 @@ cd ../frontend
 npm install
 ```
 
+## Hosted demo
+
+A shared demo runs on free hosting. Only fake data goes there.
+
+| Part | Host | Config in repo |
+|---|---|---|
+| React frontend | Vercel (root directory `frontend`) | `frontend/vercel.json` forwards `/api` to Render |
+| Django API | Render (web service from `render.yaml`) | `render.yaml` |
+| Database | Neon Postgres: `neondb` for Lumina, `src_flexcube` for fake FLEXCUBE | none, connection string lives in Render |
+
+Render environment values (set in the Render dashboard, never in the repo):
+
+| Name | Value |
+|---|---|
+| `DATABASE_URL` | Neon connection string for `neondb`, pooling off. FLEXCUBE uses the same server's `src_flexcube`. |
+| `FIELD_ENCRYPTION_KEY` | A new Fernet key (command in setup step 2). Not the one on your computer. |
+| `CSRF_TRUSTED_ORIGINS` | The Vercel address, e.g. `https://lumina-cri.vercel.app` |
+| `DEMO_PASSWORD` | Password for `rm.demo`, `agent.demo`, `steward.demo`, `compliance.demo` |
+| `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_PASSWORD` | Admin login |
+
+On every start Render runs `migrate` and `bootstrap_demo`. That command loads the fake data once (only when there are no customers) and sets the logins from the values above. The free plan sleeps when idle, so the first request after a pause takes up to a minute.
+
 ## Useful commands
 
 | Command (inside `backend/`) | What it does |

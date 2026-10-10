@@ -16,3 +16,6 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Django collectstatic output
+backend/staticfiles/
