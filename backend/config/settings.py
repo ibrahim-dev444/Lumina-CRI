@@ -146,7 +146,10 @@ BRANCH_CSV_DIR = os.getenv('BRANCH_CSV_DIR') or str(BASE_DIR.parent / 'fake_sour
 
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
 # The React dev server proxies /api to Django, so the browser sends its own origin with each request.
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:5173').split(',')
+# Spaces and a trailing slash are ignored, so "https://lumina-cri.vercel.app/ " still works.
+CSRF_TRUSTED_ORIGINS = [
+    o.strip().rstrip('/') for o in os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:5173').split(',') if o.strip()
+]
 
 REST_FRAMEWORK = {
     # Every endpoint needs a logged-in user unless it says otherwise. This is customer data.
