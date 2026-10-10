@@ -15,6 +15,7 @@ const PATHS = {
   neq: 'M5 9h14M5 15h14M16 5L8 19',
   minus: 'M6 12h12',
   chevronRight: 'M9 6l6 6-6 6',
+  menu: 'M4 7h16M4 12h16M4 17h16',
   arrowLeft: 'M19 12H5M11 18l-6-6 6-6',
   logout: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11',
   alert: 'M12 9v4M12 17h.01M10.3 3.9 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0',

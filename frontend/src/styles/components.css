@@ -212,49 +212,84 @@
   gap: 24px;
 }
 
+/* Mobile header parts: only shown on narrow screens */
+.menu-btn,
+.topbar-brand,
+.pill-short {
+  display: none;
+}
+
+.topbar-brand {
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-right: auto;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.topbar-brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: rgb(10 10 20 / 0.42);
+  backdrop-filter: blur(2px);
+  animation: fade-in 160ms ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Phones and small tablets: the rail becomes a drawer opened from the menu button */
 @media (max-width: 900px) {
   .sidebar,
   .sidebar:hover,
   .sidebar:focus-within {
-    position: static;
-    width: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
+    width: min(300px, 86vw);
+    padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
     box-shadow: none;
+  }
+
+  .sidebar {
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: transform 220ms ease, visibility 0s linear 220ms;
+  }
+
+  .sidebar.open {
+    visibility: visible;
+    transform: none;
+    box-shadow: 24px 0 48px -12px rgb(16 24 40 / 0.35);
+    transition: transform 220ms ease;
   }
 
   .rail-text {
     opacity: 1;
   }
 
-  .brand-sub,
-  .nav-label,
-  .sidebar-user {
-    display: none;
-  }
-
-  .nav-group {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
   .sidebar:not(:hover):not(:focus-within) .nav-count {
     position: static;
+    min-width: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 18px;
   }
 
   .sidebar:not(:hover):not(:focus-within) .sidebar-foot .btn-icon {
     visibility: visible;
   }
 
-  .sidebar-foot {
-    margin: 0 0 0 auto;
-    padding: 0;
-    border: 0;
+  .nav-link {
+    height: 44px;
   }
 
   .content {
@@ -265,8 +300,28 @@
     padding-top: 20px;
   }
 
+  .topbar {
+    padding: 0 12px 0 8px;
+    padding-top: env(safe-area-inset-top);
+  }
+
   .topbar-path {
     display: none;
+  }
+
+  .menu-btn,
+  .topbar-brand {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .pill-long {
+    display: none;
+  }
+
+  .pill-short {
+    display: inline;
   }
 }
 
@@ -457,14 +512,14 @@
 
 .grid-2 {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(min(300px, 100%), 1fr);
   gap: 20px;
   align-items: start;
 }
 
 .grid-auto {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -478,7 +533,7 @@
 
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -715,7 +770,7 @@ a.kpi:hover {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 12px 16px;
 }
 
@@ -1722,7 +1777,7 @@ a.kpi:hover {
 
 .status-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
   margin: 0;
 }
 
@@ -1802,7 +1857,7 @@ a.kpi:hover {
 
 .tiers {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -2044,7 +2099,7 @@ code {
 
 .hiw-steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 12px;
   margin: 0;
   padding: 0;
@@ -2091,7 +2146,7 @@ code {
 
 .hiw-two {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 24px;
   align-items: start;
 }
@@ -2208,7 +2263,7 @@ code {
 
 .hiw-glossary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 14px 24px;
   margin: 0;
 }
@@ -2277,7 +2332,7 @@ code {
 
 .grid-halves {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
   gap: 20px;
   align-items: start;
 }
@@ -2294,7 +2349,7 @@ code {
 
 .barlist li {
   display: grid;
-  grid-template-columns: minmax(110px, 160px) 1fr auto;
+  grid-template-columns: minmax(min(110px, 100%), 160px) 1fr auto;
   align-items: center;
   gap: 12px;
   font-size: var(--text-sm);
@@ -2490,5 +2545,291 @@ code {
 @media (prefers-reduced-motion: reduce) {
   .waking-banner svg {
     animation: none;
+  }
+}
+
+/* ============ Logo and loaders ============ */
+/*
+ * One logo family (see components/Loader.tsx). Animated, each part flies in from its own start (--from),
+ * the parts meet, the core lights up, the finished logo holds, then fades and the loop starts again.
+ */
+
+.logo-art {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.logo-art .blend {
+  mix-blend-mode: screen;
+}
+
+.logo-art .part,
+.logo-art .core,
+.logo-art .halo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.logo-art .arc {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+}
+
+.logo-overlap .p1 { --from: translate(0, -22px) scale(0.55); }
+.logo-overlap .p2 { --from: translate(-22px, 14px) scale(0.55); }
+.logo-overlap .p3 { --from: translate(22px, 14px) scale(0.55); }
+.logo-stack .p1 { --from: translate(-26px, -16px) rotate(-14deg); }
+.logo-stack .p2 { --from: translate(26px, -20px) rotate(12deg); }
+.logo-stack .p3 { --from: translate(0, 26px) rotate(-6deg); }
+.logo-orbit .p1 { --from: rotate(-260deg) scale(1.5); }
+.logo-orbit .p2 { --from: rotate(200deg) scale(1.5); }
+.logo-orbit .p3 { --from: rotate(-140deg) scale(1.5); }
+
+.logo-art.is-animated .part {
+  animation: logo-part 2.8s cubic-bezier(0.2, 0.85, 0.2, 1) infinite;
+}
+
+.logo-stack.is-animated .p2 { animation-delay: 0.1s; }
+.logo-stack.is-animated .p3 { animation-delay: 0.2s; }
+
+.logo-art.is-animated .core {
+  animation: logo-core 2.8s ease-out infinite;
+}
+
+.logo-art.is-animated .halo {
+  animation: logo-halo 2.8s ease-out infinite;
+}
+
+.logo-art.is-animated .ray {
+  stroke-dasharray: 1;
+  animation: logo-ray 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.logo-art.is-animated .ray.p2 { animation-delay: 0.12s; }
+.logo-art.is-animated .ray.p3 { animation-delay: 0.24s; }
+
+@keyframes logo-part {
+  0% { transform: var(--from); opacity: 0; }
+  45%, 88% { transform: none; opacity: 1; }
+  100% { transform: none; opacity: 0; }
+}
+
+@keyframes logo-core {
+  0%, 38% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.6); opacity: 1; }
+  62%, 88% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes logo-halo {
+  0%, 40% { transform: scale(0); opacity: 0; }
+  55% { transform: scale(1.5); opacity: 1; }
+  70%, 88% { transform: scale(1); opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+@keyframes logo-ray {
+  0% { stroke-dashoffset: 1; opacity: 1; }
+  40%, 88% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-art.is-animated * {
+    animation: none !important;
+  }
+}
+
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.loader-label {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.table td.loader-cell {
+  padding: 0;
+  border-bottom: 0;
+}
+
+/* Whole-screen loader while the app starts */
+.splash {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+
+/* Spans every column of a grid (e.g. a loader in place of a row of cards) */
+.grid-full {
+  grid-column: 1 / -1;
+}
+
+/* ============ Small-screen fixes (kept last so they win the cascade) ============ */
+
+.card-footer {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .topbar .topbar-path {
+    display: none;
+  }
+}
+
+/* Match review on phones: field name on its own line, then record A | same? | record B */
+@media (max-width: 640px) {
+  .compare,
+  .compare thead,
+  .compare tbody {
+    display: block;
+    min-width: 0 !important;
+  }
+
+  .compare colgroup,
+  .compare thead th:first-child {
+    display: none;
+  }
+
+  .compare tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+  }
+
+  .compare th,
+  .compare td {
+    padding: 10px 12px;
+  }
+
+  .compare thead th {
+    letter-spacing: 0.02em;
+  }
+
+  .compare tbody th {
+    grid-column: 1 / -1;
+    padding: 12px 12px 0;
+    border-bottom: 0;
+    font-size: var(--text-xs);
+  }
+
+  .compare td.verdict {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Long badges (e.g. a PEP note) wrap instead of running off the card */
+.kv dd .badge {
+  height: auto;
+  min-height: 22px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  white-space: normal;
+}
+
+/* Label/value lists stack on phones */
+@media (max-width: 480px) {
+  .kv {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .kv dd + dt,
+  .kv > div + div dt {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hiw-two > * {
+    min-width: 0;
+  }
+
+  .hiw-table th,
+  .hiw-table td {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-scroll {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chart.runway {
+    min-width: 560px;
+  }
+}
+
+/* Mobile header parts stay hidden on wider screens (beats .btn's display) */
+.topbar .menu-btn,
+.topbar .topbar-brand,
+.pill .pill-short {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .topbar .menu-btn,
+  .topbar .topbar-brand {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .pill .pill-long {
+    display: none;
+  }
+
+  .pill .pill-short {
+    display: inline;
+  }
+}
+
+/* Customer list: wide on desktop; on smaller screens less important columns step aside */
+.customers-table {
+  min-width: 860px;
+}
+
+@media (max-width: 900px) {
+  .customers-table {
+    min-width: 0;
+  }
+
+  .table .col-md {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .table .col-sm {
+    display: none;
+  }
+
+  .customers-table th,
+  .customers-table td {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+.lowest-table {
+  min-width: 600px;
+}
+
+@media (max-width: 640px) {
+  .lowest-table {
+    min-width: 0;
   }
 }

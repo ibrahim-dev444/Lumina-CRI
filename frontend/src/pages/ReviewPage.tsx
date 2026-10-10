@@ -6,8 +6,9 @@ import type { MatchSuggestion, SourceRecord } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { Icon } from '../components/Icon'
+import { Loader } from '../components/Loader'
 import { useToast } from '../components/Toasts'
-import { Card, EmptyState, ErrorAlert, PageHeader, Skeleton, StatusBadge } from '../components/ui'
+import { Card, EmptyState, ErrorAlert, PageHeader, StatusBadge } from '../components/ui'
 import { FIELD_LABELS, FIELDS, formatDate, formatFieldValue } from '../format'
 
 type Tab = 'pending' | 'accepted' | 'rejected'
@@ -70,8 +71,8 @@ export function ReviewPage() {
 
       {error && <ErrorAlert message={error} />}
       {loading && !data && (
-        <div className="card card-body">
-          <Skeleton height={160} />
+        <div className="card">
+          <Loader label="Finding records that may be the same person" />
         </div>
       )}
       {data?.results.length === 0 && (
