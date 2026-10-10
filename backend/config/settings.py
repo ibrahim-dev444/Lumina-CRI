@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, unquote, urlparse
 
 from dotenv import load_dotenv
 
@@ -32,6 +33,9 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 DEBUG = os.getenv('DJANGO_DEBUG', 'false').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Render sets this to the service's own hostname (e.g. lumina-cri-api.onrender.com).
+if os.getenv('RENDER_EXTERNAL_HOSTNAME'):
+    ALLOWED_HOSTS.append(os.environ['RENDER_EXTERNAL_HOSTNAME'])
 
 
 # Application definition
@@ -57,6 +61,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Serves the admin's CSS and JS when there is no separate web server (hosted demo).
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -102,8 +108,32 @@ DATABASES = {
     }
 }
 
+
+
+def _database_from_url(url):
+    """Turn postgresql://user:password@host:port/name?sslmode=require into Django settings."""
+    parts = urlparse(url)
+    return {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': parts.path.lstrip('/'),
+        'USER': unquote(parts.username or ''),
+        'PASSWORD': unquote(parts.password or ''),
+        'HOST': parts.hostname,
+        'PORT': str(parts.port or 5432),
+        'OPTIONS': dict(parse_qsl(parts.query)),
+    }
+
+
+# Hosted demo (Render + Neon): one connection string instead of the POSTGRES_* values.
+DATABASE_URL = os.getenv('DATABASE_URL', '')
+if DATABASE_URL:
+    DATABASES['default'] = _database_from_url(DATABASE_URL)
+
 # Fake FLEXCUBE core banking system. Connectors read it with raw SQL; Django never migrates it.
+# When only DATABASE_URL is set, FLEXCUBE is the src_flexcube database on the same server.
 FLEXCUBE_DB_URL = os.getenv('FLEXCUBE_DB_URL', '')
+if not FLEXCUBE_DB_URL and DATABASE_URL:
+    FLEXCUBE_DB_URL = urlparse(DATABASE_URL)._replace(path='/src_flexcube').geturl()
 
 # Key for encrypting PAN and CKYC numbers (Fernet key). Generate one with:
 #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
@@ -163,6 +193,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+if not DEBUG:
+    # Hosted over HTTPS behind Render's proxy: trust its scheme header and send cookies over HTTPS only.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
