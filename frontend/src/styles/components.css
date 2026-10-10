@@ -2635,6 +2635,36 @@ code {
   100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
+.logo-pair .p1 { --from: translate(-16px, 0) rotate(-8deg); }
+.logo-pair .p2 { --from: translate(16px, 0) rotate(8deg); }
+
+.logo-art .step {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Approvals: the checker's tick follows the maker's */
+.logo-art.is-animated .ray.tick2 { animation-delay: 0.45s; }
+
+/* Compliance: the seal's check draws after the shield outline */
+.logo-art.is-animated .ray.seal { animation-delay: 0.55s; }
+
+/* Audit trail: steps light up one after another */
+.logo-art.is-animated .step {
+  animation: logo-step 2.8s ease-out infinite;
+}
+
+.logo-art.is-animated .s2 { animation-delay: 0.25s; }
+.logo-art.is-animated .s3 { animation-delay: 0.5s; }
+.logo-art.is-animated .s4 { animation-delay: 0.75s; }
+
+@keyframes logo-step {
+  0%, 8% { transform: scale(0); opacity: 0; }
+  18% { transform: scale(1.4); opacity: 1; }
+  26%, 80% { transform: scale(1); opacity: 1; }
+  92%, 100% { transform: scale(1); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .logo-art.is-animated * {
     animation: none !important;

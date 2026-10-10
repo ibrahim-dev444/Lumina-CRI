@@ -238,7 +238,7 @@ function ActivityTab({ c }: { c: CustomerDetail }) {
     <Card title="Who has touched this record" description="Newest first, from the audit log." flush>
       {error && <ErrorAlert message={error} />}
       {!data && !error && (
-        <Loader label="Loading activity" size={44} />
+        <Loader kind="trail" label="Loading activity" size={44} />
       )}
       {data && data.results.length === 0 && <EmptyState icon="audit" title="No activity yet" />}
       {data && data.results.length > 0 && (

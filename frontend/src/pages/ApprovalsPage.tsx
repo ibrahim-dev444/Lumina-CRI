@@ -49,7 +49,7 @@ export function ApprovalsPage() {
       {error && <ErrorAlert message={error} />}
       {loading && !data && (
         <div className="card">
-          <Loader label="Loading changes waiting for approval" />
+          <Loader kind="check" label="Loading changes waiting for approval" />
         </div>
       )}
       {data?.results.length === 0 && (

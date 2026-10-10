@@ -1,0 +1,125 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lumina loaders</title><style>body{margin:0;padding:32px 24px;background:#f4f4f7;color:#16161d;font:14px/1.5 "Google Sans",system-ui,sans-serif}h1{margin:0 0 4px;font-size:22px}p{margin:0 0 24px;color:#6b6b78}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.tile{background:#fff;border:1px solid #e6e6ec;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px}.stage{height:170px;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle at 50% 40%,#fbfaff,#f1effa);margin-bottom:8px}.tile span{color:#6b6b78;font-size:13px}
+/* ============ Logo and loaders ============ */
+/*
+ * One logo family (see components/Loader.tsx). Animated, each part flies in from its own start (--from),
+ * the parts meet, the core lights up, the finished logo holds, then fades and the loop starts again.
+ */
+
+.logo-art {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.logo-art .blend {
+  mix-blend-mode: screen;
+}
+
+.logo-art .part,
+.logo-art .core,
+.logo-art .halo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.logo-art .arc {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+}
+
+.logo-overlap .p1 { --from: translate(0, -22px) scale(0.55); }
+.logo-overlap .p2 { --from: translate(-22px, 14px) scale(0.55); }
+.logo-overlap .p3 { --from: translate(22px, 14px) scale(0.55); }
+.logo-stack .p1 { --from: translate(-26px, -16px) rotate(-14deg); }
+.logo-stack .p2 { --from: translate(26px, -20px) rotate(12deg); }
+.logo-stack .p3 { --from: translate(0, 26px) rotate(-6deg); }
+.logo-orbit .p1 { --from: rotate(-260deg) scale(1.5); }
+.logo-orbit .p2 { --from: rotate(200deg) scale(1.5); }
+.logo-orbit .p3 { --from: rotate(-140deg) scale(1.5); }
+
+.logo-art.is-animated .part {
+  animation: logo-part 2.8s cubic-bezier(0.2, 0.85, 0.2, 1) infinite;
+}
+
+.logo-stack.is-animated .p2 { animation-delay: 0.1s; }
+.logo-stack.is-animated .p3 { animation-delay: 0.2s; }
+
+.logo-art.is-animated .core {
+  animation: logo-core 2.8s ease-out infinite;
+}
+
+.logo-art.is-animated .halo {
+  animation: logo-halo 2.8s ease-out infinite;
+}
+
+.logo-art.is-animated .ray {
+  stroke-dasharray: 1;
+  animation: logo-ray 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.logo-art.is-animated .ray.p2 { animation-delay: 0.12s; }
+.logo-art.is-animated .ray.p3 { animation-delay: 0.24s; }
+
+@keyframes logo-part {
+  0% { transform: var(--from); opacity: 0; }
+  45%, 88% { transform: none; opacity: 1; }
+  100% { transform: none; opacity: 0; }
+}
+
+@keyframes logo-core {
+  0%, 38% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.6); opacity: 1; }
+  62%, 88% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes logo-halo {
+  0%, 40% { transform: scale(0); opacity: 0; }
+  55% { transform: scale(1.5); opacity: 1; }
+  70%, 88% { transform: scale(1); opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+@keyframes logo-ray {
+  0% { stroke-dashoffset: 1; opacity: 1; }
+  40%, 88% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+.logo-pair .p1 { --from: translate(-16px, 0) rotate(-8deg); }
+.logo-pair .p2 { --from: translate(16px, 0) rotate(8deg); }
+
+.logo-art .step {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Approvals: the checker's tick follows the maker's */
+.logo-art.is-animated .ray.tick2 { animation-delay: 0.45s; }
+
+/* Compliance: the seal's check draws after the shield outline */
+.logo-art.is-animated .ray.seal { animation-delay: 0.55s; }
+
+/* Audit trail: steps light up one after another */
+.logo-art.is-animated .step {
+  animation: logo-step 2.8s ease-out infinite;
+}
+
+.logo-art.is-animated .s2 { animation-delay: 0.25s; }
+.logo-art.is-animated .s3 { animation-delay: 0.5s; }
+.logo-art.is-animated .s4 { animation-delay: 0.75s; }
+
+@keyframes logo-step {
+  0%, 8% { transform: scale(0); opacity: 0; }
+  18% { transform: scale(1.4); opacity: 1; }
+  26%, 80% { transform: scale(1); opacity: 1; }
+  92%, 100% { transform: scale(1); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-art.is-animated * {
+    animation: none !important;
+  }
+}
+
+</style></head><body><h1>Lumina loaders</h1><p>Every loader is the logo family in motion: parts come together into one. Generated from frontend/src/components/Loader.tsx.</p><div class="grid"><section class="tile"><div class="stage"><svg class="logo-art logo-overlap is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_h_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_h_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_h_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_h_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_h_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_h_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_h_-bg1)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_h_-shine)"></rect><g class="blend"><circle class="part p1" cx="32" cy="24" r="12" fill="#c4b5fd" fill-opacity="0.8"></circle><circle class="part p2" cx="24.5" cy="37" r="12" fill="#f9a8d4" fill-opacity="0.75"></circle><circle class="part p3" cx="39.5" cy="37" r="12" fill="#5eead4" fill-opacity="0.7"></circle></g><g class="core"><circle cx="32" cy="32.7" r="8" fill="url(#_R_h_-glow)"></circle><circle cx="32" cy="32.7" r="3.2" fill="#fff"></circle></g><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Overlap · the logo</strong><span>App start, Overview, How it works</span></section><section class="tile"><div class="stage"><svg class="logo-art logo-stack is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_i_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_i_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_i_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_i_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_i_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_i_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_i_-bg2)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_i_-shine)"></rect><rect class="part p1" x="19" y="13" width="30" height="22" rx="5" fill="#fff" fill-opacity="0.28"></rect><rect class="part p2" x="16" y="20" width="32" height="23" rx="5" fill="#fff" fill-opacity="0.5"></rect><g class="part p3"><rect x="13" y="27" width="34" height="24" rx="6" fill="#fff"></rect><rect x="18" y="33" width="14" height="3" rx="1.5" fill="#5b47e0" fill-opacity="0.55"></rect><rect x="18" y="40" width="20" height="3" rx="1.5" fill="#5b47e0" fill-opacity="0.3"></rect></g><g class="core"><circle cx="44" cy="30" r="8" fill="url(#_R_i_-glow)"></circle><circle cx="44" cy="30" r="3.6" fill="#fff" stroke="#5b47e0" stroke-width="1.6"></circle></g><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Stack</strong><span>Customer list</span></section><section class="tile"><div class="stage"><svg class="logo-art logo-orbit is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_j_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_j_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_j_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_j_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_j_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_j_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_j_-bg1)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_j_-shine)"></rect><g fill="none" stroke-width="5" stroke-linecap="round"><path class="part arc p1" d="M19.98 19.98A17 17 0 0 1 44.02 19.98" stroke="#c4b5fd"></path><path class="part arc p2" d="M48.42 27.6A17 17 0 0 1 36.4 48.42" stroke="#5eead4"></path><path class="part arc p3" d="M27.6 48.42A17 17 0 0 1 15.58 27.6" stroke="#f9a8d4"></path></g><g class="core"><circle cx="32" cy="32" r="9" fill="url(#_R_j_-glow)"></circle><circle cx="32" cy="32" r="4" fill="#fff"></circle></g><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Orbit</strong><span>Connectors</span></section><section class="tile"><div class="stage"><svg class="logo-art logo-converge is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_k_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_k_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_k_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_k_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_k_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_k_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_k_-bg2)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_k_-shine)"></rect><g fill="none" stroke="url(#_R_k_-ray)" stroke-linecap="round"><path class="ray p1" pathLength="1" d="M13 18C26 18 30 32 42 32" stroke-width="4"></path><path class="ray p2" pathLength="1" d="M13 32H42" stroke-width="4.5"></path><path class="ray p3" pathLength="1" d="M13 46C26 46 30 32 42 32" stroke-width="4"></path></g><circle class="halo" cx="45" cy="32" r="14" fill="url(#_R_k_-glow)"></circle><circle class="core" cx="45" cy="32" r="7" fill="url(#_R_k_-orb)"></circle><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Converge</strong><span>Customer profile (golden record)</span></section><section class="tile"><div class="stage"><svg class="logo-art logo-pair is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_l_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_l_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_l_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_l_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_l_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_l_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_l_-bg2)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_l_-shine)"></rect><g class="part p1"><rect x="7" y="18" width="20" height="28" rx="4" fill="#fff"></rect><rect x="11" y="24" width="12" height="2.5" rx="1.25" fill="#5b47e0" fill-opacity="0.55"></rect><rect x="11" y="30" width="8" height="2.5" rx="1.25" fill="#5b47e0" fill-opacity="0.35"></rect><rect x="11" y="36" width="10" height="2.5" rx="1.25" fill="#5b47e0" fill-opacity="0.35"></rect></g><g class="part p2"><rect x="37" y="18" width="20" height="28" rx="4" fill="#fff" fill-opacity="0.85"></rect><rect x="41" y="24" width="12" height="2.5" rx="1.25" fill="#5b47e0" fill-opacity="0.55"></rect><rect x="41" y="30" width="8" height="2.5" rx="1.25" fill="#5b47e0" fill-opacity="0.35"></rect><rect x="41" y="36" width="10" height="2.5" rx="1.25" fill="#5b47e0" fill-opacity="0.35"></rect></g><g class="core"><circle cx="32" cy="32" r="7" fill="url(#_R_l_-glow)"></circle><rect x="27" y="30.75" width="10" height="2.5" rx="1.25" fill="#fff"></rect><circle cx="32" cy="32" r="3" fill="#fff" stroke="#5b47e0" stroke-width="1.4"></circle></g><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Pair · new</strong><span>Match review: two records slide together and link</span></section><section class="tile"><div class="stage"><svg class="logo-art logo-check is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_m_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_m_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_m_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_m_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_m_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_m_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_m_-bg1)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_m_-shine)"></rect><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"><path class="ray tick1" pathLength="1" d="M12 33l7.5 7.5L33 27" stroke="#fff" stroke-opacity="0.55"></path><path class="ray tick2" pathLength="1" d="M24 33l7.5 7.5L50 22" stroke="#fff"></path></g><g class="core"><circle cx="50" cy="22" r="7" fill="url(#_R_m_-glow)"></circle></g><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Double check · new</strong><span>Approvals: maker&#x27;s tick, then checker&#x27;s tick</span></section><section class="tile"><div class="stage"><svg class="logo-art logo-shield is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_n_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_n_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_n_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_n_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_n_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_n_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_n_-bg1)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_n_-shine)"></rect><path class="core" d="M32 12L48 18V31C48 41.5 41 48.5 32 52C23 48.5 16 41.5 16 31V18Z" fill="#fff" fill-opacity="0.16"></path><g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"><path class="ray p1" pathLength="1" d="M32 12L48 18V31C48 41.5 41 48.5 32 52C23 48.5 16 41.5 16 31V18Z" stroke-width="3.5"></path><path class="ray seal" pathLength="1" d="M25 32l5 5 9.5-10" stroke-width="4"></path></g><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Shield · new</strong><span>Compliance: shield draws, check seals it</span></section><section class="tile"><div class="stage"><svg class="logo-art logo-trail is-animated" width="112" height="112" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="_R_o_-bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"></stop><stop offset="1" stop-color="#3b2fc9"></stop></linearGradient><linearGradient id="_R_o_-bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="0.55" stop-color="#5b47e0"></stop><stop offset="1" stop-color="#2f3fd6"></stop></linearGradient><linearGradient id="_R_o_-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.25"></stop><stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop></linearGradient><linearGradient id="_R_o_-ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.15"></stop><stop offset="1" stop-color="#fff" stop-opacity="0.95"></stop></linearGradient><radialGradient id="_R_o_-orb" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff"></stop><stop offset="0.6" stop-color="#f3e8ff"></stop><stop offset="1" stop-color="#c4b5fd"></stop></radialGradient><radialGradient id="_R_o_-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.8"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#_R_o_-bg2)"></rect><rect width="64" height="64" rx="15" fill="url(#_R_o_-shine)"></rect><path class="ray p1" pathLength="1" d="M13 32H51" stroke="#fff" stroke-opacity="0.4" stroke-width="2.5" stroke-linecap="round" fill="none"></path><circle class="step s1" cx="14" cy="32" r="3.2" fill="#fff" fill-opacity="0.6"></circle><circle class="step s2" cx="26" cy="32" r="3.2" fill="#fff" fill-opacity="0.7"></circle><circle class="step s3" cx="38" cy="32" r="3.2" fill="#fff" fill-opacity="0.85"></circle><g class="step s4"><circle cx="50" cy="32" r="9" fill="url(#_R_o_-glow)"></circle><circle cx="50" cy="32" r="4.2" fill="#fff"></circle></g><rect class="step s1" x="11" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fill-opacity="0.45"></rect><rect class="step s2" x="23" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fill-opacity="0.45"></rect><rect class="step s3" x="35" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fill-opacity="0.45"></rect><rect class="step s4" x="47" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fill-opacity="0.6"></rect><rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.18"></rect></svg></div><strong>Trail · new</strong><span>Audit log and customer activity: steps light up in order</span></section></div></body></html>

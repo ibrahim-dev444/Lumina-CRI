@@ -72,7 +72,7 @@ export function ReviewPage() {
       {error && <ErrorAlert message={error} />}
       {loading && !data && (
         <div className="card">
-          <Loader label="Finding records that may be the same person" />
+          <Loader kind="pair" label="Finding records that may be the same person" />
         </div>
       )}
       {data?.results.length === 0 && (
