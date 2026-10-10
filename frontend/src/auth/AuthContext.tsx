@@ -32,9 +32,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    await api.logout()
-    setUser(null)
-    await api.csrf()
+    try {
+      await api.logout()
+    } finally {
+      // Leave the screen even if the server call failed, so nobody is stuck signed in on this device.
+      setUser(null)
+      await api.csrf().catch(() => undefined)
+    }
   }
 
   return <AuthContext.Provider value={{ user, checking, login, logout }}>{children}</AuthContext.Provider>
