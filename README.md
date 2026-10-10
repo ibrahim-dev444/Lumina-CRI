@@ -173,6 +173,11 @@ Render environment values (set in the Render dashboard, never in the repo):
 
 On every start Render runs `migrate` and `bootstrap_demo`. That command loads the fake data once (only when there are no customers) and sets the logins from the values above. The free plan sleeps when idle, so the first request after a pause takes up to a minute.
 
+Two things soften that:
+
+- **Keep demo awake** (`.github/workflows/keep-awake.yml`) pings the API every 10 minutes. Turn it on or off under GitHub > Actions > Keep demo awake > `...` > Enable / Disable workflow. It is free only while the repository is public, and GitHub switches it off after 60 days without a push.
+- If the server is still asleep, the website shows "The server is starting" and retries on its own for up to 90 seconds.
+
 ## Useful commands
 
 | Command (inside `backend/`) | What it does |

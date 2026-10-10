@@ -2464,3 +2464,39 @@ code {
   display: block;
   height: 100%;
 }
+
+/* Free hosting wake-up notice, pinned to the top of every screen */
+.waking-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 1000;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow-pop);
+}
+
+.waking-banner svg {
+  flex: none;
+  animation: waking-spin 1.2s linear infinite;
+}
+
+@keyframes waking-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waking-banner svg {
+    animation: none;
+  }
+}
