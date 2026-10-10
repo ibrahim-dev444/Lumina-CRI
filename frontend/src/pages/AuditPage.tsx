@@ -4,7 +4,8 @@ import { api } from '../api/client'
 import type { AuditEvent } from '../api/types'
 import { useApi } from '../api/useApi'
 import { Icon } from '../components/Icon'
-import { Avatar, Card, EmptyState, ErrorAlert, PageHeader, SkeletonRows, StatusBadge } from '../components/ui'
+import { LoaderRow } from '../components/Loader'
+import { Avatar, Card, EmptyState, ErrorAlert, PageHeader, StatusBadge } from '../components/ui'
 
 const ACTIONS: { value: string; label: string }[] = [
   { value: '', label: 'All actions' },
@@ -142,7 +143,7 @@ export function AuditPage() {
               </tr>
             </thead>
             {loading && !data ? (
-              <SkeletonRows columns={6} />
+              <LoaderRow kind="overlap" label="Loading the audit log" columns={6} />
             ) : (
               <tbody>
                 {data?.results.map((e) => (

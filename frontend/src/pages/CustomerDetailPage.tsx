@@ -9,6 +9,7 @@ import { ComplianceTab, KycBadge } from '../components/ComplianceTab'
 import { RISK_LABEL } from '../compliance'
 import { CorrectionsCard } from '../components/CorrectionsCard'
 import { GoldenFieldRow } from '../components/GoldenFieldRow'
+import { Loader } from '../components/Loader'
 import { RevealPanel } from '../components/RevealPanel'
 import { Icon } from '../components/Icon'
 import { ScoreBreakdown } from '../components/ScoreBreakdown'
@@ -58,8 +59,8 @@ export function CustomerDetailPage() {
     return (
       <>
         <PageHeader title={<Skeleton width={240} height={24} />} crumbs={crumbs} />
-        <div className="card card-body">
-          <Skeleton height={80} />
+        <div className="card">
+          <Loader kind="converge" label="Building the golden record" />
         </div>
       </>
     )
@@ -237,9 +238,7 @@ function ActivityTab({ c }: { c: CustomerDetail }) {
     <Card title="Who has touched this record" description="Newest first, from the audit log." flush>
       {error && <ErrorAlert message={error} />}
       {!data && !error && (
-        <div className="card-body">
-          <Skeleton height={120} />
-        </div>
+        <Loader label="Loading activity" size={44} />
       )}
       {data && data.results.length === 0 && <EmptyState icon="audit" title="No activity yet" />}
       {data && data.results.length > 0 && (

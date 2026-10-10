@@ -6,13 +6,13 @@ import type { Band } from '../api/types'
 import { useApi } from '../api/useApi'
 import { KycBadge } from '../components/ComplianceTab'
 import { Icon } from '../components/Icon'
+import { LoaderRow } from '../components/Loader'
 import {
   Avatar,
   Card,
   EmptyState,
   ErrorAlert,
   PageHeader,
-  SkeletonRows,
   SourceChips,
   TrustCell,
 } from '../components/ui'
@@ -131,20 +131,20 @@ export function CustomersPage() {
         }
       >
         <div className="table-wrap">
-          <table className="table" style={{ minWidth: 860 }}>
+          <table className="table customers-table">
             <thead>
               <tr>
                 <th>Customer</th>
                 <th>Trust score</th>
-                <th>Found in</th>
-                <th className="right">Conflicts</th>
-                <th>Review</th>
+                <th className="col-sm">Found in</th>
+                <th className="right col-md">Conflicts</th>
+                <th className="col-md">Review</th>
                 <th>KYC</th>
-                <th className="right">Updated</th>
+                <th className="right col-md">Updated</th>
               </tr>
             </thead>
             {loading && !data ? (
-              <SkeletonRows columns={7} />
+              <LoaderRow kind="stack" label="Loading customers" columns={7} />
             ) : (
               <tbody>
                 {data?.results.map((c) => (
@@ -163,11 +163,11 @@ export function CustomersPage() {
                     <td>
                       <TrustCell score={c.trust_score} band={c.band} />
                     </td>
-                    <td>
+                    <td className="col-sm">
                       <SourceChips codes={c.sources} />
                     </td>
-                    <td className="right mono">{c.conflict_fields ? c.conflict_fields : <span className="muted">-</span>}</td>
-                    <td>
+                    <td className="right mono col-md">{c.conflict_fields ? c.conflict_fields : <span className="muted">-</span>}</td>
+                    <td className="col-md">
                       {c.needs_review ? (
                         <span className="text-sm">
                           {c.needs_review} field{c.needs_review > 1 ? 's' : ''}
@@ -179,7 +179,7 @@ export function CustomersPage() {
                     <td>
                       <KycBadge status={c.kyc_status} />
                     </td>
-                    <td className="right text-sm muted">{formatRelative(c.score_updated_at)}</td>
+                    <td className="right text-sm muted col-md">{formatRelative(c.score_updated_at)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -5,8 +5,9 @@ import type { Source } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { Icon, type IconName } from '../components/Icon'
+import { Loader } from '../components/Loader'
 import { useToast } from '../components/Toasts'
-import { Card, ErrorAlert, PageHeader, Skeleton, StatusBadge } from '../components/ui'
+import { Card, ErrorAlert, PageHeader, StatusBadge } from '../components/ui'
 import { formatRelative, formatScore, sourceHue, sourceTier } from '../format'
 
 const CATEGORY_ICON: Record<string, IconName> = {
@@ -87,7 +88,7 @@ export function ConnectorsPage() {
               <dt>Last sync</dt>
               <dd>{formatRelative(lastSync ?? null)}</dd>
             </div>
-            <div style={{ minWidth: 220 }}>
+            <div>
               <dt>Share of records</dt>
               <dd>
                 <div className="share-bar" style={{ marginTop: 8 }} role="img" aria-label="Share of records by source">
@@ -119,11 +120,11 @@ export function ConnectorsPage() {
                 onChanged={reload}
               />
             ))
-          : [1, 2, 3].map((i) => (
-              <div key={i} className="card card-body">
-                <Skeleton height={180} />
+          : (
+              <div className="card grid-full">
+                <Loader kind="orbit" label="Connecting to the source systems" />
               </div>
-            ))}
+            )}
         {data && (
           <div className="add-tile">
             <span className="add-icon">

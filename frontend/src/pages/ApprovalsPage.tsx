@@ -7,8 +7,9 @@ import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { CorrectionStatus } from '../components/CorrectionsCard'
 import { Icon } from '../components/Icon'
+import { Loader } from '../components/Loader'
 import { useToast } from '../components/Toasts'
-import { Avatar, Card, EmptyState, ErrorAlert, PageHeader, Skeleton } from '../components/ui'
+import { Avatar, Card, EmptyState, ErrorAlert, PageHeader } from '../components/ui'
 import { FIELD_LABELS, formatDateTime, formatFieldValue } from '../format'
 
 type Tab = 'pending' | 'approved' | 'rejected'
@@ -47,8 +48,8 @@ export function ApprovalsPage() {
 
       {error && <ErrorAlert message={error} />}
       {loading && !data && (
-        <div className="card card-body">
-          <Skeleton height={140} />
+        <div className="card">
+          <Loader label="Loading changes waiting for approval" />
         </div>
       )}
       {data?.results.length === 0 && (

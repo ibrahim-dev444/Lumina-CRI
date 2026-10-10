@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lumina logo and loader options</title>
+<style>
+  :root {
+    --bg: #f4f4f7; --card: #ffffff; --text: #16161d; --muted: #6b6b78; --line: #e6e6ec;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 24px 48px; background: var(--bg); color: var(--text);
+         font: 14px/1.5 "Google Sans", system-ui, sans-serif; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p.lead { margin: 0 0 24px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px;
+          display: flex; flex-direction: column; gap: 14px; }
+  .stage { height: 200px; border-radius: 12px; display: grid; place-items: center;
+           background: radial-gradient(circle at 50% 40%, #fbfaff, #f1effa); }
+  .stage.dark { background: radial-gradient(circle at 50% 40%, #1d1b33, #111019); }
+  .row { display: flex; align-items: center; gap: 14px; }
+  .name { font-weight: 700; font-size: 16px; }
+  .idea { color: var(--muted); font-size: 13px; }
+  .tabs { display: flex; gap: 10px; align-items: center; margin-left: auto; }
+  .lockup { display: flex; align-items: center; gap: 10px; }
+  .lockup b { font-size: 16px; }
+  .lockup small { display: block; color: var(--muted); font-size: 11px; }
+  svg { display: block; overflow: visible; }
+
+  /* Every animation runs 2.8 s and repeats: parts fly in, merge, the logo holds, then fades for the next round. */
+  .anim * { transform-box: fill-box; transform-origin: center; }
+
+  /* 1 · Overlap: three records drift together, the core lights up */
+  .ov .c1 { animation: ov1 2.8s cubic-bezier(.2,.8,.2,1) infinite; }
+  .ov .c2 { animation: ov2 2.8s cubic-bezier(.2,.8,.2,1) infinite; }
+  .ov .c3 { animation: ov3 2.8s cubic-bezier(.2,.8,.2,1) infinite; }
+  .ov .core { animation: core 2.8s ease-out infinite; }
+  @keyframes ov1 { 0% { transform: translate(0,-22px) scale(.55); opacity: 0 } 40%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+  @keyframes ov2 { 0% { transform: translate(-22px,14px) scale(.55); opacity: 0 } 40%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+  @keyframes ov3 { 0% { transform: translate(22px,14px) scale(.55); opacity: 0 } 40%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+  @keyframes core { 0%,38% { transform: scale(0); opacity: 0 } 50% { transform: scale(1.6); opacity: 1 } 62%,88% { transform: scale(1); opacity: 1 } 100% { opacity: 0 } }
+
+  /* 2 · Converge: three rays draw in and ignite the orb */
+  .cv .ray { stroke-dasharray: 1; animation: draw 2.8s cubic-bezier(.4,0,.2,1) infinite; }
+  .cv .ray.r2 { animation-delay: .12s; }
+  .cv .ray.r3 { animation-delay: .24s; }
+  .cv .orb { animation: core 2.8s ease-out infinite; }
+  .cv .glow { animation: glow 2.8s ease-out infinite; }
+  @keyframes draw { 0% { stroke-dashoffset: 1; opacity: 1 } 40%,88% { stroke-dashoffset: 0; opacity: 1 } 100% { stroke-dashoffset: 0; opacity: 0 } }
+  @keyframes glow { 0%,40% { transform: scale(0); opacity: 0 } 55% { transform: scale(1.5); opacity: 1 } 70%,88% { transform: scale(1); opacity: .8 } 100% { opacity: 0 } }
+
+  /* 3 · Lumen L: a beam draws the L, the light point flares */
+  .lm .beam { stroke-dasharray: 1; animation: draw 2.8s cubic-bezier(.65,0,.35,1) infinite; }
+  .lm .spark { animation: core 2.8s ease-out infinite; }
+  .lm .halo { animation: glow 2.8s ease-out infinite; }
+
+  /* 4 · Orbit: three arcs spin in from different angles and lock into a ring */
+  .ob .a1 { animation: ob1 2.8s cubic-bezier(.2,.9,.2,1) infinite; }
+  .ob .a2 { animation: ob2 2.8s cubic-bezier(.2,.9,.2,1) infinite; }
+  .ob .a3 { animation: ob3 2.8s cubic-bezier(.2,.9,.2,1) infinite; }
+  .ob .core { animation: core 2.8s ease-out infinite; }
+  .ob .arc { transform-box: view-box; transform-origin: 32px 32px; }
+  @keyframes ob1 { 0% { transform: rotate(-260deg) scale(1.5); opacity: 0 } 45%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+  @keyframes ob2 { 0% { transform: rotate(200deg) scale(1.5); opacity: 0 } 45%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+  @keyframes ob3 { 0% { transform: rotate(-140deg) scale(1.5); opacity: 0 } 45%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+
+  /* 5 · Stack: three record cards fly in and settle into one stack */
+  .st .k1 { animation: st1 2.8s cubic-bezier(.2,.8,.2,1) infinite; }
+  .st .k2 { animation: st2 2.8s cubic-bezier(.2,.8,.2,1) infinite; animation-delay: .1s; }
+  .st .k3 { animation: st3 2.8s cubic-bezier(.2,.8,.2,1) infinite; animation-delay: .2s; }
+  .st .dot { animation: core 2.8s ease-out infinite; }
+  @keyframes st1 { 0% { transform: translate(-26px,-16px) rotate(-14deg); opacity: 0 } 40%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+  @keyframes st2 { 0% { transform: translate(26px,-20px) rotate(12deg); opacity: 0 } 40%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+  @keyframes st3 { 0% { transform: translate(0,26px) rotate(-6deg); opacity: 0 } 40%,88% { transform: none; opacity: 1 } 100% { opacity: 0 } }
+
+  /* Static copies (tab size and sidebar) never animate */
+  .still * { animation: none !important; }
+
+  @media (prefers-reduced-motion: reduce) { .anim * { animation: none !important; } }
+</style>
+</head>
+<body>
+<h1>Lumina: logo and loading options</h1>
+<p class="lead">Each loader shows the parts of the logo coming together, the way Lumina joins many records into one. The small icons on the right are the finished logo at sidebar and browser-tab size.</p>
+
+<div class="grid">
+
+  <!-- 1 · Overlap -->
+  <section class="card">
+    <div class="stage"><svg class="anim ov" width="132" height="132" viewBox="0 0 64 64"><use href="#bg1"/>
+      <g style="mix-blend-mode:screen">
+        <circle class="c1" cx="32" cy="24" r="12" fill="#c4b5fd" fill-opacity=".8"/>
+        <circle class="c2" cx="24.5" cy="37" r="12" fill="#f9a8d4" fill-opacity=".75"/>
+        <circle class="c3" cx="39.5" cy="37" r="12" fill="#5eead4" fill-opacity=".7"/>
+      </g>
+      <g class="core"><circle cx="32" cy="32.7" r="8" fill="url(#coreGlow)"/><circle cx="32" cy="32.7" r="3.2" fill="#fff"/></g>
+      <use href="#rim"/></svg></div>
+    <div class="row"><div><div class="name">1 · Overlap</div><div class="idea">Three records drift in, overlap, and a white core lights up where they agree.</div></div></div>
+    <div class="row"><div class="lockup"><svg class="still" width="34" height="34" viewBox="0 0 64 64"><use href="#logo1"/></svg><div><b>Lumina</b><small>Customer data platform</small></div></div>
+      <div class="tabs"><svg width="32" height="32" viewBox="0 0 64 64"><use href="#logo1"/></svg><svg width="16" height="16" viewBox="0 0 64 64"><use href="#logo1"/></svg></div></div>
+  </section>
+
+  <!-- 2 · Converge -->
+  <section class="card">
+    <div class="stage"><svg class="anim cv" width="132" height="132" viewBox="0 0 64 64"><use href="#bg2"/><use href="#shine"/>
+      <g fill="none" stroke="url(#ray)" stroke-linecap="round">
+        <path class="ray" pathLength="1" d="M13 18C26 18 30 32 42 32" stroke-width="4"/>
+        <path class="ray r2" pathLength="1" d="M13 32H42" stroke-width="4.5"/>
+        <path class="ray r3" pathLength="1" d="M13 46C26 46 30 32 42 32" stroke-width="4"/>
+      </g>
+      <circle class="glow" cx="45" cy="32" r="14" fill="url(#softGlow)"/>
+      <circle class="orb" cx="45" cy="32" r="7" fill="url(#orb)"/>
+      <use href="#rim"/></svg></div>
+    <div class="row"><div><div class="name">2 · Converge</div><div class="idea">Three rays draw in from the left and ignite one bright point: many sources, one record.</div></div></div>
+    <div class="row"><div class="lockup"><svg width="34" height="34" viewBox="0 0 64 64"><use href="#logo2"/></svg><div><b>Lumina</b><small>Customer data platform</small></div></div>
+      <div class="tabs"><svg width="32" height="32" viewBox="0 0 64 64"><use href="#logo2"/></svg><svg width="16" height="16" viewBox="0 0 64 64"><use href="#logo2"/></svg></div></div>
+  </section>
+
+  <!-- 3 · Lumen L -->
+  <section class="card">
+    <div class="stage dark"><svg class="anim lm" width="132" height="132" viewBox="0 0 64 64"><use href="#bg3"/><use href="#halo3"/>
+      <path class="beam" pathLength="1" d="M22 14V44H44" fill="none" stroke="url(#beam)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="halo" cx="44" cy="20" r="13" fill="url(#pinkGlow)"/>
+      <circle class="spark" cx="44" cy="20" r="5" fill="#fff"/>
+      <use href="#rimSoft"/></svg></div>
+    <div class="row"><div><div class="name">3 · Lumen L</div><div class="idea">A beam of light writes the L, then the light point flares. Premium, letter-based.</div></div></div>
+    <div class="row"><div class="lockup"><svg width="34" height="34" viewBox="0 0 64 64"><use href="#logo3"/></svg><div><b>Lumina</b><small>Customer data platform</small></div></div>
+      <div class="tabs"><svg width="32" height="32" viewBox="0 0 64 64"><use href="#logo3"/></svg><svg width="16" height="16" viewBox="0 0 64 64"><use href="#logo3"/></svg></div></div>
+  </section>
+
+  <!-- 4 · Orbit -->
+  <section class="card">
+    <div class="stage"><svg class="anim ob" width="132" height="132" viewBox="0 0 64 64"><use href="#bg1"/><use href="#shine"/>
+      <g fill="none" stroke-width="5" stroke-linecap="round">
+        <path class="arc a1" d="M19.98 19.98A17 17 0 0 1 44.02 19.98" stroke="#c4b5fd"/>
+        <path class="arc a2" d="M48.42 27.6A17 17 0 0 1 36.4 48.42" stroke="#5eead4"/>
+        <path class="arc a3" d="M27.6 48.42A17 17 0 0 1 15.58 27.6" stroke="#f9a8d4"/>
+      </g>
+      <g class="core"><circle cx="32" cy="32" r="9" fill="url(#coreGlow)"/><circle cx="32" cy="32" r="4" fill="#fff"/></g>
+      <use href="#rim"/></svg></div>
+    <div class="row"><div><div class="name">4 · Orbit</div><div class="idea">Three coloured arcs spin in from different angles and lock into one ring around a core.</div></div></div>
+    <div class="row"><div class="lockup"><svg width="34" height="34" viewBox="0 0 64 64"><use href="#logo4"/></svg><div><b>Lumina</b><small>Customer data platform</small></div></div>
+      <div class="tabs"><svg width="32" height="32" viewBox="0 0 64 64"><use href="#logo4"/></svg><svg width="16" height="16" viewBox="0 0 64 64"><use href="#logo4"/></svg></div></div>
+  </section>
+
+  <!-- 5 · Stack -->
+  <section class="card">
+    <div class="stage"><svg class="anim st" width="132" height="132" viewBox="0 0 64 64"><use href="#bg2"/><use href="#shine"/>
+      <rect class="k1" x="19" y="13" width="30" height="22" rx="5" fill="#fff" fill-opacity=".28"/>
+      <rect class="k2" x="16" y="20" width="32" height="23" rx="5" fill="#fff" fill-opacity=".5"/>
+      <g class="k3"><rect x="13" y="27" width="34" height="24" rx="6" fill="#fff"/>
+        <rect x="18" y="33" width="14" height="3" rx="1.5" fill="#5b47e0" fill-opacity=".55"/>
+        <rect x="18" y="40" width="20" height="3" rx="1.5" fill="#5b47e0" fill-opacity=".3"/></g>
+      <g class="dot"><circle cx="44" cy="30" r="8" fill="url(#softGlow)"/><circle cx="44" cy="30" r="3.6" fill="#fff" stroke="#5b47e0" stroke-width="1.6"/></g>
+      <use href="#rim"/></svg></div>
+    <div class="row"><div><div class="name">5 · Stack</div><div class="idea">Three record cards fly in and settle into one stack; the front card is the golden record.</div></div></div>
+    <div class="row"><div class="lockup"><svg width="34" height="34" viewBox="0 0 64 64"><use href="#logo5"/></svg><div><b>Lumina</b><small>Customer data platform</small></div></div>
+      <div class="tabs"><svg width="32" height="32" viewBox="0 0 64 64"><use href="#logo5"/></svg><svg width="16" height="16" viewBox="0 0 64 64"><use href="#logo5"/></svg></div></div>
+  </section>
+
+</div>
+
+<!-- Shared shapes and finished (static) logos -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5cf0"/><stop offset="1" stop-color="#3b2fc9"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset=".55" stop-color="#5b47e0"/><stop offset="1" stop-color="#2f3fd6"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2370"/><stop offset="1" stop-color="#110e33"/></linearGradient>
+    <linearGradient id="shineG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="ray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".15"/><stop offset="1" stop-color="#fff" stop-opacity=".95"/></linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset=".6" stop-color="#c084fc"/><stop offset="1" stop-color="#f0abfc"/></linearGradient>
+    <radialGradient id="orb" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#f3e8ff"/><stop offset="1" stop-color="#c4b5fd"/></radialGradient>
+    <radialGradient id="softGlow"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="coreGlow"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="pinkGlow"><stop offset="0" stop-color="#f5d0fe" stop-opacity=".9"/><stop offset="1" stop-color="#f5d0fe" stop-opacity="0"/></radialGradient>
+    <radialGradient id="violetHalo" cx=".3" cy=".2" r=".9"><stop offset="0" stop-color="#7c3aed" stop-opacity=".55"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></radialGradient>
+
+    <rect id="bg1" width="64" height="64" rx="15" fill="url(#g1)"/>
+    <rect id="bg2" width="64" height="64" rx="15" fill="url(#g2)"/>
+    <rect id="bg3" width="64" height="64" rx="15" fill="url(#g3)"/>
+    <rect id="shine" width="64" height="64" rx="15" fill="url(#shineG)"/>
+    <rect id="halo3" width="64" height="64" rx="15" fill="url(#violetHalo)"/>
+    <rect id="rim" x=".5" y=".5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity=".18"/>
+    <rect id="rimSoft" x=".5" y=".5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity=".12"/>
+
+    <g id="logo1"><use href="#bg1"/><use href="#shine"/>
+      <g style="mix-blend-mode:screen"><circle cx="32" cy="24" r="12" fill="#c4b5fd" fill-opacity=".8"/><circle cx="24.5" cy="37" r="12" fill="#f9a8d4" fill-opacity=".75"/><circle cx="39.5" cy="37" r="12" fill="#5eead4" fill-opacity=".7"/></g>
+      <circle cx="32" cy="32.7" r="8" fill="url(#coreGlow)"/><circle cx="32" cy="32.7" r="3.2" fill="#fff"/><use href="#rim"/></g>
+    <g id="logo2"><use href="#bg2"/><use href="#shine"/>
+      <g fill="none" stroke="url(#ray)" stroke-linecap="round"><path d="M13 18C26 18 30 32 42 32" stroke-width="4"/><path d="M13 32H42" stroke-width="4.5"/><path d="M13 46C26 46 30 32 42 32" stroke-width="4"/></g>
+      <circle cx="45" cy="32" r="14" fill="url(#softGlow)"/><circle cx="45" cy="32" r="7" fill="url(#orb)"/><use href="#rim"/></g>
+    <g id="logo3"><use href="#bg3"/><use href="#halo3"/>
+      <path d="M22 14V44H44" fill="none" stroke="url(#beam)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="44" cy="20" r="13" fill="url(#pinkGlow)"/><circle cx="44" cy="20" r="5" fill="#fff"/><use href="#rimSoft"/></g>
+    <g id="logo4"><use href="#bg1"/><use href="#shine"/>
+      <g fill="none" stroke-width="5" stroke-linecap="round"><path d="M19.98 19.98A17 17 0 0 1 44.02 19.98" stroke="#c4b5fd"/><path d="M48.42 27.6A17 17 0 0 1 36.4 48.42" stroke="#5eead4"/><path d="M27.6 48.42A17 17 0 0 1 15.58 27.6" stroke="#f9a8d4"/></g>
+      <circle cx="32" cy="32" r="9" fill="url(#coreGlow)"/><circle cx="32" cy="32" r="4" fill="#fff"/><use href="#rim"/></g>
+    <g id="logo5"><use href="#bg2"/><use href="#shine"/>
+      <rect x="19" y="13" width="30" height="22" rx="5" fill="#fff" fill-opacity=".28"/><rect x="16" y="20" width="32" height="23" rx="5" fill="#fff" fill-opacity=".5"/>
+      <rect x="13" y="27" width="34" height="24" rx="6" fill="#fff"/><rect x="18" y="33" width="14" height="3" rx="1.5" fill="#5b47e0" fill-opacity=".55"/><rect x="18" y="40" width="20" height="3" rx="1.5" fill="#5b47e0" fill-opacity=".3"/>
+      <circle cx="44" cy="30" r="8" fill="url(#softGlow)"/><circle cx="44" cy="30" r="3.6" fill="#fff" stroke="#5b47e0" stroke-width="1.6"/><use href="#rim"/></g>
+  </defs>
+</svg>
+</body>
+</html>

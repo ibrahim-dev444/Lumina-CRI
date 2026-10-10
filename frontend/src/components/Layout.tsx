@@ -62,6 +62,16 @@ export function Layout() {
   const [pendingCorrections, setPendingCorrections] = useState<number | null>(null)
   const [sources, setSources] = useState<Source[] | null>(null)
   const [theme, setTheme] = useState<Theme>(getTheme)
+  // Phones and small tablets: the menu is a drawer that slides in from the left.
+  const [navOpen, setNavOpen] = useState(false)
+  const closeNav = () => setNavOpen(false)
+
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setNavOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOpen])
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -101,8 +111,8 @@ export function Layout() {
 
   return (
     <div className="shell">
-      <aside className="sidebar" aria-label="Main navigation">
-        <Link to="/" className="brand" title="Go to Overview">
+      <aside id="main-nav" className={`sidebar${navOpen ? ' open' : ''}`} aria-label="Main navigation">
+        <Link to="/" className="brand" title="Go to Overview" onClick={closeNav}>
           <BrandMark />
           <div className="rail-text">
             <div className="brand-name">Lumina</div>
@@ -118,7 +128,7 @@ export function Layout() {
               <span className="rail-text">{group.label}</span>
             </div>
             {group.items.map((item) => (
-              <NavLink key={item.to} to={item.to} end={item.end} className="nav-link">
+              <NavLink key={item.to} to={item.to} end={item.end} className="nav-link" onClick={closeNav}>
                 <Icon name={item.icon} />
                 <span className="rail-text">{item.label}</span>
                 {item.to === '/review' && pending ? <span className="nav-count">{pending}</span> : null}
@@ -149,9 +159,24 @@ export function Layout() {
           </button>
         </div>
       </aside>
+      {navOpen && <div className="nav-backdrop" onClick={closeNav} aria-hidden="true" />}
 
       <main className="content">
         <header className="topbar glass">
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon menu-btn"
+            onClick={() => setNavOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={navOpen}
+            aria-controls="main-nav"
+          >
+            <Icon name="menu" />
+          </button>
+          <Link to="/" className="topbar-brand" title="Go to Overview">
+            <BrandMark size={28} />
+            <span>{page?.title ?? 'Lumina'}</span>
+          </Link>
           <div className="topbar-path">
             <Link to="/" className="topbar-home">
               Lumina
@@ -162,9 +187,12 @@ export function Layout() {
           {sources && (
             <span className="pill" title="Status of the bank systems Lumina reads from">
               <span className={`badge-dot ${off ? 'warn' : 'live'}`} />
-              {off
-                ? `${off} source${off > 1 ? 's' : ''} disconnected`
-                : `All ${sources.length} sources connected · synced ${formatRelative(lastSync ?? null).toLowerCase()}`}
+              <span className="pill-long">
+                {off
+                  ? `${off} source${off > 1 ? 's' : ''} disconnected`
+                  : `All ${sources.length} sources connected · synced ${formatRelative(lastSync ?? null).toLowerCase()}`}
+              </span>
+              <span className="pill-short">{off ? `${off} off` : `${sources.length} live`}</span>
             </span>
           )}
         </header>

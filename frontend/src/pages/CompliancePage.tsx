@@ -5,7 +5,8 @@ import { api } from '../api/client'
 import { useApi } from '../api/useApi'
 import { KycBadge } from '../components/ComplianceTab'
 import { RISK_LABEL } from '../compliance'
-import { Avatar, Card, EmptyState, ErrorAlert, PageHeader, Skeleton, SkeletonRows, StatusBadge } from '../components/ui'
+import { LoaderRow } from '../components/Loader'
+import { Avatar, Card, EmptyState, ErrorAlert, PageHeader, Skeleton, StatusBadge } from '../components/ui'
 import { formatDate, formatScore } from '../format'
 
 type Filter = { label: string; status?: string; risk?: string }
@@ -97,7 +98,7 @@ export function CompliancePage() {
               </tr>
             </thead>
             {loading && !data ? (
-              <SkeletonRows columns={8} />
+              <LoaderRow kind="overlap" label="Loading KYC and risk" columns={8} />
             ) : (
               <tbody>
                 {data?.results.map((r) => (

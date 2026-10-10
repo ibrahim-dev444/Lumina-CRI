@@ -56,58 +56,61 @@ export function TrustRunway({ scores }: { scores: Overview['scores'] }) {
   }
 
   return (
-    <div className="chart">
-      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label="Every customer placed by trust score, 0 to 100">
-        {ZONES.map((z) => (
-          <g key={z.label}>
-            <rect x={x(z.from)} y={M.top - 6} width={x(z.to) - x(z.from)} height={BASE - M.top + 6} fill={z.colour} fillOpacity="0.06" />
-            <text x={x(z.from) + 8} y={M.top - 12} fontSize="12" fontWeight="600" fill="var(--text-3)">
-              {z.label}
-            </text>
-          </g>
-        ))}
-        {[60, 80].map((t) => (
-          <line key={t} x1={x(t)} x2={x(t)} y1={M.top - 22} y2={BASE} stroke="var(--border-strong)" strokeDasharray="3 4" />
-        ))}
-        <line x1={x(0)} x2={x(100)} y1={BASE} y2={BASE} stroke="var(--chart-axis)" />
-        {[0, 20, 40, 60, 80, 100].map((t) => (
-          <g key={t}>
-            <line x1={x(t)} x2={x(t)} y1={BASE} y2={BASE + 5} stroke="var(--chart-axis)" />
-            <text x={x(t)} y={BASE + 19} textAnchor="middle" fontSize="11" fill="var(--text-3)">
-              {t}
-            </text>
-          </g>
-        ))}
-        {dots.map((d) => (
-          <circle
-            key={d.id}
-            cx={d.px}
-            cy={d.py}
-            r={hover === d.id ? R + 2 : R}
-            fill={zoneColour(d.v)}
-            stroke="var(--surface)"
-            strokeWidth="2"
-            tabIndex={0}
-            role="link"
-            aria-label={`${d.name || d.code}, trust ${formatScore(d.score)}`}
-            style={{ cursor: 'pointer', outline: 'none', transition: 'r 120ms' }}
-            onMouseEnter={() => setHover(d.id)}
-            onMouseLeave={() => setHover(null)}
-            onFocus={() => setHover(d.id)}
-            onBlur={() => setHover(null)}
-            onClick={() => open(d.id)}
-            onKeyDown={(e) => onKey(e, d.id)}
-          />
-        ))}
-      </svg>
-      {focused && (
-        <div className="chart-tooltip" style={{ left: `${(focused.px / W) * 100}%`, top: `${(focused.py / H) * 100}%` }}>
-          <strong>{focused.name || focused.code}</strong>
-          <span className="muted">
-            {focused.code} · trust <span className="num">{formatScore(focused.score)}</span>
-          </span>
-        </div>
-      )}
+    // On phones the chart keeps a readable size and scrolls sideways instead of shrinking.
+    <div className="chart-scroll">
+      <div className="chart runway">
+        <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label="Every customer placed by trust score, 0 to 100">
+          {ZONES.map((z) => (
+            <g key={z.label}>
+              <rect x={x(z.from)} y={M.top - 6} width={x(z.to) - x(z.from)} height={BASE - M.top + 6} fill={z.colour} fillOpacity="0.06" />
+              <text x={x(z.from) + 8} y={M.top - 12} fontSize="12" fontWeight="600" fill="var(--text-3)">
+                {z.label}
+              </text>
+            </g>
+          ))}
+          {[60, 80].map((t) => (
+            <line key={t} x1={x(t)} x2={x(t)} y1={M.top - 22} y2={BASE} stroke="var(--border-strong)" strokeDasharray="3 4" />
+          ))}
+          <line x1={x(0)} x2={x(100)} y1={BASE} y2={BASE} stroke="var(--chart-axis)" />
+          {[0, 20, 40, 60, 80, 100].map((t) => (
+            <g key={t}>
+              <line x1={x(t)} x2={x(t)} y1={BASE} y2={BASE + 5} stroke="var(--chart-axis)" />
+              <text x={x(t)} y={BASE + 19} textAnchor="middle" fontSize="11" fill="var(--text-3)">
+                {t}
+              </text>
+            </g>
+          ))}
+          {dots.map((d) => (
+            <circle
+              key={d.id}
+              cx={d.px}
+              cy={d.py}
+              r={hover === d.id ? R + 2 : R}
+              fill={zoneColour(d.v)}
+              stroke="var(--surface)"
+              strokeWidth="2"
+              tabIndex={0}
+              role="link"
+              aria-label={`${d.name || d.code}, trust ${formatScore(d.score)}`}
+              style={{ cursor: 'pointer', outline: 'none', transition: 'r 120ms' }}
+              onMouseEnter={() => setHover(d.id)}
+              onMouseLeave={() => setHover(null)}
+              onFocus={() => setHover(d.id)}
+              onBlur={() => setHover(null)}
+              onClick={() => open(d.id)}
+              onKeyDown={(e) => onKey(e, d.id)}
+            />
+          ))}
+        </svg>
+        {focused && (
+          <div className="chart-tooltip" style={{ left: `${(focused.px / W) * 100}%`, top: `${(focused.py / H) * 100}%` }}>
+            <strong>{focused.name || focused.code}</strong>
+            <span className="muted">
+              {focused.code} · trust <span className="num">{formatScore(focused.score)}</span>
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import type { Capability } from './api/types'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { Icon } from './components/Icon'
 import { Layout } from './components/Layout'
+import { Loader } from './components/Loader'
 import { ToastProvider } from './components/Toasts'
 import { WakingBanner } from './components/WakingBanner'
 import { ApprovalsPage } from './pages/ApprovalsPage'
@@ -20,7 +21,13 @@ import { ReviewPage } from './pages/ReviewPage'
 
 function Routed() {
   const { user, checking, logout } = useAuth()
-  if (checking) return null
+  if (checking) {
+    return (
+      <main className="splash">
+        <Loader label="Opening Lumina" size={72} />
+      </main>
+    )
+  }
   if (!user) return <LoginPage />
   if (!user.role) {
     return (

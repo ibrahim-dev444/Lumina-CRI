@@ -5,6 +5,7 @@ import { api } from '../api/client'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { Icon, type IconName } from '../components/Icon'
+import { Loader } from '../components/Loader'
 import { useToast } from '../components/Toasts'
 import { BarList } from '../components/BarList'
 import { TrustRunway } from '../components/TrustRunway'
@@ -139,7 +140,7 @@ export function OverviewPage() {
           )
         }
       >
-        {data ? <TrustRunway scores={data.scores} /> : <Skeleton height={150} />}
+        {data ? <TrustRunway scores={data.scores} /> : <Loader label="Checking data quality" />}
       </Card>
 
       <div className="grid-halves">
@@ -211,13 +212,13 @@ export function OverviewPage() {
         }
       >
         <div className="table-wrap">
-          <table className="table" style={{ minWidth: 600 }}>
+          <table className="table lowest-table">
             <thead>
               <tr>
                 <th>Customer</th>
                 <th>Trust</th>
-                <th>Found in</th>
-                <th className="right">Action</th>
+                <th className="col-sm">Found in</th>
+                <th className="right col-sm">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -235,10 +236,10 @@ export function OverviewPage() {
                   <td>
                     <TrustCell score={c.trust_score} band={c.band} />
                   </td>
-                  <td>
+                  <td className="col-sm">
                     <SourceChips codes={c.sources} />
                   </td>
-                  <td className="right">
+                  <td className="right col-sm">
                     <Link to={`/customers/${c.id}`} className="btn btn-sm" onClick={(e) => e.stopPropagation()}>
                       Review
                     </Link>

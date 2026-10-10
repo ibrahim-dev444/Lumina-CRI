@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import type { Capability, Field } from '../api/types'
 import { useApi } from '../api/useApi'
 import { Icon, type IconName } from '../components/Icon'
+import { Loader } from '../components/Loader'
 import { Card, ErrorAlert, PageHeader, Skeleton } from '../components/ui'
 import { FIELD_LABELS, FIELDS, formatScore } from '../format'
 
@@ -118,7 +119,7 @@ export function HowItWorksPage() {
             </div>
           </div>
         ) : (
-          <Skeleton height={160} />
+          <Loader label="Loading the rules" />
         )}
       </Section>
 
