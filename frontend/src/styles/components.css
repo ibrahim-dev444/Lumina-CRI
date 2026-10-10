@@ -2833,3 +2833,81 @@ code {
     min-width: 0;
   }
 }
+
+/* ============ Content transitions ============ */
+/*
+ * New content fades and rises into place (0.22 s) whenever it appears: a new page, a customer tab, a filter
+ * or tab switch, rows that arrive, content replacing a loader. CSS runs the animation only when an element
+ * is first added, so anything that stays on screen does not move again.
+ */
+
+@keyframes content-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.page > *,
+.grid-auto > *,
+.card-body > :not(.skeleton):not(.spin),
+.card > .table-wrap {
+  animation: content-in 220ms ease-out both;
+}
+
+/* Rows only fade: moving table rows would make long lists shimmer */
+.table tbody tr,
+.compare tbody tr {
+  animation: row-in 200ms ease-out both;
+}
+
+/* A gentle cascade down the page: each early block starts a moment after the one above */
+.page > :nth-child(2) { animation-delay: 30ms; }
+.page > :nth-child(3) { animation-delay: 60ms; }
+.page > :nth-child(4) { animation-delay: 90ms; }
+.page > :nth-child(n + 5) { animation-delay: 120ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page > *,
+  .grid-auto > *,
+  .card-body > *,
+  .card > .table-wrap,
+  .table tbody tr,
+  .compare tbody tr {
+    animation: none;
+  }
+}
+
+/* Tab and filter buttons change state smoothly; the active tab's underline grows in from the middle */
+.tab,
+.segmented button {
+  transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.tab[aria-selected='true']::after {
+  animation: underline-in 220ms ease-out;
+}
+
+@keyframes underline-in {
+  from {
+    transform: scaleX(0.3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab,
+  .segmented button {
+    transition: none;
+  }
+
+  .tab[aria-selected='true']::after {
+    animation: none;
+  }
+}
