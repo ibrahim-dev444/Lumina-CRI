@@ -59,11 +59,6 @@
   padding: 0 4px;
 }
 
-.brand-mark {
-  display: block;
-  flex: none;
-}
-
 .brand-name {
   font-size: 17px;
   font-weight: 700;
@@ -1057,24 +1052,6 @@ a.kpi:hover {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-}
-
-.meter {
-  position: relative;
-  display: inline-block;
-  width: 64px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--chart-track);
-  overflow: hidden;
-  flex: none;
-}
-
-.meter > i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 999px;
-  background: var(--chart-1);
 }
 
 .profile-score {
