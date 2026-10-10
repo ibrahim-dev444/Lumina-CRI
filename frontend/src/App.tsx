@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './auth/AuthContext'
 import { Icon } from './components/Icon'
 import { Layout } from './components/Layout'
 import { ToastProvider } from './components/Toasts'
+import { WakingBanner } from './components/WakingBanner'
 import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
 import { CompliancePage } from './pages/CompliancePage'
@@ -64,6 +65,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <WakingBanner />
         <BrowserRouter>
           <Routed />
         </BrowserRouter>

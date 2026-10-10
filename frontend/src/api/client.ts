@@ -25,6 +25,55 @@ export class ApiError extends Error {
   }
 }
 
+// The hosted demo's free server sleeps after 15 minutes without visitors. While it starts again (up to a
+// minute) every request gets 502, 503 or 504, or no answer at all. Wait and retry instead of failing, and tell
+// the screen so it can say what is happening.
+const WAKING_STATUSES = [502, 503, 504]
+const WAKING_LIMIT_MS = 90_000
+const WAKING_RETRY_MS = 5_000
+
+let waking = false
+const wakingListeners = new Set<() => void>()
+
+function setWaking(value: boolean) {
+  if (value === waking) return
+  waking = value
+  wakingListeners.forEach((listener) => listener())
+}
+
+export const serverWaking = {
+  get: () => waking,
+  subscribe: (listener: () => void) => {
+    wakingListeners.add(listener)
+    return () => {
+      wakingListeners.delete(listener)
+    }
+  },
+}
+
+async function fetchWhileWaking(url: string, init: RequestInit): Promise<Response> {
+  const started = Date.now()
+  for (;;) {
+    let response: Response | null = null
+    try {
+      response = await fetch(url, init)
+    } catch {
+      response = null // no answer at all
+    }
+    if (response && !WAKING_STATUSES.includes(response.status)) {
+      setWaking(false)
+      return response
+    }
+    if (Date.now() - started > WAKING_LIMIT_MS) {
+      setWaking(false)
+      if (response) return response
+      throw new ApiError(0, 'The server did not answer. Please try again in a minute.')
+    }
+    setWaking(true)
+    await new Promise((resolve) => setTimeout(resolve, WAKING_RETRY_MS))
+  }
+}
+
 // Django rejects POST/PATCH without the CSRF token it put in the csrftoken cookie.
 function csrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/)
@@ -32,7 +81,7 @@ function csrfToken(): string {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`/api${path}`, {
+  const response = await fetchWhileWaking(`/api${path}`, {
     method,
     credentials: 'same-origin',
     headers: {
@@ -103,7 +152,7 @@ export const api = {
 
   // CSV download: the server builds the file (and writes the audit entry).
   exportCustomers: async (): Promise<Blob> => {
-    const response = await fetch('/api/customers/export/', { credentials: 'same-origin' })
+    const response = await fetchWhileWaking('/api/customers/export/', { credentials: 'same-origin' })
     if (!response.ok) {
       const data = await response.json().catch(() => ({}))
       throw new ApiError(response.status, data.detail ?? `Export failed (${response.status})`)
