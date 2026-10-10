@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 import { api } from '../api/client'
+import { atLeast, LOADER_MIN_MS } from '../api/useApi'
 import type { Capability, User } from '../api/types'
 
 interface AuthState {
@@ -18,9 +19,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Get the CSRF cookie first, then see if a login session already exists.
-    api
-      .csrf()
-      .then(() => api.me())
+    // The opening splash stays for one full logo formation, like every first load.
+    atLeast(
+      api.csrf().then(() => api.me()),
+      LOADER_MIN_MS,
+    )
       .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setChecking(false))
