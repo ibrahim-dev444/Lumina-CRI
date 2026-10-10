@@ -2643,8 +2643,32 @@ code {
   transform-origin: center;
 }
 
-/* Approvals: the checker's tick follows the maker's */
-.logo-art.is-animated .ray.tick2 { animation-delay: 0.45s; }
+/* Approvals: a ball bounces between maker and checker */
+.logo-art .ball-x,
+.logo-art .ball-y {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+}
+
+.logo-art .node-maker,
+.logo-art .node-checker {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Ping-pong: across and back every 2.4 s; the arc comes from a separate up-and-down bounce */
+.logo-art.is-animated .ball-x { animation: ball-x 1.2s ease-in-out infinite alternate; }
+.logo-art.is-animated .ball-y { animation: ball-y 0.6s ease-in-out infinite alternate; }
+.logo-art.is-animated .node-checker { animation: node-land 2.4s ease-out infinite; }
+.logo-art.is-animated .node-maker { animation: node-land 2.4s ease-out infinite 1.2s; }
+
+@keyframes ball-x { to { transform: translateX(32px); } }
+@keyframes ball-y { from { transform: translateY(6px); } to { transform: translateY(-12px); } }
+@keyframes node-land {
+  0%, 40% { transform: scale(1); }
+  50% { transform: scale(1.22); }
+  62%, 100% { transform: scale(1); }
+}
 
 /* Compliance: the seal's check draws after the shield outline */
 .logo-art.is-animated .ray.seal { animation-delay: 0.55s; }

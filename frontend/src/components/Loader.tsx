@@ -7,11 +7,20 @@ import { useId } from 'react'
 //   orbit    - arcs lock into a ring around a core; source system connections
 //   converge - rays meet in one bright point; building a golden record
 //   pair     - two record cards slide together and link; match review
-//   check    - one tick, then a second tick (maker, then checker); approvals
+//   pingpong - a ball bounces between maker and checker; approvals (maker-checker)
 //   shield   - a shield draws itself and a check appears; compliance
 //   trail    - steps light up one after another along a line; audit log and activity
 // With "reduce motion" switched on in the operating system, the finished picture shows without movement.
-export type LoaderKind = 'overlap' | 'stack' | 'orbit' | 'converge' | 'pair' | 'check' | 'shield' | 'trail'
+export type LoaderKind =
+  | 'overlap'
+  | 'stack'
+  | 'orbit'
+  | 'converge'
+  | 'pair'
+  | 'shield'
+  | 'trail'
+  | 'pingpong'
+
 
 // Gradient ids must be unique on the page; useId gives ":r1:"-style values, which url(#...) cannot use.
 function useSvgId() {
@@ -20,7 +29,7 @@ function useSvgId() {
 
 export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: number; animated: boolean }) {
   const id = useSvgId()
-  const bg = ['overlap', 'orbit', 'check', 'shield'].includes(kind) ? `${id}-bg1` : `${id}-bg2`
+  const bg = ['overlap', 'orbit', 'shield'].includes(kind) ? `${id}-bg1` : `${id}-bg2`
   return (
     <svg
       className={`logo-art logo-${kind}${animated ? ' is-animated' : ''}`}
@@ -139,18 +148,6 @@ export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: numb
         </>
       )}
 
-      {kind === 'check' && (
-        <>
-          <g fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5">
-            <path className="ray tick1" pathLength={1} d="M12 33l7.5 7.5L33 27" stroke="#fff" strokeOpacity="0.55" />
-            <path className="ray tick2" pathLength={1} d="M24 33l7.5 7.5L50 22" stroke="#fff" />
-          </g>
-          <g className="core">
-            <circle cx="50" cy="22" r="7" fill={`url(#${id}-glow)`} />
-          </g>
-        </>
-      )}
-
       {kind === 'shield' && (
         <>
           <path
@@ -185,6 +182,25 @@ export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: numb
           <rect className="step s2" x="23" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fillOpacity="0.45" />
           <rect className="step s3" x="35" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fillOpacity="0.45" />
           <rect className="step s4" x="47" y="40" width="6" height="2.5" rx="1.25" fill="#fff" fillOpacity="0.6" />
+        </>
+      )}
+
+      {kind === 'pingpong' && (
+        <>
+          <path d="M16 42Q32 16 48 42" fill="none" stroke="#fff" strokeOpacity="0.18" strokeWidth="1.5" strokeDasharray="2 3" />
+          <g className="node-maker">
+            <circle cx="16" cy="44" r="6.5" fill="#fff" fillOpacity="0.25" stroke="#fff" strokeOpacity="0.7" strokeWidth="1.6" />
+          </g>
+          <g className="node-checker">
+            <circle cx="48" cy="44" r="6.5" fill="#5eead4" stroke="#fff" strokeWidth="1.6" />
+            <path d="M45.4 44.1l1.8 1.8 3.5-3.7" fill="none" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <g className="ball-x">
+            <g className="ball-y">
+              <circle cx="16" cy="36" r="9" fill={`url(#${id}-glow)`} />
+              <circle cx="16" cy="36" r="4" fill="#fff" />
+            </g>
+          </g>
         </>
       )}
 
