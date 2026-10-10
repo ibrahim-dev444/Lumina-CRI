@@ -6,6 +6,7 @@ import type { Capability, Source } from '../api/types'
 import { formatRelative } from '../format'
 import { applyTheme, getTheme, type Theme } from '../theme'
 import { useAuth } from '../auth/AuthContext'
+import { BrandMark } from './BrandMark'
 import { Icon, type IconName } from './Icon'
 import { Avatar } from './ui'
 
@@ -102,9 +103,7 @@ export function Layout() {
     <div className="shell">
       <aside className="sidebar" aria-label="Main navigation">
         <Link to="/" className="brand" title="Go to Overview">
-          <span className="brand-mark" aria-hidden="true">
-            L
-          </span>
+          <BrandMark />
           <div className="rail-text">
             <div className="brand-name">Lumina</div>
             <div className="brand-sub">Customer data platform</div>

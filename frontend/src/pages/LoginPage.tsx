@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 
 import { useAuth } from '../auth/AuthContext'
+import { BrandMark } from '../components/BrandMark'
 import { Icon } from '../components/Icon'
 import { ErrorAlert } from '../components/ui'
 
@@ -34,6 +35,7 @@ export function LoginPage() {
       </div>
       <form className="glass login-card" style={{ borderRadius: 'var(--radius-lg)' }} onSubmit={submit}>
         <div className="brand" style={{ padding: 0 }}>
+          <BrandMark size={40} />
           <div>
             <div className="brand-name">Lumina</div>
             <div className="brand-sub">Customer data platform</div>
