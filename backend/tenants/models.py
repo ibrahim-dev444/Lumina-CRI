@@ -35,3 +35,25 @@ class Tenant(TenantMixin):
 class Domain(DomainMixin):
     """How requests find their tenant. With subfolder routing this is the short organization code people
     type at sign-in ("axis"), used in addresses like /t/axis/."""
+
+
+class PlatformEvent(models.Model):
+    """Something the platform team did (signed in, added or changed an organization). Append-only.
+
+    Lives in the shared schema. Each organization's own audit log stays inside that organization.
+    """
+
+    at = models.DateTimeField(auto_now_add=True, db_index=True)
+    actor_name = models.CharField(max_length=150)
+    action = models.CharField(max_length=30, db_index=True)
+    target = models.CharField(max_length=100, blank=True)
+    detail = models.JSONField(default=dict, blank=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-at", "-id"]
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            raise ValueError("Platform events cannot be changed.")
+        super().save(*args, **kwargs)

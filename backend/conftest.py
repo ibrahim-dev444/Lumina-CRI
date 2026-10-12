@@ -33,7 +33,7 @@ def django_db_setup(django_db_setup, django_db_blocker):
 def in_test_organization(request, monkeypatch):
     """Database tests run inside the "axis" schema, and API calls like client.get("/api/customers/") go to
     /t/axis/api/customers/, as the website sends them. Paths that name an organization (/t/...) or belong to
-    the shared space (/api/organizations/, /api/health/) are left as written."""
+    the shared space (/api/organizations/, /api/health/, /api/platform/) are left as written."""
     uses_db = (
         "db" in request.fixturenames
         or "transactional_db" in request.fixturenames
@@ -48,7 +48,7 @@ def in_test_organization(request, monkeypatch):
     original = APIClient.generic
 
     def generic(self, method, path, *args, **kwargs):
-        if path.startswith("/api/") and not path.startswith(("/api/organizations/", "/api/health/")):
+        if path.startswith("/api/") and not path.startswith(("/api/organizations/", "/api/health/", "/api/platform/")):
             path = f"/t/{TEST_ORG}{path}"
         return original(self, method, path, *args, **kwargs)
 

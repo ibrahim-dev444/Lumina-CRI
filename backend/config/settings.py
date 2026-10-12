@@ -85,6 +85,8 @@ DATABASE_ROUTERS = ('django_tenants.routers.TenantSyncRouter',)
 MIDDLEWARE = [
     # Must run first: picks the organization from the /t/<org>/ path and switches to its schema.
     'django_tenants.middleware.subfolder.TenantSubfolderMiddleware',
+    # A suspended organization is closed to everyone, even people already signed in.
+    'tenants.middleware.SuspendedOrganizationMiddleware',
     'django.middleware.security.SecurityMiddleware',
     # Serves the admin's CSS and JS when there is no separate web server (hosted demo).
     'whitenoise.middleware.WhiteNoiseMiddleware',
