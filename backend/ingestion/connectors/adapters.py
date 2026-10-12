@@ -175,8 +175,11 @@ class MySQLAdapter(BaseAdapter):
             )
         except pymysql.MySQLError as exc:
             raise ConnectorError(f"Could not connect: {exc.args[-1] if exc.args else exc}") from exc
-        with conn.cursor() as cur:
-            cur.execute("SET SESSION TRANSACTION READ ONLY")
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SET SESSION TRANSACTION READ ONLY")
+        except pymysql.MySQLError:
+            pass  # some MySQL-compatible servers (e.g. TiDB) do not support it; the login itself is read-only
         return conn
 
     def list_objects(self):
