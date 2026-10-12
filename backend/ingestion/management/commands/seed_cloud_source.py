@@ -1,7 +1,7 @@
 """Fill a cloud database with synthetic customers and create a read-only login for Lumina (Phase 6).
 
     python manage.py seed_cloud_source postgres --bank axis
-    python manage.py seed_cloud_source mysql --bank hdfc
+    python manage.py seed_cloud_source mysql --bank hdfc      (asks host, port, user, password one by one)
     python manage.py seed_cloud_source mongodb --bank axis
 
 The command asks for the database's admin connection string with hidden typing, so it never appears in the
@@ -11,7 +11,7 @@ connector screen. Run it again any time to reset the rows (and the read-only pas
 
 import getpass
 import secrets
-from urllib.parse import unquote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -29,7 +29,10 @@ class Command(BaseCommand):
         parser.add_argument("--count", type=int, default=24)
 
     def handle(self, *args, kind, bank, count, **options):
-        url = getpass.getpass(f"Paste the {kind} ADMIN connection string (hidden), then press Enter: ").strip()
+        if kind == "mysql":
+            url = self._ask_mysql()
+        else:
+            url = getpass.getpass(f"Paste the {kind} ADMIN connection string (hidden), then press Enter: ").strip()
         if not url:
             raise CommandError("No connection string given.")
         rows = customers(bank, count=count, seed=SEEDS[kind])
@@ -78,6 +81,18 @@ class Command(BaseCommand):
         ])
 
     # ---------- MySQL (e.g. TiDB Cloud Serverless) ----------
+
+    def _ask_mysql(self):
+        """Ask for each part separately (as TiDB's Connect screen shows them), so nothing needs URL-escaping."""
+        host = input("Host (e.g. gateway01.ap-southeast-1.prod.aws.tidbcloud.com): ").strip()
+        if not host or host.lower() in {"host", "<host>"} or "." not in host:
+            raise CommandError("Type the real host name from the database's Connect screen.")
+        port = input("Port [4000]: ").strip() or "4000"
+        user = input("User (e.g. 3Abc123.root): ").strip()
+        password = getpass.getpass("Password (hidden): ")
+        if not user or not password:
+            raise CommandError("User and password are needed.")
+        return f"mysql://{quote(user, safe='')}:{quote(password, safe='')}@{host}:{int(port)}/lumina_source"
 
     def _mysql(self, url, rows, bank, password):
         import ssl
