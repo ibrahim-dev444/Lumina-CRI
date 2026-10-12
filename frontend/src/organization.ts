@@ -14,6 +14,7 @@ export interface Organization {
   code: string
   name: string
   brand_color: string
+  logo: string // https:// or data:image/ address; empty shows initials
 }
 
 // Asks the server whether an organization code exists. It answers one code at a time; there is no list.

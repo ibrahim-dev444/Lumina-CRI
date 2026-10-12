@@ -9,6 +9,7 @@ import { useAuth } from '../auth/AuthContext'
 import { useOrganization } from '../organization'
 import { BrandMark } from './BrandMark'
 import { Icon, type IconName } from './Icon'
+import { OrgLogo } from './OrgLogo'
 import { Avatar } from './ui'
 
 type NavItem = { to: string; label: string; icon: IconName; end?: boolean; needs?: Capability[] }
@@ -118,7 +119,7 @@ export function Layout() {
           <BrandMark />
           <div className="rail-text">
             <div className="brand-name">Lumina</div>
-            <div className="brand-sub">{org.name}</div>
+            <div className="brand-sub">Customer data platform</div>
           </div>
         </Link>
 
@@ -181,22 +182,29 @@ export function Layout() {
           </Link>
           <div className="topbar-path">
             <Link to="/" className="topbar-home">
-              {org.name}
+              Lumina
             </Link>
             <Icon name="chevronRight" size={14} />
             <strong>{page?.title ?? 'Workspace'}</strong>
           </div>
-          {sources && (
-            <span className="pill" title="Status of the bank systems Lumina reads from">
-              <span className={`badge-dot ${off ? 'warn' : 'live'}`} />
-              <span className="pill-long">
-                {off
-                  ? `${off} source${off > 1 ? 's' : ''} disconnected`
-                  : `All ${sources.length} sources connected · synced ${formatRelative(lastSync ?? null).toLowerCase()}`}
+          <div className="topbar-right">
+            {sources && (
+              <span className="pill" title="Status of the bank systems Lumina reads from">
+                <span className={`badge-dot ${off ? 'warn' : 'live'}`} />
+                <span className="pill-long">
+                  {off
+                    ? `${off} source${off > 1 ? 's' : ''} disconnected`
+                    : `All ${sources.length} sources connected · synced ${formatRelative(lastSync ?? null).toLowerCase()}`}
+                </span>
+                <span className="pill-short">{off ? `${off} off` : `${sources.length} live`}</span>
               </span>
-              <span className="pill-short">{off ? `${off} off` : `${sources.length} live`}</span>
+            )}
+            {/* The organization's own logo: the one place its identity appears inside Lumina. */}
+            <span className="org-badge" title={`Signed in to ${org.name}`}>
+              <OrgLogo org={org} size={26} />
+              <span className="org-badge-name">{org.name}</span>
             </span>
-          )}
+          </div>
         </header>
         <div className="content-inner">
           <div className="page">

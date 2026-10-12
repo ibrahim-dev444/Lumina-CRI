@@ -16,7 +16,10 @@ class Tenant(TenantMixin):
 
     name = models.CharField(max_length=120)  # shown to people: "Axis Bank"
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=ACTIVE)
-    brand_color = models.CharField(max_length=7, blank=True)  # e.g. "#97144d"; empty uses Lumina's colour
+    brand_color = models.CharField(max_length=7, blank=True)  # e.g. "#97144d"; colours the initials badge
+    # The organization's own logo, shown as a badge inside Lumina (the app itself always looks like Lumina).
+    # An https:// address or a data:image/... URL. Empty shows the organization's initials instead.
+    logo = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Saving a new tenant creates its schema and runs every tenant migration in it.

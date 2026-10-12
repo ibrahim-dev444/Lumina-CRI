@@ -25,4 +25,13 @@ def organization(request, code):
         return Response({"detail": "No organization with that code."}, status=404)
     if tenant.status != Tenant.ACTIVE:
         return Response({"detail": "This organization's access is paused. Contact your administrator."}, status=403)
-    return Response({"code": domain.domain, "name": tenant.name, "brand_color": tenant.brand_color})
+    return Response(
+        {"code": domain.domain, "name": tenant.name, "brand_color": tenant.brand_color, "logo": safe_logo(tenant.logo)}
+    )
+
+
+def safe_logo(value):
+    """Only image addresses the browser shows as a picture: https:// links or data:image/ URLs.
+    Anything else (for example raw SVG markup that could carry scripts) is dropped."""
+    value = (value or "").strip()
+    return value if value.startswith(("https://", "data:image/")) else ""

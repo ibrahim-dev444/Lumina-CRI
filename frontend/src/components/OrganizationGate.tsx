@@ -15,7 +15,7 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
     lookupOrganization(ORG_CODE)
       .then((found) => {
         setOrg(found)
-        document.title = `${found.name} · Lumina CRI`
+        document.title = `Lumina CRI · ${found.name}`
       })
       .catch((e: Error) => setError(e.message))
   }, [])

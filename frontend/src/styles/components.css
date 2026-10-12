@@ -2942,3 +2942,82 @@ code {
     animation: none;
   }
 }
+
+
+/* ============ Organization logo badge ============ */
+/* Lumina keeps its own look; the organization appears only as its logo (or initials) and name. */
+
+.org-logo {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 8px;
+  object-fit: contain;
+  background: var(--surface);
+}
+
+.org-initials {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.org-signin {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.org-signin > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.org-signin strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.org-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.org-badge .org-logo {
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .org-badge {
+    padding: 0 4px;
+  }
+
+  .org-badge-name {
+    display: none;
+  }
+}
