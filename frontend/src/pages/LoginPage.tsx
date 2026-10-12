@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { BrandMark } from '../components/BrandMark'
 import { Icon } from '../components/Icon'
+import { OrgLogo } from '../components/OrgLogo'
 import { ErrorAlert } from '../components/ui'
 import { useOrganization } from '../organization'
 
@@ -39,19 +40,25 @@ export function LoginPage() {
         <div className="brand" style={{ padding: 0 }}>
           <BrandMark size={40} />
           <div>
-            <div className="brand-name">{org.name}</div>
-            <div className="brand-sub">Lumina CRI</div>
+            <div className="brand-name">Lumina CRI</div>
+            <div className="brand-sub">Customer data platform</div>
           </div>
+        </div>
+
+        <div className="org-signin">
+          <OrgLogo org={org} size={36} />
+          <div>
+            <span className="text-xs muted">Signing in to</span>
+            <strong>{org.name}</strong>
+          </div>
+          <a className="link text-sm" href="/">
+            Change
+          </a>
         </div>
 
         <div className="stack" style={{ gap: 6 }}>
           <h1>Sign in</h1>
-          <p className="muted text-sm">
-            Use the account your {org.name} administrator created for you.{' '}
-            <a className="link" href="/">
-              Not {org.name}?
-            </a>
-          </p>
+          <p className="muted text-sm">Use the account your {org.name} administrator created for you.</p>
         </div>
 
         {error && <ErrorAlert message={error} />}

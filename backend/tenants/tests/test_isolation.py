@@ -57,7 +57,8 @@ def test_unknown_organization_in_address_is_not_found(db):
 def test_organization_lookup_answers_one_code_only(db):
     client = APIClient()
     found = client.get("/api/organizations/axis/")
-    assert found.status_code == 200 and found.json() == {"code": "axis", "name": "Axis Bank", "brand_color": ""}
+    assert found.status_code == 200
+    assert found.json() == {"code": "axis", "name": "Axis Bank", "brand_color": "", "logo": ""}
     assert client.get("/api/organizations/AXIS/").status_code == 200  # people may type capitals
     assert client.get("/api/organizations/nobank/").status_code == 404
     assert client.get("/api/organizations/public/").status_code == 404  # the platform is not an organization
@@ -69,6 +70,18 @@ def test_suspended_organization_cannot_be_opened(db):
         hdfc.status = Tenant.SUSPENDED
         hdfc.save()
     assert APIClient().get("/api/organizations/hdfc/").status_code == 403
+
+
+def test_logo_must_be_an_image_address(db):
+    with schema_context("public"):
+        axis = Tenant.objects.get(schema_name="axis")
+        axis.logo = "<svg onload=alert(1)>"
+        axis.save()
+    assert APIClient().get("/api/organizations/axis/").json()["logo"] == ""
+    with schema_context("public"):
+        axis.logo = "data:image/png;base64,iVBORw0KGgo="
+        axis.save()
+    assert APIClient().get("/api/organizations/axis/").json()["logo"].startswith("data:image/png")
 
 
 def test_demo_data_folder_follows_the_organization(db):
