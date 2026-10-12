@@ -143,6 +143,27 @@ Every change is written to that organization's audit log. To make the first admi
 python manage.py tenant_command createsuperuser --schema=axis
 ```
 
+## Platform console
+
+The Lumina platform team works at **/platform** (not linked from the landing page). Platform logins live in the shared
+schema and are separate from every bank's logins: bank staff cannot sign in there, and platform admins cannot open a
+bank's data.
+
+- **Organizations**: one health card per bank (users, customer count, sources live, waiting reviews, last sync, last
+  activity; never customer details). **Add organization** creates its own schema and its first admin, whose temporary
+  password is shown once. **Edit** changes name and badge colour. **Suspend** closes the bank to everyone at once,
+  even people already signed in; **Resume** opens it again.
+- **Activity**: the platform team's own log (sign-ins, organizations added, changed, suspended, resumed).
+
+Create a platform login locally (runs in the shared schema):
+
+```
+python manage.py createsuperuser
+```
+
+On the hosted demo it is the `DJANGO_SUPERUSER_USERNAME` login. One browser holds one sign-in at a time: signing in to
+the platform signs that browser out of a bank, and the other way round.
+
 ## Every day
 
 ```
