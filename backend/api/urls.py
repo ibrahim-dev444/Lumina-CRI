@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from . import admin_views, connector_views, views
+from . import admin_views, connector_views, ingest_views, views
 
 router = DefaultRouter()
 router.register("sources", views.SourceViewSet, basename="source")
@@ -27,6 +27,9 @@ urlpatterns = [
     path("connectors/<slug:code>/mapping/", connector_views.save_mapping),
     path("connectors/<slug:code>/upload/", connector_views.upload_file),
     path("connectors/<slug:code>/runs/", connector_views.sync_runs),
+    path("connectors/<slug:code>/api-key/", connector_views.create_api_key),
+    # Push API: a bank system sends records with its connector's API key (no sign-in session).
+    path("ingest/<slug:code>/", ingest_views.ingest),
     path("overview/", views.overview),
     path("reference/", views.reference),
     path("compliance/", views.compliance_queue),

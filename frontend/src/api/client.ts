@@ -87,6 +87,8 @@ function csrfToken(): string {
   return match ? decodeURIComponent(match[1]) : ''
 }
 
+export const SIGNED_OUT_EVENT = 'lumina:signed-out'
+
 export async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const response = await fetchWhileWaking(`${ORG_BASE}/api${path}`, {
     method,
@@ -101,6 +103,10 @@ export async function request<T>(method: string, path: string, body?: unknown): 
   if (response.status === 204) return undefined as T
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
+    // The session ended (30 minutes without activity, or signed out elsewhere): tell the app to show sign-in.
+    if (response.status === 403 && data.detail === 'Authentication credentials were not provided.') {
+      window.dispatchEvent(new Event(SIGNED_OUT_EVENT))
+    }
     throw new ApiError(response.status, data.detail ?? `Request failed (${response.status})`)
   }
   return data as T
@@ -142,7 +148,7 @@ export const api = {
 
   // Connectors
   sources: () => get<Page<Source>>('/sources/'),
-  updateSource: (code: string, changes: Partial<Pick<Source, 'enabled' | 'trust'>>) =>
+  updateSource: (code: string, changes: Partial<Pick<Source, 'enabled' | 'trust' | 'sync_every_hours'>>) =>
     patch<Source>(`/sources/${code}/`, changes),
   syncSource: (code: string) => post<SyncResult>(`/sources/${code}/sync/`),
 
@@ -158,6 +164,7 @@ export const api = {
     post<{ object: string; columns: string[] }>(`/connectors/${code}/discover/`, { object }),
   saveMapping: (code: string, mapping: ConnectorMapping) => put<Source>(`/connectors/${code}/mapping/`, mapping),
   connectorRuns: (code: string) => get<SyncRun[]>(`/connectors/${code}/runs/`),
+  createApiKey: (code: string) => post<{ api_key: string; key_prefix: string }>(`/connectors/${code}/api-key/`),
   uploadConnectorFile: async (code: string, file: File): Promise<{ name: string; rows: number }> => {
     const form = new FormData()
     form.append('file', file)

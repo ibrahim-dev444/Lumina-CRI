@@ -13,6 +13,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from accounts.lockout import locked_message, org_lock_minutes
 from accounts.models import must_change_password
 from accounts.roles import LABELS, capabilities_of, role_of
 from audit.models import AuditEvent
@@ -51,6 +52,10 @@ def csrf(request):
 @permission_classes([AllowAny])
 def login_view(request):
     username = str(request.data.get("username", ""))[:150]
+    minutes = org_lock_minutes(username)
+    if minutes:
+        record(request, AuditEvent.LOGIN_FAILED, username=username, reason="locked")
+        return Response({"detail": locked_message(minutes)}, status=status.HTTP_429_TOO_MANY_REQUESTS)
     user = authenticate(request, username=username, password=request.data.get("password"))
     if user is None:
         record(request, AuditEvent.LOGIN_FAILED, username=username)
@@ -108,7 +113,8 @@ class SourceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Upd
         source = serializer.save()
         record(self.request, AuditEvent.UPDATE_SOURCE, target=f"source {source.code}",
                changes=dict(self.request.data))
-        build_customers()
+        if set(self.request.data) - {"sync_every_hours"}:  # a schedule change alone does not change any score
+            build_customers()
 
     @action(detail=True, methods=["post"])
     def sync(self, request, code=None):

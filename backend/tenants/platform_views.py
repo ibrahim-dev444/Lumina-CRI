@@ -9,6 +9,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.response import Response
 
+from accounts.lockout import locked_message, platform_lock_minutes
+
 from .models import PlatformEvent, Tenant
 from .platform import (
     PlatformError,
@@ -44,6 +46,10 @@ def csrf(request):
 @permission_classes([AllowAny])
 def platform_login(request):
     username = str(request.data.get("username", ""))[:150]
+    minutes = platform_lock_minutes(username)
+    if minutes:
+        record_platform_event(request, "login_failed", username=username, reason="locked")
+        return Response({"detail": locked_message(minutes)}, status=status.HTTP_429_TOO_MANY_REQUESTS)
     user = authenticate(request, username=username, password=request.data.get("password"))
     if user is None or not user.is_superuser:
         record_platform_event(request, "login_failed", username=username)

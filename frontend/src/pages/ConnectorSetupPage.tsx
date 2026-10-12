@@ -54,7 +54,13 @@ export function ConnectorSetupPage() {
     <>
       <PageHeader
         title={s?.name ?? 'Connector'}
-        description={type ? `${type.label} connector. Lumina only reads, and only the columns you map.` : undefined}
+        description={
+          type?.type === 'push_api'
+            ? 'Your own systems send customers to Lumina with an API key.'
+            : type
+              ? `${type.label} connector. Lumina only reads, and only the columns you map.`
+              : undefined
+        }
         crumbs={[{ label: 'Connectors', to: '/connectors' }, { label: s?.name ?? '...' }]}
       />
       {(source.error || catalog.error) && <ErrorAlert message={source.error ?? catalog.error ?? ''} />}
@@ -77,6 +83,14 @@ export function ConnectorSetupPage() {
 }
 
 function SetupSteps({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+  if (type.type === 'push_api') {
+    return (
+      <>
+        <ApiKeyStep source={source} onChanged={onChanged} />
+        <SyncStep source={source} onChanged={onChanged} push />
+      </>
+    )
+  }
   return (
     <>
       {type.type === 'file_upload' ? (
@@ -355,12 +369,22 @@ function MappingStep({ source, type, onChanged }: { source: Source; type: Connec
   )
 }
 
-function SyncStep({ source, onChanged }: { source: Source; onChanged: () => void }) {
+function SyncStep({ source, onChanged, push = false }: { source: Source; onChanged: () => void; push?: boolean }) {
   const toast = useToast()
   const canSync = useCan('manage_sources')
   const runs = useApi(() => api.connectorRuns(source.code), [source.code])
   const [busy, setBusy] = useState(false)
   const ready = 'object' in source.mapping
+
+  const setSchedule = async (hours: number) => {
+    try {
+      await api.updateSource(source.code, { sync_every_hours: hours as Source['sync_every_hours'] })
+      toast('success', hours ? `Lumina will sync this every ${hours} hours.` : 'Automatic sync turned off.')
+      onChanged()
+    } catch (e) {
+      toast('error', (e as Error).message)
+    }
+  }
 
   const sync = async () => {
     setBusy(true)
@@ -378,13 +402,31 @@ function SyncStep({ source, onChanged }: { source: Source; onChanged: () => void
 
   return (
     <Card
-      title={<StepTitle n={3} text="Sync" />}
-      description="Read the mapped columns, then match and score the customers. Every attempt is listed below."
+      title={<StepTitle n={push ? 2 : 3} text={push ? 'Received data' : 'Sync'} />}
+      description={
+        push
+          ? 'Every batch your systems sent, newest first.'
+          : 'Read the mapped columns, then match and score the customers. Every attempt is listed below.'
+      }
       actions={
-        canSync && (
-          <button type="button" className="btn btn-primary" disabled={busy || !ready || !source.enabled} onClick={sync}>
-            <Icon name="refresh" size={16} className={busy ? 'spin' : undefined} /> {busy ? 'Syncing...' : 'Sync now'}
-          </button>
+        canSync &&
+        !push && (
+          <div className="row" style={{ gap: 8 }}>
+            <select
+              className="select select-sm"
+              aria-label="Sync automatically"
+              value={source.sync_every_hours}
+              onChange={(e) => setSchedule(Number(e.target.value))}
+            >
+              <option value={0}>Sync by hand only</option>
+              <option value={6}>Every 6 hours</option>
+              <option value={12}>Every 12 hours</option>
+              <option value={24}>Every day</option>
+            </select>
+            <button type="button" className="btn btn-primary" disabled={busy || !ready || !source.enabled} onClick={sync}>
+              <Icon name="refresh" size={16} className={busy ? 'spin' : undefined} /> {busy ? 'Syncing...' : 'Sync now'}
+            </button>
+          </div>
         )
       }
       flush
@@ -408,7 +450,7 @@ function SyncStep({ source, onChanged }: { source: Source; onChanged: () => void
               {runs.data?.length === 0 && (
                 <tr>
                   <td colSpan={6} className="muted text-sm">
-                    No syncs yet.
+                    {push ? 'Nothing received yet.' : 'No syncs yet.'}
                   </td>
                 </tr>
               )}
@@ -434,6 +476,82 @@ function SyncStep({ source, onChanged }: { source: Source; onChanged: () => void
             </tbody>
           )}
         </table>
+      </div>
+    </Card>
+  )
+}
+
+function ApiKeyStep({ source, onChanged }: { source: Source; onChanged: () => void }) {
+  const toast = useToast()
+  const [key, setKey] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const prefix = source.config.key_prefix
+  const endpoint = `${window.location.origin}/t/${window.location.pathname.split('/')[2]}/api/ingest/${source.code}/`
+  const continued = ' \\' // shell line continuation
+  const example = [
+    `curl -X POST ${endpoint}${continued}`,
+    `  -H "Authorization: Bearer ${key ?? 'YOUR_API_KEY'}"${continued}`,
+    `  -H "Content-Type: application/json"${continued}`,
+    `  -d '{"records": [{"id": "C-1001", "name": "Asha Rao", "mobile": "9000000001", "pan": "ABCPR1234K", "updated_at": "2026-10-01T10:00:00"}]}'`,
+  ].join('\n')
+
+  const create = async () => {
+    if (prefix && !window.confirm('Create a new key? The current key stops working immediately.')) return
+    setBusy(true)
+    try {
+      setKey((await api.createApiKey(source.code)).api_key)
+      toast('success', 'New API key created. Copy it now: it is shown only once.')
+      onChanged()
+    } catch (e) {
+      toast('error', (e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Card
+      title={<StepTitle n={1} text="API key" />}
+      description="Your systems send customers to Lumina with this key. Lumina keeps only a scrambled copy, so a lost key can be replaced, not shown again."
+      actions={
+        <button type="button" className={`btn${prefix ? '' : ' btn-primary'}`} disabled={busy} onClick={create}>
+          {prefix ? 'Replace key' : 'Create API key'}
+        </button>
+      }
+    >
+      <div className="stack" style={{ gap: 16 }}>
+        {key ? (
+          <div className="issued" role="status">
+            <Icon name="key" size={18} />
+            <div className="issued-text">
+              <strong>Copy this key now</strong>
+              <span className="text-sm">It is shown only once. Keep it in your system&apos;s secret settings, never in code.</span>
+            </div>
+            <code className="issued-pw">{key}</code>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => navigator.clipboard?.writeText(key).then(() => toast('success', 'Copied.'))}
+            >
+              Copy
+            </button>
+          </div>
+        ) : prefix ? (
+          <span className="text-sm">
+            Active key starts with <code className="mono">{prefix}…</code>
+          </span>
+        ) : (
+          <span className="text-sm muted">No key yet.</span>
+        )}
+        <div className="stack" style={{ gap: 6 }}>
+          <strong className="text-sm">How your system sends customers</strong>
+          <pre className="code-block">{example}</pre>
+          <span className="text-xs muted">
+            Up to 1,000 records per request. Each needs id and name; other fields: father_name, dob, gender, pan, aadhaar,
+            ckyc, mobile, email, address, perm_address, occupation, income, updated_at. PAN and CKYC are encrypted on
+            arrival; only the last 4 digits of Aadhaar are kept.
+          </span>
+        </div>
       </div>
     </Card>
   )

@@ -15,6 +15,7 @@ const TYPE_ICON: Record<string, IconName> = {
   mysql: 'connectors',
   mongodb: 'connectors',
   rest_api: 'cloud',
+  push_api: 'cloud',
   file_upload: 'file',
   salesforce: 'cloud',
 }

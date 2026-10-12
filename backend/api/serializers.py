@@ -38,8 +38,14 @@ class SourceSerializer(serializers.ModelSerializer):
         model = Source
         # Never "secret": passwords and tokens stay on the server.
         fields = ["code", "name", "category", "trust", "enabled", "last_synced_at", "record_count",
-                  "connector_type", "connector_label", "is_demo", "config", "mapping", "has_secret", "last_run"]
+                  "connector_type", "connector_label", "is_demo", "config", "mapping", "has_secret", "last_run",
+                  "sync_every_hours"]
         read_only_fields = ["code", "name", "category", "last_synced_at", "connector_type", "config", "mapping"]
+
+    def validate_sync_every_hours(self, value):
+        if value not in (0, 6, 12, 24):
+            raise serializers.ValidationError("Choose off, every 6, 12 or 24 hours.")
+        return value
 
     def get_connector_label(self, obj):
         return type_label(obj.connector_type)

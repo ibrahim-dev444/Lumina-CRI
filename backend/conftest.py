@@ -48,7 +48,7 @@ def in_test_organization(request, monkeypatch):
     original = APIClient.generic
 
     def generic(self, method, path, *args, **kwargs):
-        if path.startswith("/api/") and not path.startswith(("/api/organizations/", "/api/health/", "/api/platform/")):
+        if path.startswith("/api/") and not path.startswith(("/api/organizations/", "/api/health/", "/api/platform/", "/api/internal/")):
             path = f"/t/{TEST_ORG}{path}"
         return original(self, method, path, *args, **kwargs)
 

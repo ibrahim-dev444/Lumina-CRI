@@ -95,6 +95,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'accounts.middleware.IdleTimeoutMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -232,7 +233,22 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Signed out after 30 minutes without activity; each signed-in request restarts the 30 minutes
+# (accounts.middleware.IdleTimeoutMiddleware; not SESSION_SAVE_EVERY_REQUEST, see that class).
+SESSION_COOKIE_AGE = 30 * 60
+SESSION_COOKIE_HTTPONLY = True
+
+# Browser protections on every API answer: never shown inside another site's frame, no content-type guessing.
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# Scheduled syncs: the hourly runner must send this token (see tenants/scheduler_views.py). Empty turns it off.
+SYNC_RUNNER_TOKEN = os.getenv('SYNC_RUNNER_TOKEN', '')
+
 if not DEBUG:
+    # Hosted over HTTPS: browsers must use HTTPS for a year.
+    SECURE_HSTS_SECONDS = 31536000
     # Hosted over HTTPS behind Render's proxy: trust its scheme header and send cookies over HTTPS only.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True

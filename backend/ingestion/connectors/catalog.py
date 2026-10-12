@@ -105,6 +105,16 @@ CATALOG = [
         "adapter": FileUploadAdapter,
     },
     {
+        "type": "push_api",
+        "label": "Lumina push API",
+        "category": "API",
+        "description": "Your own systems send customers to Lumina over HTTPS with an API key. Nothing to connect to.",
+        "object_label": "Records",
+        "available": True,
+        "fields": [],
+        "adapter": None,  # data arrives at /api/ingest/<code>/ instead of being read
+    },
+    {
         "type": "salesforce",
         "label": "Salesforce",
         "category": "CRM",

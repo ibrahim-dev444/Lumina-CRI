@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.urls import path
 
-from tenants import platform_views, views
+from tenants import platform_views, scheduler_views, views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -17,4 +17,6 @@ urlpatterns = [
     path('api/platform/organizations/', platform_views.organization_list),
     path('api/platform/organizations/<slug:code>/', platform_views.organization_detail),
     path('api/platform/events/', platform_views.platform_events),
+    # Hourly scheduled syncs, protected by SYNC_RUNNER_TOKEN.
+    path('api/internal/run-due-syncs/', scheduler_views.run_scheduled_syncs),
 ]
