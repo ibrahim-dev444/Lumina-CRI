@@ -7,7 +7,9 @@ import { Icon } from './components/Icon'
 import { Layout } from './components/Layout'
 import { Loader } from './components/Loader'
 import { ToastProvider } from './components/Toasts'
+import { OrganizationGate } from './components/OrganizationGate'
 import { WakingBanner } from './components/WakingBanner'
+import { ORG_BASE } from './organization'
 import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
 import { CompliancePage } from './pages/CompliancePage'
@@ -70,13 +72,18 @@ function Routed() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <WakingBanner />
-        <BrowserRouter>
-          <Routed />
-        </BrowserRouter>
-      </ToastProvider>
-    </AuthProvider>
+    <>
+      <WakingBanner />
+      <OrganizationGate>
+        <AuthProvider>
+          <ToastProvider>
+            {/* Every page lives under /t/<org>/, so links like "/customers" stay inside this organization. */}
+            <BrowserRouter basename={ORG_BASE}>
+              <Routed />
+            </BrowserRouter>
+          </ToastProvider>
+        </AuthProvider>
+      </OrganizationGate>
+    </>
   )
 }

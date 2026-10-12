@@ -1,15 +1,14 @@
 import csv
 from datetime import datetime, time
-from pathlib import Path
 
-from django.conf import settings
+from sources.demo_data import demo_data_dir
 
 from ..clean import clean_date
 from .base import BaseConnector
 
 
 class BranchCsvConnector(BaseConnector):
-    """Reads the spreadsheets branches upload, one or more .csv files in BRANCH_CSV_DIR.
+    """Reads the spreadsheets branches upload: the .csv files in fake_sources/<org>/branch_csv/.
 
     Expected columns: Ref No, Cust Name, Mobile No, Email, Address, DOB, Updated On.
     Dates are written the Indian way, DD/MM/YYYY.
@@ -19,7 +18,7 @@ class BranchCsvConnector(BaseConnector):
     sensitive_columns = {"PAN": "pan", "Aadhaar": "aadhaar"}
 
     def fetch(self):
-        folder = Path(settings.BRANCH_CSV_DIR)
+        folder = demo_data_dir() / "branch_csv"
         if not folder.is_dir():
             raise RuntimeError(f"Branch CSV folder not found: {folder}")
         rows = []

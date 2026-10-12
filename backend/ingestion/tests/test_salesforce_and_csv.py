@@ -57,6 +57,6 @@ def test_branch_csv_maps_columns_and_reads_day_first_dates():
     assert std["source_updated_at"] == datetime(2026, 9, 5, 0, 0)
 
 
-def test_fake_files_load():
+def test_fake_files_load(db):  # runs inside the Axis test organization, so it reads fake_sources/axis/
     assert len(SalesforceConnector().fetch()) == 8
     assert len(BranchCsvConnector().fetch()) == 6

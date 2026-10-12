@@ -2,18 +2,21 @@
 
 import csv
 from datetime import date, datetime
-from pathlib import Path
 
-from django.conf import settings
 from django.db import transaction
 
 from ingestion.clean import clean_date, clean_pan
 from security.crypto import fingerprint
+from sources.demo_data import demo_data_dir
 
 from .models import PURPOSES, ConsentRecord, KycRecord
 
 PURPOSE_KEYS = [p for p, _ in PURPOSES]
-FEED_FILE = Path(settings.BASE_DIR).parent / "fake_sources" / "compliance" / "kyc_aml.csv"
+
+
+def feed_file():
+    """This organization's compliance feed: fake_sources/<org>/compliance/kyc_aml.csv."""
+    return demo_data_dir() / "compliance" / "kyc_aml.csv"
 
 
 class ConsentError(ValueError):
@@ -63,11 +66,11 @@ def _parse_date(value):
 
 
 @transaction.atomic
-def import_feed(path=FEED_FILE):
+def import_feed(path=None):
     """Load the (fake) compliance feed: KYC/AML status and consent, one row per PAN.
     Returns (kyc_rows, consent_changes). Re-running is safe: unchanged consent is not duplicated."""
     kyc_rows = consent_changes = 0
-    with open(path, encoding="utf-8-sig", newline="") as f:
+    with open(path or feed_file(), encoding="utf-8-sig", newline="") as f:
         for row in csv.DictReader(f):
             pan = clean_pan(row.get("PAN"))
             if not pan:

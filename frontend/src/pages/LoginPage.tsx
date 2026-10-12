@@ -4,9 +4,11 @@ import { useAuth } from '../auth/AuthContext'
 import { BrandMark } from '../components/BrandMark'
 import { Icon } from '../components/Icon'
 import { ErrorAlert } from '../components/ui'
+import { useOrganization } from '../organization'
 
 export function LoginPage() {
   const { login } = useAuth()
+  const org = useOrganization()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -37,14 +39,19 @@ export function LoginPage() {
         <div className="brand" style={{ padding: 0 }}>
           <BrandMark size={40} />
           <div>
-            <div className="brand-name">Lumina</div>
-            <div className="brand-sub">Customer data platform</div>
+            <div className="brand-name">{org.name}</div>
+            <div className="brand-sub">Lumina CRI</div>
           </div>
         </div>
 
         <div className="stack" style={{ gap: 6 }}>
           <h1>Sign in</h1>
-          <p className="muted text-sm">Use the account your administrator created for you.</p>
+          <p className="muted text-sm">
+            Use the account your {org.name} administrator created for you.{' '}
+            <a className="link" href="/">
+              Not {org.name}?
+            </a>
+          </p>
         </div>
 
         {error && <ErrorAlert message={error} />}

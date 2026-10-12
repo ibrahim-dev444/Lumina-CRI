@@ -15,6 +15,7 @@ import type {
   SyncResult,
   User,
 } from './types'
+import { ORG_BASE } from '../organization'
 
 export class ApiError extends Error {
   status: number
@@ -81,7 +82,7 @@ function csrfToken(): string {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const response = await fetchWhileWaking(`/api${path}`, {
+  const response = await fetchWhileWaking(`${ORG_BASE}/api${path}`, {
     method,
     credentials: 'same-origin',
     headers: {
@@ -152,7 +153,7 @@ export const api = {
 
   // CSV download: the server builds the file (and writes the audit entry).
   exportCustomers: async (): Promise<Blob> => {
-    const response = await fetchWhileWaking('/api/customers/export/', { credentials: 'same-origin' })
+    const response = await fetchWhileWaking(`${ORG_BASE}/api/customers/export/`, { credentials: 'same-origin' })
     if (!response.ok) {
       const data = await response.json().catch(() => ({}))
       throw new ApiError(response.status, data.detail ?? `Export failed (${response.status})`)

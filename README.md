@@ -19,7 +19,8 @@ Team rules (branches, pull requests, migrations, secrets) are in [CONTRIBUTING.m
 ```
 LUMINA CRI/
 ├── backend/
-│   ├── config/        Settings and URLs
+│   ├── config/        Settings and URLs (urls.py inside an organization, urls_public.py outside)
+│   ├── tenants/       Organizations (banks), each with its own database schema
 │   ├── sources/       The bank systems we read from, and how much we trust each one
 │   ├── ingestion/     Connectors: read each system, keep the raw copy, save a cleaned copy
 │   ├── mdm/           Matching, golden record and trust score
@@ -34,7 +35,7 @@ LUMINA CRI/
 │   ├── components/    Reusable pieces (charts, badges, layout, logo and loaders)
 │   ├── pages/         One file per screen
 │   └── styles/        Design tokens and CSS
-├── fake_sources/      Fake Salesforce export, branch CSV files and compliance feed
+├── fake_sources/      Synthetic data per organization: axis/ and hdfc/ (core banking, Salesforce, branch CSV, compliance)
 ├── docker/postgres/init/   Creates the fake FLEXCUBE database on first start
 ├── docs/design/       Design references, Stitch prompts and loaders-preview.html
 ├── docs/prototypes/   The original HTML prototypes this app was built from
@@ -86,30 +87,27 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-python manage.py migrate
+python manage.py migrate_schemas --shared
 ```
 
 Mac or Linux: the same, but activate with `source .venv/bin/activate`.
 
-**5. Load the fake bank data and build customers.**
+**5. Create the organizations and load their data.** Lumina serves many organizations (banks); each has its own
+database schema, so one bank can never see another's data. This creates the two demo banks, Axis Bank (`axis`) and
+HDFC Bank (`hdfc`), and loads each one's synthetic data from `fake_sources/<code>/`:
 
 ```
-python manage.py load_fake_flexcube
-python manage.py sync flexcube
-python manage.py sync salesforce
-python manage.py sync branch_csv
-python manage.py build_customers
-python manage.py sync_compliance
+python manage.py setup_tenants
 ```
 
-**6. Create logins.**
+**6. Create logins**, once per organization:
 
 ```
-python manage.py createsuperuser
-python manage.py seed_demo_users
+python manage.py tenant_command seed_demo_users --schema=axis
+python manage.py tenant_command seed_demo_users --schema=hdfc
 ```
 
-`seed_demo_users` creates one login per role (relationship manager, contact centre agent, data steward, compliance officer) and prints their passwords once. Run it again to reset them.
+`seed_demo_users` creates one login per role (relationship manager, contact centre agent, data steward, compliance officer) in that organization and prints their passwords once. Run it again to reset them. The same username in two banks is two different people with different passwords.
 
 **7. Start the backend.** Keep this terminal open.
 
@@ -125,7 +123,8 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 and sign in.
+Open http://localhost:5173, type the organization code (`axis` or `hdfc`), then sign in. Each organization's pages
+live under `/t/<code>/`, for example http://localhost:5173/t/axis/.
 
 ## Every day
 
@@ -135,15 +134,16 @@ cd backend && .venv\Scripts\activate && python manage.py runserver
 cd frontend && npm run dev           # second terminal
 ```
 
-After a pull that changed the fake data (files in `fake_sources/` or `docker/postgres/init/`), reload and re-sync:
+Commands that work on customer data run inside one organization. Wrap them in `tenant_command ... --schema=<code>`.
+After a pull that changed the fake data in `fake_sources/<code>/`, reload that organization:
 
 ```
-python manage.py load_fake_flexcube
-python manage.py sync flexcube
-python manage.py sync salesforce
-python manage.py sync branch_csv
-python manage.py build_customers
-python manage.py sync_compliance
+python manage.py tenant_command load_fake_flexcube --schema=axis
+python manage.py tenant_command sync flexcube --schema=axis
+python manage.py tenant_command sync salesforce --schema=axis
+python manage.py tenant_command sync branch_csv --schema=axis
+python manage.py tenant_command build_customers --schema=axis
+python manage.py tenant_command sync_compliance --schema=axis
 ```
 
 After every `git pull`, also run:
@@ -151,7 +151,7 @@ After every `git pull`, also run:
 ```
 cd backend
 pip install -r requirements.txt
-python manage.py migrate
+python manage.py migrate_schemas
 cd ../frontend
 npm install
 ```
@@ -176,7 +176,7 @@ Render environment values (set in the Render dashboard, never in the repo):
 | `DEMO_PASSWORD` | Password for `rm.demo`, `agent.demo`, `steward.demo`, `compliance.demo` |
 | `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_PASSWORD` | Admin login |
 
-On every start Render runs `migrate` and `bootstrap_demo`. That command loads the fake data once (only when there are no customers) and sets the logins from the values above. The free plan sleeps when idle, so the first request after a pause takes up to a minute.
+On every start Render runs `migrate_schemas` and `bootstrap_demo`. That command creates the demo organizations, loads each one's data once (only when it has no customers) and sets the logins from the values above in every organization. The same admin name and password are also the platform login. The free plan sleeps when idle, so the first request after a pause takes up to a minute.
 
 Two things soften that:
 
@@ -187,12 +187,15 @@ Two things soften that:
 
 | Command (inside `backend/`) | What it does |
 |---|---|
-| `python manage.py load_fake_flexcube` | Re-create the fake FLEXCUBE table from `docker/postgres/init/01-flexcube.sql` |
-| `python manage.py sync <source>` | Read one source: `flexcube`, `salesforce` or `branch_csv` |
-| `python manage.py build_customers` | Re-run matching, golden records and trust scores |
-| `python manage.py sync_compliance` | Import KYC, AML and consent from `fake_sources/compliance/kyc_aml.csv` |
-| `python manage.py seed_demo_users` | Create or reset one demo login per role |
-| `pytest` | Run all backend tests |
+| `python manage.py setup_tenants` | Create the demo organizations and load data into any that has none |
+| `python manage.py migrate_schemas` | Apply migrations to the shared schema and every organization |
+| `python manage.py tenant_command <command> --schema=<code>` | Run any command below inside one organization |
+| `load_fake_flexcube` | Re-create that organization's fake core banking table from `fake_sources/<code>/flexcube.sql` |
+| `sync <source>` | Read one source: `flexcube`, `salesforce` or `branch_csv` |
+| `build_customers` | Re-run matching, golden records and trust scores |
+| `sync_compliance` | Import KYC, AML and consent from `fake_sources/<code>/compliance/kyc_aml.csv` |
+| `seed_demo_users` | Create or reset one demo login per role |
+| `pytest` | Run all backend tests (they include checks that organizations cannot see each other's data) |
 
 | Command (inside `frontend/`) | What it does |
 |---|---|
@@ -202,7 +205,7 @@ Two things soften that:
 
 ## Look at the database
 
-Connect pgAdmin or DBeaver to host `localhost`, port `5433`, database `lumina`, user `lumina`, and the password from your `.env`. The fake FLEXCUBE system is the `src_flexcube` database on the same server. Use these tools to look, not to edit: changes made by hand skip score recalculation and the audit log.
+Connect pgAdmin or DBeaver to host `localhost`, port `5433`, database `lumina`, user `lumina`, and the password from your `.env`. Each organization is a schema (`axis`, `hdfc`); the list of organizations is in `public`. The fake core banking systems are the `axis` and `hdfc` schemas of the `src_flexcube` database on the same server. Use these tools to look, not to edit: changes made by hand skip score recalculation and the audit log.
 
 ## Reset your local data
 
@@ -212,3 +215,5 @@ docker compose up -d
 ```
 
 Then repeat steps 4 (migrate) to 6. This only affects your own machine.
+
+If your database was created before organizations existed, start fresh this way once.

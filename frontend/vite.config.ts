@@ -9,7 +9,10 @@ export default defineConfig({
     // so login cookies work without any cross-site setup.
     proxy: {
       // 127.0.0.1, not localhost: Node may resolve localhost to IPv6 (::1), but runserver listens on IPv4.
+      // Shared API (organization lookup, health) ...
       '/api': 'http://127.0.0.1:8000',
+      // ... and each organization's API, /t/<org>/api/... Its pages (/t/<org>/customers) stay with Vite.
+      '^/t/[^/]+/api/': 'http://127.0.0.1:8000',
     },
   },
 })

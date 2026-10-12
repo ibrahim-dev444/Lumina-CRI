@@ -1,8 +1,7 @@
 import json
 from datetime import datetime
-from pathlib import Path
 
-from django.conf import settings
+from sources.demo_data import demo_data_dir
 
 from .base import BaseConnector
 
@@ -10,8 +9,8 @@ from .base import BaseConnector
 class SalesforceConnector(BaseConnector):
     """Reads Contacts in the shape the Salesforce REST API returns them.
 
-    In development we read a saved API response from a JSON file. The real connector will
-    call GET /services/data/v60.0/query?q=SELECT ... FROM Contact and get the same shape,
+    In development we read a saved API response from fake_sources/<org>/salesforce/contacts.json. The real
+    connector will call GET /services/data/v60.0/query?q=SELECT ... FROM Contact and get the same shape,
     so only fetch() changes.
     """
 
@@ -19,7 +18,7 @@ class SalesforceConnector(BaseConnector):
     sensitive_columns = {"PAN__c": "pan"}
 
     def fetch(self):
-        path = Path(settings.SALESFORCE_MOCK_FILE)
+        path = demo_data_dir() / "salesforce" / "contacts.json"
         if not path.exists():
             raise RuntimeError(f"Salesforce mock file not found: {path}")
         return json.loads(path.read_text(encoding="utf-8"))["records"]
