@@ -8,11 +8,14 @@ import type {
   Field,
   FieldCorrection,
   MatchSuggestion,
+  OrgUser,
   Overview,
   Page,
   Reference,
+  RoleCode,
   Source,
   SyncResult,
+  TrustSettings,
   User,
 } from './types'
 import { ORG_BASE } from '../organization'
@@ -103,6 +106,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 const get = <T>(path: string) => request<T>('GET', path)
 const post = <T>(path: string, body?: unknown) => request<T>('POST', path, body ?? {})
 const patch = <T>(path: string, body: unknown) => request<T>('PATCH', path, body)
+const put = <T>(path: string, body: unknown) => request<T>('PUT', path, body)
 
 function query(params: Record<string, string | undefined>): string {
   const clean = Object.entries(params).filter(([, v]) => v) as [string, string][]
@@ -115,6 +119,20 @@ export const api = {
   login: (username: string, password: string) => post<User>('/auth/login/', { username, password }),
   logout: () => post<void>('/auth/logout/'),
   me: () => get<User>('/auth/me/'),
+  changePassword: (current_password: string, new_password: string) =>
+    post<void>('/auth/change-password/', { current_password, new_password }),
+
+  // Organization administration (organization admins only)
+  users: () => get<OrgUser[]>('/users/'),
+  createUser: (body: { username: string; first_name: string; last_name: string; role: RoleCode }) =>
+    post<OrgUser>('/users/', body),
+  updateUser: (id: number, body: Partial<Pick<OrgUser, 'role' | 'is_active' | 'first_name' | 'last_name'>>) =>
+    patch<OrgUser>(`/users/${id}/`, body),
+  resetPassword: (id: number) => post<OrgUser>(`/users/${id}/reset-password/`),
+  trustSettings: () => get<TrustSettings>('/settings/trust/'),
+  saveTrustSettings: (body: { sources?: Record<string, number>; weights?: Record<string, number> }) =>
+    put<TrustSettings>('/settings/trust/', body),
+  saveLogo: (logo: string) => put<{ logo: string }>('/settings/logo/', { logo }),
 
   overview: () => get<Overview>('/overview/'),
   reference: () => get<Reference>('/reference/'),

@@ -9,6 +9,7 @@ interface AuthState {
   checking: boolean // true while we ask Django whether we are already logged in
   login: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  refresh: () => Promise<void> // reload the signed-in user (e.g. after changing the password)
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -44,7 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  return <AuthContext.Provider value={{ user, checking, login, logout }}>{children}</AuthContext.Provider>
+  const refresh = async () => setUser(await api.me())
+
+  return <AuthContext.Provider value={{ user, checking, login, logout, refresh }}>{children}</AuthContext.Provider>
 }
 
 // True if the signed-in user's role allows this. Only hides controls; the API enforces the same rule.

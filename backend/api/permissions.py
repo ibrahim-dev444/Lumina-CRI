@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission
 
+from accounts.models import must_change_password
 from accounts.roles import can, role_of
 from audit.models import AuditEvent
 from audit.services import record
@@ -11,7 +12,13 @@ class HasRole(BasePermission):
     message = "Your account has no Lumina role yet. Ask an administrator to assign one."
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and role_of(request.user))
+        if not (request.user and request.user.is_authenticated and role_of(request.user)):
+            return False
+        if must_change_password(request.user):
+            # A temporary password from an administrator unlocks only the change-password screen.
+            self.message = "Choose your own password before continuing."
+            return False
+        return True
 
 
 def requires(*capabilities):

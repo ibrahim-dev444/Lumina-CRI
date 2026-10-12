@@ -13,6 +13,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from accounts.models import must_change_password
 from accounts.roles import LABELS, capabilities_of, role_of
 from audit.models import AuditEvent
 from audit.services import record
@@ -82,6 +83,7 @@ def _user_json(user):
         "role": role,
         "role_label": LABELS.get(role, "No role"),
         "capabilities": capabilities_of(user),
+        "must_change_password": must_change_password(user),
     }
 
 
