@@ -51,7 +51,7 @@ export function LoginPage() {
             <span className="text-xs muted">Signing in to</span>
             <strong>{org.name}</strong>
           </div>
-          <a className="link text-sm" href="/">
+          <a className="link text-sm" href="/sign-in">
             Change
           </a>
         </div>

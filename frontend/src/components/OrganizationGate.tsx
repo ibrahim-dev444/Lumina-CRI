@@ -26,7 +26,7 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
         <div className="glass login-card" style={{ borderRadius: 'var(--radius-lg)' }}>
           <h1>Organization not available</h1>
           <p className="muted">{error}</p>
-          <a className="btn btn-primary" href="/">
+          <a className="btn btn-primary" href="/sign-in">
             Choose another organization
           </a>
         </div>
