@@ -25,6 +25,7 @@ const CAPABILITY_LABELS: { key: Capability; label: string }[] = [
   { key: 'view_audit', label: 'Read the audit log' },
   { key: 'manage_users', label: 'Add users and change roles' },
   { key: 'manage_settings', label: 'Change trust settings and logo' },
+  { key: 'manage_connectors', label: 'Add and set up connectors' },
 ]
 
 export function HowItWorksPage() {

@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from . import admin_views, views
+from . import admin_views, connector_views, views
 
 router = DefaultRouter()
 router.register("sources", views.SourceViewSet, basename="source")
@@ -19,6 +19,14 @@ urlpatterns = [
     path("auth/change-password/", admin_views.change_password),
     path("settings/trust/", admin_views.trust_settings),
     path("settings/logo/", admin_views.organization_logo),
+    path("connectors/catalog/", connector_views.catalog),
+    path("connectors/", connector_views.create_connector),
+    path("connectors/<slug:code>/", connector_views.update_connector),
+    path("connectors/<slug:code>/test/", connector_views.test_connector),
+    path("connectors/<slug:code>/discover/", connector_views.discover),
+    path("connectors/<slug:code>/mapping/", connector_views.save_mapping),
+    path("connectors/<slug:code>/upload/", connector_views.upload_file),
+    path("connectors/<slug:code>/runs/", connector_views.sync_runs),
     path("overview/", views.overview),
     path("reference/", views.reference),
     path("compliance/", views.compliance_queue),

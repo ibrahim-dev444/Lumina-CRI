@@ -143,6 +143,23 @@ Every change is written to that organization's audit log. To make the first admi
 python manage.py tenant_command createsuperuser --schema=axis
 ```
 
+## Connectors
+
+Each organization connects its own systems under **Connectors > Add connector** (organization admins). Every
+organization sees the same catalog: **PostgreSQL, MySQL, MongoDB, REST API, CSV file upload** (Salesforce comes later).
+Setup has three steps:
+
+1. **Connection**: the system's address and a read-only login. Passwords, tokens and connection strings are stored
+   encrypted and never shown again; leave the box empty to keep the stored one. **Test connection** checks it.
+2. **What to read**: **Discover** lists tables, views or collections; pick one and Lumina shows its columns and
+   suggests which column feeds which field. Only the mapped columns are ever read.
+3. **Sync**: reads the rows, then matches and scores customers as usual. Every attempt is in the sync history.
+
+Safety rules: connectors may only reach public internet addresses (private and internal addresses are refused, except
+in local development where `CONNECTORS_ALLOW_PRIVATE_HOSTS` is on), sessions are read-only, queries time out after
+`CONNECTOR_TIMEOUT_SECONDS` (30) and read at most `CONNECTOR_MAX_ROWS` (50,000) rows. The three demo connectors keep
+reading the sample data in `fake_sources/`.
+
 ## Platform console
 
 The Lumina platform team works at **/platform** (not linked from the landing page). Platform logins live in the shared

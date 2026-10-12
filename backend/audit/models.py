@@ -28,6 +28,8 @@ class AuditEvent(models.Model):
     PASSWORD_RESET = "password_reset"
     PASSWORD_CHANGED = "password_changed"
     SETTINGS_CHANGED = "settings_changed"
+    CONNECTOR_ADDED = "connector_added"
+    CONNECTOR_CHANGED = "connector_changed"
 
     ACTION_CHOICES = [
         (LOGIN, "Signed in"),
@@ -50,6 +52,8 @@ class AuditEvent(models.Model):
         (PASSWORD_RESET, "Reset a password"),
         (PASSWORD_CHANGED, "Changed own password"),
         (SETTINGS_CHANGED, "Changed settings"),
+        (CONNECTOR_ADDED, "Added a connector"),
+        (CONNECTOR_CHANGED, "Changed a connector"),
     ]
 
     at = models.DateTimeField(auto_now_add=True, db_index=True)

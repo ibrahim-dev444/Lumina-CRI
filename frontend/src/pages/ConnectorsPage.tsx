@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { api } from '../api/client'
 import type { Source } from '../api/types'
@@ -28,6 +29,7 @@ export function ConnectorsPage() {
   const toast = useToast()
   const [syncingAll, setSyncingAll] = useState(false)
   const canManage = useCan('manage_sources')
+  const canSetUp = useCan('manage_connectors')
 
   const sources = data?.results ?? []
   const enabled = sources.filter((s) => s.enabled)
@@ -58,10 +60,17 @@ export function ConnectorsPage() {
         description="Bank systems Lumina reads from. Read-only: Lumina never writes back."
         actions={
           canManage ? (
-            <button type="button" className="btn btn-primary" onClick={syncAll} disabled={syncingAll || !enabled.length}>
-              <Icon name="refresh" size={16} className={syncingAll ? 'spin' : undefined} />
-              {syncingAll ? 'Syncing...' : 'Sync all'}
-            </button>
+            <>
+              {canSetUp && (
+                <Link className="btn" to="/connectors/new">
+                  <Icon name="connectors" size={16} /> Add connector
+                </Link>
+              )}
+              <button type="button" className="btn btn-primary" onClick={syncAll} disabled={syncingAll || !enabled.length}>
+                <Icon name="refresh" size={16} className={syncingAll ? 'spin' : undefined} />
+                {syncingAll ? 'Syncing...' : 'Sync all'}
+              </button>
+            </>
           ) : (
             <span className="pill">
               <Icon name="lock" size={14} /> View only for your role
@@ -117,6 +126,7 @@ export function ConnectorsPage() {
                 s={s}
                 share={s.record_count / Math.max(totalRecords, 1)}
                 canManage={canManage}
+                canSetUp={canSetUp}
                 onChanged={reload}
               />
             ))
@@ -125,18 +135,24 @@ export function ConnectorsPage() {
                 <Loader kind="orbit" label="Connecting to the source systems" />
               </div>
             )}
-        {data && (
-          <div className="add-tile">
-            <span className="add-icon">
-              <Icon name="connectors" size={20} />
-            </span>
-            <strong>Add a bank system</strong>
-            <span>
-              New connectors (Finacle, CKYC, WhatsApp) are added by the engineering team. Each one maps that system's
-              columns to Lumina's fields.
-            </span>
-          </div>
-        )}
+        {data &&
+          (canSetUp ? (
+            <Link className="add-tile" to="/connectors/new">
+              <span className="add-icon">
+                <Icon name="connectors" size={20} />
+              </span>
+              <strong>Add a bank system</strong>
+              <span>PostgreSQL, MySQL, MongoDB, a REST API or a CSV file, with your own login. Read-only.</span>
+            </Link>
+          ) : (
+            <div className="add-tile">
+              <span className="add-icon">
+                <Icon name="connectors" size={20} />
+              </span>
+              <strong>Add a bank system</strong>
+              <span>Your organization admin connects new systems: databases, APIs or files.</span>
+            </div>
+          ))}
       </div>
 
       {data && (
@@ -175,12 +191,11 @@ function ConnectorCard({
   share,
   canManage,
   onChanged,
-}: {
+ canSetUp,}: {
   s: Source
   share: number
   canManage: boolean
-  onChanged: () => void
-}) {
+  onChanged: () => void; canSetUp: boolean}) {
   const [busy, setBusy] = useState<'sync' | 'toggle' | null>(null)
   const toast = useToast()
   const tier = sourceTier(Number(s.trust))
@@ -222,7 +237,9 @@ function ConnectorCard({
         </span>
         <div className="stack" style={{ flex: 1, minWidth: 0 }}>
           <h3>{s.name}</h3>
-          <span className="text-sm muted">{s.category}</span>
+          <span className="text-sm muted">
+            {s.category} · {s.connector_label}
+          </span>
         </div>
         {s.enabled ? <StatusBadge tone="good">Active</StatusBadge> : <StatusBadge tone="neutral">Off</StatusBadge>}
       </div>
@@ -264,6 +281,11 @@ function ConnectorCard({
           <Icon name="power" size={16} />
           {s.enabled ? 'Disconnect' : 'Connect'}
         </button>
+        {canSetUp && !s.is_demo && (
+          <Link className="btn" to={`/connectors/${s.code}`}>
+            <Icon name="sliders" size={16} /> Set up
+          </Link>
+        )}
       </div>
       )}
     </article>

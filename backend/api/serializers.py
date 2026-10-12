@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from accounts.masking import MASKERS, mask
+from ingestion.connectors.catalog import DEMO_TYPES, type_label
 from security.fields import compare_key, display
 from accounts.roles import can
 from compliance.models import PURPOSES, KycRecord
@@ -28,11 +29,32 @@ def trust_band(score):
 
 class SourceSerializer(serializers.ModelSerializer):
     record_count = serializers.IntegerField(read_only=True)
+    connector_label = serializers.SerializerMethodField()
+    is_demo = serializers.SerializerMethodField()
+    has_secret = serializers.SerializerMethodField()
+    last_run = serializers.SerializerMethodField()
 
     class Meta:
         model = Source
-        fields = ["code", "name", "category", "trust", "enabled", "last_synced_at", "record_count"]
-        read_only_fields = ["code", "name", "category", "last_synced_at"]
+        # Never "secret": passwords and tokens stay on the server.
+        fields = ["code", "name", "category", "trust", "enabled", "last_synced_at", "record_count",
+                  "connector_type", "connector_label", "is_demo", "config", "mapping", "has_secret", "last_run"]
+        read_only_fields = ["code", "name", "category", "last_synced_at", "connector_type", "config", "mapping"]
+
+    def get_connector_label(self, obj):
+        return type_label(obj.connector_type)
+
+    def get_is_demo(self, obj):
+        return obj.connector_type in DEMO_TYPES or not obj.connector_type
+
+    def get_has_secret(self, obj):
+        return bool(obj.secret)
+
+    def get_last_run(self, obj):
+        run = obj.runs.first()
+        if run is None:
+            return None
+        return {"status": run.status, "at": run.started_at.isoformat(), "fetched": run.fetched, "error": run.error}
 
 
 class CustomerListSerializer(serializers.ModelSerializer):

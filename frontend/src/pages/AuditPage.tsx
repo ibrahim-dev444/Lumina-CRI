@@ -22,6 +22,8 @@ const ACTIONS: { value: string; label: string }[] = [
   { value: 'password_reset', label: 'Reset a password' },
   { value: 'password_changed', label: 'Changed own password' },
   { value: 'settings_changed', label: 'Changed settings' },
+  { value: 'connector_added', label: 'Added a connector' },
+  { value: 'connector_changed', label: 'Changed a connector' },
   { value: 'reveal', label: 'Revealed identity number' },
   { value: 'sync_source', label: 'Synced source' },
   { value: 'update_source', label: 'Changed source' },

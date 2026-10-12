@@ -4,6 +4,8 @@ import type {
   AuditEvent,
   ComplianceQueue,
   CustomerDetail,
+  ConnectorMapping,
+  ConnectorType,
   CustomerSummary,
   Field,
   FieldCorrection,
@@ -15,6 +17,7 @@ import type {
   RoleCode,
   Source,
   SyncResult,
+  SyncRun,
   TrustSettings,
   User,
 } from './types'
@@ -142,6 +145,32 @@ export const api = {
   updateSource: (code: string, changes: Partial<Pick<Source, 'enabled' | 'trust'>>) =>
     patch<Source>(`/sources/${code}/`, changes),
   syncSource: (code: string) => post<SyncResult>(`/sources/${code}/sync/`),
+
+  // Connector setup (organization admins)
+  connectorCatalog: () => get<ConnectorType[]>('/connectors/catalog/'),
+  createConnector: (body: { name: string; connector_type: string; trust: number; settings: Record<string, string> }) =>
+    post<Source>('/connectors/', body),
+  updateConnector: (code: string, body: { name?: string; settings?: Record<string, string> }) =>
+    patch<Source>(`/connectors/${code}/`, body),
+  testConnector: (code: string) => post<{ ok: boolean; detail: string }>(`/connectors/${code}/test/`),
+  discoverObjects: (code: string) => post<{ objects: string[] }>(`/connectors/${code}/discover/`),
+  discoverColumns: (code: string, object: string) =>
+    post<{ object: string; columns: string[] }>(`/connectors/${code}/discover/`, { object }),
+  saveMapping: (code: string, mapping: ConnectorMapping) => put<Source>(`/connectors/${code}/mapping/`, mapping),
+  connectorRuns: (code: string) => get<SyncRun[]>(`/connectors/${code}/runs/`),
+  uploadConnectorFile: async (code: string, file: File): Promise<{ name: string; rows: number }> => {
+    const form = new FormData()
+    form.append('file', file)
+    const response = await fetchWhileWaking(`${ORG_BASE}/api/connectors/${code}/upload/`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json', 'X-CSRFToken': csrfToken() },
+      body: form,
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) throw new ApiError(response.status, data.detail ?? `Upload failed (${response.status})`)
+    return data
+  },
 
   // Customers
   customers: (params: { search?: string; ordering?: string; band?: string; page?: string }) =>

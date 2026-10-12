@@ -114,7 +114,7 @@ class SourceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Upd
     def sync(self, request, code=None):
         source = self.get_object()
         try:
-            synced = sync_source(source.code)
+            synced = sync_source(source.code, started_by=request.user.get_username())
         except (ValueError, RuntimeError) as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         built = build_customers()

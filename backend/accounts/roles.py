@@ -49,6 +49,8 @@ CAPABILITIES = {
     "manage_users": {ADMIN},
     # Change this organization's settings: source trust levels, field weights, logo.
     "manage_settings": {ADMIN},
+    # Add connectors, enter their passwords or tokens, choose what they read.
+    "manage_connectors": {ADMIN},
 }
 
 
