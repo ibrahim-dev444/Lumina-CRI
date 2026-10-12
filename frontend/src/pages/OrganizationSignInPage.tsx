@@ -34,13 +34,13 @@ export function OrganizationSignInPage() {
         <i />
       </div>
       <form className="glass login-card" style={{ borderRadius: 'var(--radius-lg)' }} onSubmit={submit}>
-        <div className="brand" style={{ padding: 0 }}>
+        <a className="brand" style={{ padding: 0 }} href="/" title="Back to the Lumina CRI home page">
           <BrandMark size={40} />
           <div>
             <div className="brand-name">Lumina CRI</div>
             <div className="brand-sub">Customer data platform</div>
           </div>
-        </div>
+        </a>
 
         <div className="stack" style={{ gap: 6 }}>
           <h1>Organization sign-in</h1>
