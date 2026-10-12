@@ -3384,3 +3384,17 @@ a.add-tile:hover {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
+
+
+.code-block {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: #15122b;
+  color: #e9e6ff;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  white-space: pre;
+}

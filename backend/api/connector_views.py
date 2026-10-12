@@ -6,6 +6,9 @@ Passwords, tokens and connection strings are stored encrypted, never returned an
 audit log.
 """
 
+import hashlib
+import json
+import secrets
 from decimal import Decimal
 
 from django.utils.text import slugify
@@ -19,6 +22,7 @@ from audit.services import record
 from ingestion.connectors.adapters import ConnectorError, parse_csv_upload
 from ingestion.connectors.catalog import BY_TYPE, adapter_for, public_catalog, split_settings, write_secrets
 from mdm.models import FIELDS
+from security import crypto
 from sources.models import Source, UploadedFile
 
 from .permissions import HasRole, requires
@@ -219,3 +223,26 @@ def sync_runs(request, code):
          "started_by": r.started_by}
         for r in source.runs.all()[:50]
     ])
+
+
+@api_view(["POST"])
+@permission_classes(ADMIN_ONLY)
+def create_api_key(request, code):
+    """POST /api/connectors/<code>/api-key/  A new key for a push-API connector. Shown once; only a one-way
+    hash is stored, so a lost key cannot be recovered, only replaced. The old key stops working at once."""
+    source, error = _configurable(code)
+    if error:
+        return error
+    if source.connector_type != "push_api":
+        return _bad("Only push-API connectors have API keys.")
+    key = "lum_" + secrets.token_urlsafe(32)
+    source.secret = crypto.encrypt(json.dumps({"key_hash": hash_api_key(key)}))
+    source.config = {**source.config, "key_prefix": key[:12]}
+    source.mapping = {"push": True}
+    source.save(update_fields=["secret", "config", "mapping"])
+    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", api_key="replaced", prefix=key[:12])
+    return Response({"api_key": key, "key_prefix": key[:12]})
+
+
+def hash_api_key(key):
+    return hashlib.sha256(key.encode()).hexdigest()

@@ -271,7 +271,7 @@ function ConnectorCard({
       </div>
       {canManage && (
       <div className="connector-actions">
-        {s.enabled && (
+        {s.enabled && s.connector_type !== 'push_api' && (
           <button type="button" className="btn btn-primary" disabled={busy !== null} onClick={sync}>
             <Icon name="refresh" size={16} className={busy === 'sync' ? 'spin' : undefined} />
             {busy === 'sync' ? 'Syncing' : 'Sync now'}

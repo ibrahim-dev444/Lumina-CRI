@@ -85,6 +85,26 @@ def sync_source(source_code, started_by=""):
 def _sync(source):
     connector = connector_for(source)
     rows = connector.fetch()  # read the external system before opening our transaction
+    return _store(source, connector, rows)
+
+
+def ingest_records(source, rows, started_by):
+    """Store records a bank's own system sent to the push API. Same raw copy, cleaning, encryption and
+    sync history as a pull; rows have Lumina's own field names plus "id" and optional "updated_at"."""
+    from .connectors.push import PushConnector
+
+    try:
+        result = _store(source, PushConnector(), rows)
+    except Exception as exc:
+        SyncRun.objects.create(source=source, status=SyncRun.FAILED, error=str(exc)[:500], started_by=started_by,
+                               finished_at=timezone.now())
+        raise
+    SyncRun.objects.create(source=source, status=SyncRun.OK, fetched=result.fetched, created=result.created,
+                           updated=result.updated, started_by=started_by, finished_at=timezone.now())
+    return result
+
+
+def _store(source, connector, rows):
 
     result = SyncResult(fetched=len(rows))
     # All rows are saved together or not at all, so a failure halfway leaves no half-synced data.

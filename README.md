@@ -126,6 +126,9 @@ npm run dev
 Open http://localhost:5173, type the organization code (`axis` or `hdfc`), then sign in. Each organization's pages
 live under `/t/<code>/`, for example http://localhost:5173/t/axis/.
 
+Security rules (sign-in lockout after 5 wrong passwords, sign-out after 30 idle minutes, encryption, connector
+safety, audit) are summarised in [SECURITY.md](SECURITY.md).
+
 ## Organization administration
 
 Each organization has its own administrators (role "Organization admin"). Signed in as one, the sidebar shows
@@ -154,6 +157,14 @@ Setup has three steps:
 2. **What to read**: **Discover** lists tables, views or collections; pick one and Lumina shows its columns and
    suggests which column feeds which field. Only the mapped columns are ever read.
 3. **Sync**: reads the rows, then matches and scores customers as usual. Every attempt is in the sync history.
+
+**Scheduled sync**: on the Sync step choose every 6, 12 or 24 hours. Once an hour the scheduler
+(`.github/workflows/scheduled-sync.yml`, or `python manage.py run_due_syncs` locally) syncs whatever is due in every
+organization. On the hosted demo it needs the same `SYNC_RUNNER_TOKEN` value in Render and in the GitHub repository
+secrets.
+
+**Push API**: choose **Lumina push API** in the catalog when the bank's own system should send customers to Lumina
+instead. Create an API key (shown once) and the setup page shows a ready-to-copy example request.
 
 Safety rules: connectors may only reach public internet addresses (private and internal addresses are refused, except
 in local development where `CONNECTORS_ALLOW_PRIVATE_HOSTS` is on), sessions are read-only, queries time out after

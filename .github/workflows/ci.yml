@@ -61,3 +61,21 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  # Known security problems in the libraries we use. Reported here; not a required check, so a newly
+  # published problem does not block unrelated work, but it must be looked at.
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Python libraries
+        run: pip install pip-audit && pip-audit -r backend/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: JavaScript libraries
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high

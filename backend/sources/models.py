@@ -24,6 +24,8 @@ class Source(models.Model):
     # What to read: {"object": "public.customers", "id_column": "cust_id", "updated_column": "updated_at",
     #                "fields": {"name": "cust_name", "mobile": "mob_no", ...}}
     mapping = models.JSONField(default=dict, blank=True)
+    # Sync on its own every N hours (0 = only when someone presses Sync). Run by the hourly scheduler.
+    sync_every_hours = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         ordering = ["-trust", "name"]

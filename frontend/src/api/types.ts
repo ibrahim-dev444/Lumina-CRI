@@ -100,6 +100,7 @@ export interface Source {
   mapping: ConnectorMapping | Record<string, never>
   has_secret: boolean // a password or token is stored (never sent to the browser)
   last_run: { status: 'ok' | 'failed'; at: string; fetched: number; error: string } | null
+  sync_every_hours: 0 | 6 | 12 | 24 // scheduled sync; 0 = only when someone presses Sync
 }
 
 export interface ConnectorMapping {
