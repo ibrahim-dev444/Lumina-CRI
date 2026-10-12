@@ -167,6 +167,13 @@ if not FLEXCUBE_DB_URL and DATABASE_URL:
 # Required when DJANGO_DEBUG is false; in development a key is derived from DJANGO_SECRET_KEY if missing.
 FIELD_ENCRYPTION_KEY = os.getenv('FIELD_ENCRYPTION_KEY', '')
 
+# Connectors may only reach public internet addresses (see security/network.py). Local development allows
+# private addresses because the demo databases run on this machine.
+CONNECTORS_ALLOW_PRIVATE_HOSTS = os.getenv('CONNECTORS_ALLOW_PRIVATE_HOSTS', str(DEBUG)).lower() == 'true'
+# The most rows one sync reads from a source, and how long one query may run.
+CONNECTOR_MAX_ROWS = int(os.getenv('CONNECTOR_MAX_ROWS', '50000'))
+CONNECTOR_TIMEOUT_SECONDS = int(os.getenv('CONNECTOR_TIMEOUT_SECONDS', '30'))
+
 # Synthetic demo data, one folder per organization: fake_sources/<schema>/ holds that bank's core banking
 # rows (flexcube.sql), Salesforce export, branch CSV uploads and compliance feed.
 DEMO_DATA_DIR = os.getenv('DEMO_DATA_DIR') or str(BASE_DIR.parent / 'fake_sources')

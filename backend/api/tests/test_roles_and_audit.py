@@ -78,7 +78,7 @@ def test_capabilities_per_role(suresh, monkeypatch, group, sync_ok, review_ok, a
     import api.views
     from ingestion.sync import SyncResult
 
-    monkeypatch.setattr(api.views, "sync_source", lambda code: SyncResult(fetched=0))
+    monkeypatch.setattr(api.views, "sync_source", lambda code, **kwargs: SyncResult(fetched=0))
     c = client_for(group)
     assert (c.post("/api/sources/flexcube/sync/").status_code == 200) is sync_ok
     assert (c.get("/api/suggestions/").status_code == 200) is review_ok

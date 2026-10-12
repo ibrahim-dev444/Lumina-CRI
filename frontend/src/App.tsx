@@ -14,11 +14,13 @@ import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { CompliancePage } from './pages/CompliancePage'
+import { ConnectorSetupPage } from './pages/ConnectorSetupPage'
 import { ConnectorsPage } from './pages/ConnectorsPage'
 import { CustomerDetailPage } from './pages/CustomerDetailPage'
 import { CustomersPage } from './pages/CustomersPage'
 import { HowItWorksPage } from './pages/HowItWorksPage'
 import { LoginPage } from './pages/LoginPage'
+import { NewConnectorPage } from './pages/NewConnectorPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { ReviewPage } from './pages/ReviewPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -68,6 +70,8 @@ function Routed() {
           <Route path="/approvals" element={<ApprovalsPage />} />
         )}
         <Route path="/connectors" element={<ConnectorsPage />} />
+        {can('manage_connectors') && <Route path="/connectors/new" element={<NewConnectorPage />} />}
+        {can('manage_connectors') && <Route path="/connectors/:code" element={<ConnectorSetupPage />} />}
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/password" element={<ChangePasswordPage />} />
         {can('manage_users') && <Route path="/users" element={<UsersPage />} />}

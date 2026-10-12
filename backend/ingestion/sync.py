@@ -5,10 +5,12 @@ from django.utils import timezone
 
 from security import crypto
 from security.fields import ENCRYPTED_FIELDS
-from sources.models import Source
+from sources.models import Source, SyncRun
 
 from .clean import clean_aadhaar, clean_record
 from .connectors import CONNECTORS
+from .connectors.catalog import DEMO_TYPES
+from .connectors.generic import MappedConnector
 from .models import RawRecord, SourceRecord
 
 
@@ -50,15 +52,38 @@ def _protect_record(std):
     return std
 
 
-def sync_source(source_code):
-    """Pull every customer from one source, keep the raw copy, and save the cleaned version."""
+def connector_for(source):
+    """The built-in demo sources use their hand-written connectors; everything else reads its mapping."""
+    if source.connector_type in DEMO_TYPES or not source.connector_type:
+        if source.code not in CONNECTORS:
+            raise ValueError(f"No connector written yet for '{source.code}'.")
+        return CONNECTORS[source.code]()
+    return MappedConnector(source)
+
+
+def sync_source(source_code, started_by=""):
+    """Pull every customer from one source, keep the raw copy, and save the cleaned version.
+    Every attempt, good or failed, is written to the source's sync history."""
     source = Source.objects.get(code=source_code)
     if not source.enabled:
         raise ValueError(f"Source '{source_code}' is disabled.")
-    if source_code not in CONNECTORS:
-        raise ValueError(f"No connector written yet for '{source_code}'.")
+    try:
+        result = _sync(source)
+    except Exception as exc:
+        SyncRun.objects.create(
+            source=source, status=SyncRun.FAILED, error=str(exc)[:500], started_by=started_by,
+            finished_at=timezone.now(),
+        )
+        raise
+    SyncRun.objects.create(
+        source=source, status=SyncRun.OK, fetched=result.fetched, created=result.created, updated=result.updated,
+        started_by=started_by, finished_at=timezone.now(),
+    )
+    return result
 
-    connector = CONNECTORS[source_code]()
+
+def _sync(source):
+    connector = connector_for(source)
     rows = connector.fetch()  # read the external system before opening our transaction
 
     result = SyncResult(fetched=len(rows))
@@ -66,6 +91,8 @@ def sync_source(source_code):
     with transaction.atomic():
         for raw in rows:
             record_id = connector.record_id(raw)
+            if not record_id:
+                continue  # a row without an ID cannot be followed over time; skip it
             RawRecord.objects.create(
                 source=source, source_record_id=record_id, payload=_protect_raw(raw, connector.sensitive_columns)
             )

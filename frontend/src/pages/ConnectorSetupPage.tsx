@@ -1,0 +1,440 @@
+import { useRef, useState, type ChangeEvent } from 'react'
+import { useParams } from 'react-router-dom'
+
+import { api } from '../api/client'
+import type { ConnectorMapping, ConnectorType, Field, Source } from '../api/types'
+import { useApi } from '../api/useApi'
+import { useCan } from '../auth/AuthContext'
+import { ConnectorFields } from '../components/ConnectorFields'
+import { Icon } from '../components/Icon'
+import { Loader, LoaderRow } from '../components/Loader'
+import { useToast } from '../components/Toasts'
+import { Card, ErrorAlert, PageHeader, StatusBadge } from '../components/ui'
+import { FIELD_LABELS, FIELDS, formatDateTime } from '../format'
+
+// Guesses which column feeds which Lumina field from its name ("MOB_NO" -> Mobile). Only a suggestion:
+// the administrator confirms every choice before saving.
+const GUESS: Record<Field | 'id' | 'updated', { has: string[]; not?: string[] }> = {
+  name: { has: ['fullname', 'custname', 'customername', 'name'], not: ['father', 'first', 'last', 'user', 'file', 'branch'] },
+  father_name: { has: ['father'] },
+  dob: { has: ['dob', 'birth'] },
+  gender: { has: ['gender', 'sex'] },
+  pan: { has: ['pan'], not: ['company', 'span'] },
+  aadhaar: { has: ['aadhaar', 'aadhar', 'uid'] },
+  ckyc: { has: ['ckyc'] },
+  mobile: { has: ['mobile', 'mob', 'phone', 'cell'] },
+  email: { has: ['email', 'mail'] },
+  address: { has: ['address', 'addr'], not: ['perm', 'email', 'mail'] },
+  perm_address: { has: ['permaddr', 'permanent', 'perm'] },
+  occupation: { has: ['occupation', 'job', 'title', 'profession'] },
+  income: { has: ['income', 'salary'] },
+  id: { has: ['custid', 'customerid', 'refno', 'ref', 'id', 'code'], not: ['pan', 'ckyc', 'aadhaar', 'email'] },
+  updated: { has: ['updated', 'modified', 'lastupd', 'changed'] },
+}
+
+function guess(key: keyof typeof GUESS, columns: string[]): string {
+  const rule = GUESS[key]
+  const norm = (c: string) => c.toLowerCase().replace(/[^a-z0-9]/g, '')
+  for (const word of rule.has) {
+    const hit = columns.find((c) => norm(c).includes(word) && !(rule.not ?? []).some((n) => norm(c).includes(n)))
+    if (hit) return hit
+  }
+  return ''
+}
+
+export function ConnectorSetupPage() {
+  const { code = '' } = useParams()
+  const source = useApi(() => api.sources().then((p) => p.results.find((s) => s.code === code) ?? null), [code])
+  const catalog = useApi(() => api.connectorCatalog(), [])
+
+  const s = source.data
+  const type = catalog.data?.find((t) => t.type === s?.connector_type)
+
+  return (
+    <>
+      <PageHeader
+        title={s?.name ?? 'Connector'}
+        description={type ? `${type.label} connector. Lumina only reads, and only the columns you map.` : undefined}
+        crumbs={[{ label: 'Connectors', to: '/connectors' }, { label: s?.name ?? '...' }]}
+      />
+      {(source.error || catalog.error) && <ErrorAlert message={source.error ?? catalog.error ?? ''} />}
+      {source.data === null && <ErrorAlert message="No connector with this code." />}
+      {!s || !catalog.data ? (
+        source.data !== null && (
+          <div className="card">
+            <Loader kind="orbit" label="Loading the connector" />
+          </div>
+        )
+      ) : s.is_demo || !type ? (
+        <Card title="Built-in demo connector">
+          <p className="muted">This demo connector reads Lumina&apos;s sample data and cannot be reconfigured.</p>
+        </Card>
+      ) : (
+        <SetupSteps source={s} type={type} onChanged={source.reload} />
+      )}
+    </>
+  )
+}
+
+function SetupSteps({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+  return (
+    <>
+      {type.type === 'file_upload' ? (
+        <UploadStep source={source} onChanged={onChanged} />
+      ) : (
+        <ConnectionStep source={source} type={type} onChanged={onChanged} />
+      )}
+      <MappingStep source={source} type={type} onChanged={onChanged} />
+      <SyncStep source={source} onChanged={onChanged} />
+    </>
+  )
+}
+
+function StepTitle({ n, text }: { n: number; text: string }) {
+  return (
+    <span className="row" style={{ gap: 10 }}>
+      <span className="step-n">{n}</span>
+      {text}
+    </span>
+  )
+}
+
+function ConnectionStep({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+  const toast = useToast()
+  const [values, setValues] = useState<Record<string, string>>(
+    Object.fromEntries(type.fields.map((f) => [f.name, f.secret ? '' : (source.config[f.name] ?? f.default)])),
+  )
+  const [busy, setBusy] = useState<'save' | 'test' | null>(null)
+  const [result, setResult] = useState<{ ok: boolean; detail: string } | null>(null)
+
+  const save = async () => {
+    setBusy('save')
+    try {
+      await api.updateConnector(source.code, { settings: values })
+      setValues((v) => Object.fromEntries(Object.entries(v).map(([k, val]) => [k, type.fields.find((f) => f.name === k)?.secret ? '' : val])))
+      toast('success', 'Connection details saved.')
+      onChanged()
+    } catch (e) {
+      toast('error', (e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const test = async () => {
+    setBusy('test')
+    setResult(null)
+    try {
+      setResult(await api.testConnector(source.code))
+    } catch (e) {
+      setResult({ ok: false, detail: (e as Error).message })
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <Card
+      title={<StepTitle n={1} text="Connection" />}
+      description="Use a read-only login that can see only the customer table or view."
+      footer={
+        <>
+          {result ? (
+            <span className="row text-sm" style={{ gap: 8, color: result.ok ? 'var(--good-text)' : 'var(--bad-text)' }}>
+              <Icon name={result.ok ? 'check' : 'alert'} size={16} /> {result.detail}
+            </span>
+          ) : (
+            <span className="text-sm muted">Save, then test the connection.</span>
+          )}
+          <div className="row" style={{ gap: 8 }}>
+            <button type="button" className="btn" disabled={busy !== null} onClick={save}>
+              {busy === 'save' ? 'Saving...' : 'Save'}
+            </button>
+            <button type="button" className="btn btn-primary" disabled={busy !== null} onClick={test}>
+              <Icon name="refresh" size={16} className={busy === 'test' ? 'spin' : undefined} />
+              {busy === 'test' ? 'Testing...' : 'Test connection'}
+            </button>
+          </div>
+        </>
+      }
+    >
+      <div className="form-grid">
+        <ConnectorFields fields={type.fields} values={values} onChange={setValues} secretStored={source.has_secret} />
+      </div>
+    </Card>
+  )
+}
+
+function UploadStep({ source, onChanged }: { source: Source; onChanged: () => void }) {
+  const toast = useToast()
+  const input = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+
+  const pick = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    try {
+      const done = await api.uploadConnectorFile(source.code, file)
+      toast('success', `${done.name} uploaded: ${done.rows} rows. Now map its columns.`)
+      onChanged()
+    } catch (err) {
+      toast('error', (err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Card title={<StepTitle n={1} text="File" />} description="A CSV file with a header row, up to 5 MB. A new upload replaces the old one at the next sync.">
+      <div className="row" style={{ gap: 12 }}>
+        <input ref={input} type="file" accept=".csv,text/csv" hidden onChange={pick} />
+        <button type="button" className="btn btn-primary" disabled={busy} onClick={() => input.current?.click()}>
+          <Icon name="file" size={16} /> {busy ? 'Uploading...' : 'Upload CSV'}
+        </button>
+        {source.mapping && 'object' in source.mapping && (
+          <span className="text-sm muted">Mapped file: {source.mapping.object}</span>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+function MappingStep({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+  const toast = useToast()
+  const saved = 'object' in source.mapping ? (source.mapping as ConnectorMapping) : null
+  const [objects, setObjects] = useState<string[] | null>(null)
+  const [object, setObject] = useState(saved?.object ?? '')
+  const [columns, setColumns] = useState<string[] | null>(null)
+  const [mapping, setMapping] = useState<ConnectorMapping>(
+    saved ?? { object: '', id_column: '', updated_column: '', fields: {} },
+  )
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const run = async (label: string, work: () => Promise<void>) => {
+    setBusy(label)
+    setError(null)
+    try {
+      await work()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const discover = () =>
+    run('objects', async () => {
+      const found = (await api.discoverObjects(source.code)).objects
+      setObjects(found)
+      if (!object && found.length === 1) setObject(found[0])
+    })
+
+  const loadColumns = (target = object) =>
+    run('columns', async () => {
+      const cols = (await api.discoverColumns(source.code, target)).columns
+      setColumns(cols)
+      setMapping((m) => {
+        const sameObject = m.object === target
+        const fields: Partial<Record<Field, string>> = sameObject ? { ...m.fields } : {}
+        for (const f of FIELDS) if (!fields[f]) fields[f] = guess(f, cols)
+        return {
+          object: target,
+          id_column: (sameObject && m.id_column) || guess('id', cols),
+          updated_column: (sameObject && m.updated_column) || guess('updated', cols),
+          fields,
+        }
+      })
+    })
+
+  const save = () =>
+    run('save', async () => {
+      await api.saveMapping(source.code, mapping)
+      toast('success', 'Mapping saved. Sync to read the customers.')
+      onChanged()
+    })
+
+  const setField = (f: Field, column: string) => setMapping((m) => ({ ...m, fields: { ...m.fields, [f]: column } }))
+  const columnSelect = (value: string, onChange: (v: string) => void, label: string, emptyText: string) => (
+    <select className="select select-sm" aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">{emptyText}</option>
+      {columns?.map((c) => (
+        <option key={c} value={c}>
+          {c}
+        </option>
+      ))}
+    </select>
+  )
+
+  return (
+    <Card
+      title={<StepTitle n={2} text="What to read" />}
+      description="Choose where customers are, then match its columns to Lumina's fields. Unmapped columns are never read."
+      footer={
+        columns && (
+          <>
+            <span className="text-sm muted">
+              {Object.values(mapping.fields).filter(Boolean).length} of {FIELDS.length} fields mapped
+            </span>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={busy !== null || !mapping.id_column || !mapping.fields.name}
+              onClick={save}
+            >
+              <Icon name="check" size={16} /> {busy === 'save' ? 'Saving...' : 'Save mapping'}
+            </button>
+          </>
+        )
+      }
+    >
+      <div className="stack" style={{ gap: 16 }}>
+        {error && <ErrorAlert message={error} />}
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" className="btn" disabled={busy !== null} onClick={discover}>
+            <Icon name="search" size={16} /> {busy === 'objects' ? 'Looking...' : 'Discover'}
+          </button>
+          {(objects || object) && (
+            <select
+              className="select"
+              aria-label={type.object_label}
+              value={object}
+              onChange={(e) => {
+                setObject(e.target.value)
+                setColumns(null)
+              }}
+            >
+              <option value="">Choose {type.object_label.toLowerCase()}</option>
+              {(objects ?? [object]).map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          )}
+          {object && (
+            <button type="button" className="btn" disabled={busy !== null} onClick={() => loadColumns()}>
+              {busy === 'columns' ? 'Reading columns...' : columns ? 'Reload columns' : 'Show columns'}
+            </button>
+          )}
+        </div>
+
+        {busy === 'columns' && <Loader kind="pair" label="Reading the columns" size={44} />}
+
+        {columns && (
+          <div className="mapping-grid">
+            <div className="mapping-row is-key">
+              <span>
+                <strong>Record ID</strong>
+                <span className="text-xs muted">Required. Never changes for a customer.</span>
+              </span>
+              {columnSelect(mapping.id_column, (v) => setMapping((m) => ({ ...m, id_column: v })), 'Record ID column', 'Choose...')}
+            </div>
+            <div className="mapping-row is-key">
+              <span>
+                <strong>Last updated</strong>
+                <span className="text-xs muted">Optional. The newest value wins a tie.</span>
+              </span>
+              {columnSelect(mapping.updated_column, (v) => setMapping((m) => ({ ...m, updated_column: v })), 'Last updated column', 'Not available')}
+            </div>
+            {FIELDS.map((f) => (
+              <div key={f} className="mapping-row">
+                <span>
+                  {FIELD_LABELS[f]}
+                  {f === 'name' && <span className="muted"> (required)</span>}
+                </span>
+                {columnSelect(mapping.fields[f] ?? '', (v) => setField(f, v), `Column for ${FIELD_LABELS[f]}`, 'Not in this source')}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+function SyncStep({ source, onChanged }: { source: Source; onChanged: () => void }) {
+  const toast = useToast()
+  const canSync = useCan('manage_sources')
+  const runs = useApi(() => api.connectorRuns(source.code), [source.code])
+  const [busy, setBusy] = useState(false)
+  const ready = 'object' in source.mapping
+
+  const sync = async () => {
+    setBusy(true)
+    try {
+      const r = await api.syncSource(source.code)
+      toast('success', `Read ${r.fetched} rows: ${r.created} new, ${r.updated} updated. Customers rebuilt.`)
+      onChanged()
+    } catch (e) {
+      toast('error', (e as Error).message)
+    } finally {
+      setBusy(false)
+      runs.reload()
+    }
+  }
+
+  return (
+    <Card
+      title={<StepTitle n={3} text="Sync" />}
+      description="Read the mapped columns, then match and score the customers. Every attempt is listed below."
+      actions={
+        canSync && (
+          <button type="button" className="btn btn-primary" disabled={busy || !ready || !source.enabled} onClick={sync}>
+            <Icon name="refresh" size={16} className={busy ? 'spin' : undefined} /> {busy ? 'Syncing...' : 'Sync now'}
+          </button>
+        )
+      }
+      flush
+    >
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Result</th>
+              <th className="right">Rows read</th>
+              <th className="right col-sm">New</th>
+              <th className="right col-sm">Updated</th>
+              <th className="col-md">By</th>
+            </tr>
+          </thead>
+          {runs.loading && !runs.data ? (
+            <LoaderRow kind="trail" label="Loading sync history" columns={6} />
+          ) : (
+            <tbody>
+              {runs.data?.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="muted text-sm">
+                    No syncs yet.
+                  </td>
+                </tr>
+              )}
+              {runs.data?.map((r) => (
+                <tr key={r.id}>
+                  <td className="text-sm">{formatDateTime(r.started_at)}</td>
+                  <td>
+                    {r.status === 'ok' ? (
+                      <StatusBadge tone="good">Succeeded</StatusBadge>
+                    ) : (
+                      <span className="stack" style={{ gap: 2 }}>
+                        <StatusBadge tone="bad">Failed</StatusBadge>
+                        <span className="text-xs muted">{r.error}</span>
+                      </span>
+                    )}
+                  </td>
+                  <td className="right num">{r.fetched}</td>
+                  <td className="right num col-sm">{r.created}</td>
+                  <td className="right num col-sm">{r.updated}</td>
+                  <td className="mono text-sm col-md">{r.started_by || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          )}
+        </table>
+      </div>
+    </Card>
+  )
+}

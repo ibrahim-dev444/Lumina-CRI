@@ -38,6 +38,7 @@ export type Capability =
   | 'view_audit'
   | 'manage_users'
   | 'manage_settings'
+  | 'manage_connectors'
 
 export interface User {
   username: string
@@ -92,6 +93,53 @@ export interface Source {
   enabled: boolean
   last_synced_at: string | null
   record_count: number
+  connector_type: string
+  connector_label: string
+  is_demo: boolean // built-in demo connector: not reconfigurable
+  config: Record<string, string> // connection details without secrets
+  mapping: ConnectorMapping | Record<string, never>
+  has_secret: boolean // a password or token is stored (never sent to the browser)
+  last_run: { status: 'ok' | 'failed'; at: string; fetched: number; error: string } | null
+}
+
+export interface ConnectorMapping {
+  object: string
+  id_column: string
+  updated_column: string
+  fields: Partial<Record<Field, string>>
+}
+
+export interface ConnectorField {
+  name: string
+  label: string
+  kind: 'text' | 'number' | 'password' | 'select'
+  required: boolean
+  secret: boolean
+  default: string
+  help: string
+  choices: [string, string][]
+}
+
+export interface ConnectorType {
+  type: string
+  label: string
+  category: string
+  description: string
+  object_label: string
+  available: boolean
+  fields: ConnectorField[]
+}
+
+export interface SyncRun {
+  id: number
+  status: 'ok' | 'failed'
+  started_at: string
+  finished_at: string | null
+  fetched: number
+  created: number
+  updated: number
+  error: string
+  started_by: string
 }
 
 export interface SyncResult {
