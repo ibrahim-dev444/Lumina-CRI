@@ -8,7 +8,7 @@ import { ErrorAlert } from '../components/ui'
 import { useOrganization } from '../organization'
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login, endedQuietly } = useAuth()
   const org = useOrganization()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -61,6 +61,12 @@ export function LoginPage() {
           <p className="muted text-sm">Use the account your {org.name} administrator created for you.</p>
         </div>
 
+        {endedQuietly && !error && (
+          <div className="notice">
+            <Icon name="lock" size={16} />
+            <span>You were signed out after 30 minutes without activity. Sign in again to continue.</span>
+          </div>
+        )}
         {error && <ErrorAlert message={error} />}
 
         <div className="form-field">
