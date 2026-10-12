@@ -36,6 +36,8 @@ export type Capability =
   | 'record_consent'
   | 'export'
   | 'view_audit'
+  | 'manage_users'
+  | 'manage_settings'
 
 export interface User {
   username: string
@@ -44,6 +46,30 @@ export interface User {
   role: string | null
   role_label: string
   capabilities: Capability[]
+  must_change_password: boolean // true after an administrator set a temporary password
+}
+
+export type RoleCode = 'relationship_manager' | 'agent' | 'steward' | 'compliance' | 'admin'
+
+// A login in this organization, as its administrator sees it.
+export interface OrgUser {
+  id: number
+  username: string
+  first_name: string
+  last_name: string
+  name: string
+  role: RoleCode | null
+  role_label: string
+  is_active: boolean
+  last_login: string | null
+  date_joined: string
+  must_change_password: boolean
+  temporary_password?: string // only in the reply that created it or reset it
+}
+
+export interface TrustSettings {
+  sources: { code: string; name: string; category: string; trust: number }[]
+  weights: { field: string; label: string; points: number }[]
 }
 
 export interface AuditEvent {

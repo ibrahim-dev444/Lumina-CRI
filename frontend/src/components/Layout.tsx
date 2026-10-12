@@ -41,6 +41,13 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    label: 'Administration',
+    items: [
+      { to: '/users', label: 'Users and roles', icon: 'customers', needs: ['manage_users'] },
+      { to: '/settings', label: 'Settings', icon: 'sliders', needs: ['manage_settings'] },
+    ],
+  },
+  {
     label: 'Help',
     items: [{ to: '/how-it-works', label: 'How it works', icon: 'info' }],
   },
@@ -54,6 +61,9 @@ const PAGE_TITLES = [
   { path: '/audit', title: 'Audit log' },
   { path: '/approvals', title: 'Approvals' },
   { path: '/how-it-works', title: 'How it works' },
+  { path: '/users', title: 'Users and roles' },
+  { path: '/settings', title: 'Settings' },
+  { path: '/password', title: 'Change password' },
   { path: '/compliance', title: 'Compliance' },
 ]
 
@@ -157,6 +167,9 @@ export function Layout() {
           >
             <Icon name={theme === 'light' ? 'moon' : 'sun'} label={theme === 'light' ? 'Dark theme' : 'Light theme'} />
           </button>
+          <Link to="/password" className="btn btn-ghost btn-icon" title="Change password" onClick={closeNav}>
+            <Icon name="key" label="Change password" />
+          </Link>
           <button type="button" className="btn btn-ghost btn-icon" onClick={logout} title="Sign out">
             <Icon name="logout" label="Sign out" />
           </button>

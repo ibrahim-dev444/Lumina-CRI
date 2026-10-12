@@ -23,6 +23,11 @@ class AuditEvent(models.Model):
     CORRECTION_REJECTED = "corr_rejected"
     REVEAL = "reveal"
     CONSENT = "consent"
+    USER_CREATED = "user_created"
+    USER_UPDATED = "user_updated"
+    PASSWORD_RESET = "password_reset"
+    PASSWORD_CHANGED = "password_changed"
+    SETTINGS_CHANGED = "settings_changed"
 
     ACTION_CHOICES = [
         (LOGIN, "Signed in"),
@@ -40,6 +45,11 @@ class AuditEvent(models.Model):
         (CORRECTION_REJECTED, "Rejected correction"),
         (REVEAL, "Revealed identity number"),
         (CONSENT, "Recorded consent"),
+        (USER_CREATED, "Added a user"),
+        (USER_UPDATED, "Changed a user"),
+        (PASSWORD_RESET, "Reset a password"),
+        (PASSWORD_CHANGED, "Changed own password"),
+        (SETTINGS_CHANGED, "Changed settings"),
     ]
 
     at = models.DateTimeField(auto_now_add=True, db_index=True)

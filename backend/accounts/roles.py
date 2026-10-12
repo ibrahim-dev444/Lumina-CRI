@@ -17,7 +17,7 @@ GROUPS = {
     "Data steward": STEWARD,
     "Compliance officer": COMPLIANCE,
 }
-LABELS = {role: name for name, role in GROUPS.items()} | {ADMIN: "Administrator"}
+LABELS = {role: name for name, role in GROUPS.items()} | {ADMIN: "Organization admin"}
 
 # Capabilities. A role not listed for a capability does not have it.
 CAPABILITIES = {
@@ -45,6 +45,10 @@ CAPABILITIES = {
     "export": {STEWARD, COMPLIANCE, ADMIN},
     # Read the audit log.
     "view_audit": {COMPLIANCE, ADMIN},
+    # Add staff, change their roles, deactivate them, reset their passwords.
+    "manage_users": {ADMIN},
+    # Change this organization's settings: source trust levels, field weights, logo.
+    "manage_settings": {ADMIN},
 }
 
 

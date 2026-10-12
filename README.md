@@ -126,6 +126,23 @@ npm run dev
 Open http://localhost:5173, type the organization code (`axis` or `hdfc`), then sign in. Each organization's pages
 live under `/t/<code>/`, for example http://localhost:5173/t/axis/.
 
+## Organization administration
+
+Each organization has its own administrators (role "Organization admin"). Signed in as one, the sidebar shows
+**Administration**:
+
+- **Users and roles**: add staff (they get a temporary password, shown once, and must choose their own at first
+  sign-in), change roles, deactivate, reset passwords. An admin cannot deactivate themselves or remove the last admin.
+- **Settings**: the organization's logo (PNG, JPEG or WebP up to 256 KB; shown only on its sign-in page and top bar),
+  how much it trusts each source system, and how many points each field adds to the trust score (must total 100).
+  Saving recalculates every customer's golden record and score.
+
+Every change is written to that organization's audit log. To make the first admin locally:
+
+```
+python manage.py tenant_command createsuperuser --schema=axis
+```
+
 ## Every day
 
 ```

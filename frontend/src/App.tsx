@@ -12,6 +12,7 @@ import { WakingBanner } from './components/WakingBanner'
 import { ORG_BASE } from './organization'
 import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
+import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { CompliancePage } from './pages/CompliancePage'
 import { ConnectorsPage } from './pages/ConnectorsPage'
 import { CustomerDetailPage } from './pages/CustomerDetailPage'
@@ -20,6 +21,8 @@ import { HowItWorksPage } from './pages/HowItWorksPage'
 import { LoginPage } from './pages/LoginPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { ReviewPage } from './pages/ReviewPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { UsersPage } from './pages/UsersPage'
 
 function Routed() {
   const { user, checking, logout } = useAuth()
@@ -31,6 +34,8 @@ function Routed() {
     )
   }
   if (!user) return <LoginPage />
+  // An administrator set a temporary password: nothing else opens until the person chooses their own.
+  if (user.must_change_password) return <ChangePasswordPage forced />
   if (!user.role) {
     return (
       <main className="login">
@@ -64,6 +69,9 @@ function Routed() {
         )}
         <Route path="/connectors" element={<ConnectorsPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/password" element={<ChangePasswordPage />} />
+        {can('manage_users') && <Route path="/users" element={<UsersPage />} />}
+        {can('manage_settings') && <Route path="/settings" element={<SettingsPage />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

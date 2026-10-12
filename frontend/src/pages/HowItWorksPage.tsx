@@ -23,6 +23,8 @@ const CAPABILITY_LABELS: { key: Capability; label: string }[] = [
   { key: 'view_compliance', label: 'See AML risk, PEP and sanctions' },
   { key: 'reveal_identity', label: 'Reveal full PAN or CKYC (with reason)' },
   { key: 'view_audit', label: 'Read the audit log' },
+  { key: 'manage_users', label: 'Add users and change roles' },
+  { key: 'manage_settings', label: 'Change trust settings and logo' },
 ]
 
 export function HowItWorksPage() {
