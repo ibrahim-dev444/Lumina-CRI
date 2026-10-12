@@ -1,26 +1,28 @@
-from pathlib import Path
-
 import psycopg
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import connection
+from psycopg import sql
 
-# The same SQL Docker runs on first start, so there is one copy of the fake data.
-SQL_FILE = Path(settings.BASE_DIR).parent / "docker" / "postgres" / "init" / "01-flexcube.sql"
+from sources.demo_data import demo_data_dir
 
 
 class Command(BaseCommand):
-    help = "Re-create the fake FLEXCUBE table (src_flexcube.CUST_MASTER) from docker/postgres/init/01-flexcube.sql."
+    help = (
+        "Re-create this organization's fake FLEXCUBE table (<org>.CUST_MASTER in src_flexcube) from "
+        "fake_sources/<org>/flexcube.sql. Run per organization: tenant_command load_fake_flexcube --schema=axis"
+    )
 
     def handle(self, *args, **options):
         if not settings.FLEXCUBE_DB_URL:
             raise CommandError("FLEXCUBE_DB_URL is not set in .env.")
-        text = SQL_FILE.read_text(encoding="utf-8")
-        # Skip the database creation part; run only what comes after "\connect src_flexcube".
-        marker = "\\connect src_flexcube"
-        if marker not in text:
-            raise CommandError(f"Could not find '{marker}' in {SQL_FILE}.")
-        sql = text.split(marker, 1)[1]
+        sql_file = demo_data_dir() / "flexcube.sql"
+        if not sql_file.exists():
+            raise CommandError(f"No core banking data for this organization: {sql_file}")
+        schema = sql.Identifier(connection.schema_name)
         with psycopg.connect(settings.FLEXCUBE_DB_URL, autocommit=True) as conn:
-            conn.execute(sql)
+            conn.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(schema))
+            conn.execute(sql.SQL("SET search_path TO {}").format(schema))
+            conn.execute(sql_file.read_text(encoding="utf-8"))
             rows = conn.execute('SELECT count(*) FROM "CUST_MASTER"').fetchone()[0]
-        self.stdout.write(self.style.SUCCESS(f"Fake FLEXCUBE reloaded: {rows} customers."))
+        self.stdout.write(self.style.SUCCESS(f"Fake FLEXCUBE for {connection.schema_name} reloaded: {rows} customers."))

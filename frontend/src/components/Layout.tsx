@@ -6,6 +6,7 @@ import type { Capability, Source } from '../api/types'
 import { formatRelative } from '../format'
 import { applyTheme, getTheme, type Theme } from '../theme'
 import { useAuth } from '../auth/AuthContext'
+import { useOrganization } from '../organization'
 import { BrandMark } from './BrandMark'
 import { Icon, type IconName } from './Icon'
 import { Avatar } from './ui'
@@ -57,6 +58,7 @@ const PAGE_TITLES = [
 
 export function Layout() {
   const { user, logout } = useAuth()
+  const org = useOrganization()
   const location = useLocation()
   const [pending, setPending] = useState<number | null>(null)
   const [pendingCorrections, setPendingCorrections] = useState<number | null>(null)
@@ -116,7 +118,7 @@ export function Layout() {
           <BrandMark />
           <div className="rail-text">
             <div className="brand-name">Lumina</div>
-            <div className="brand-sub">Customer data platform</div>
+            <div className="brand-sub">{org.name}</div>
           </div>
         </Link>
 
@@ -179,7 +181,7 @@ export function Layout() {
           </Link>
           <div className="topbar-path">
             <Link to="/" className="topbar-home">
-              Lumina
+              {org.name}
             </Link>
             <Icon name="chevronRight" size={14} />
             <strong>{page?.title ?? 'Workspace'}</strong>

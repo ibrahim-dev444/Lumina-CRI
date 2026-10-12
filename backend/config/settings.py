@@ -40,15 +40,28 @@ if os.getenv('RENDER_EXTERNAL_HOSTNAME'):
 
 # Application definition
 
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
+# Multi-tenancy: each organization (bank) gets its own PostgreSQL schema, managed by django-tenants.
+# SHARED_APPS have tables only in the shared "public" schema: the list of organizations and the platform team's
+# own logins. TENANT_APPS get a full set of tables inside every organization's schema, so one bank's customers,
+# users, connectors and audit log never sit in the same tables as another bank's.
+SHARED_APPS = [
+    'django_tenants',  # must be first
+    'tenants',
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
+    'django.contrib.admin',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+]
+
+TENANT_APPS = [
+    'django.contrib.contenttypes',
+    'django.contrib.auth',
+    'django.contrib.sessions',
+    'django.contrib.admin',
     'sources',
     'ingestion',
     'mdm',
@@ -59,7 +72,19 @@ INSTALLED_APPS = [
     'compliance',
 ]
 
+INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
+TENANT_MODEL = 'tenants.Tenant'
+TENANT_DOMAIN_MODEL = 'tenants.Domain'
+# Organizations are reached by path: /t/axis/... is Axis Bank, /t/hdfc/... is HDFC Bank.
+TENANT_SUBFOLDER_PREFIX = 't'
+# Addresses without /t/<org>/ (the organization lookup, the platform console) use this URL list.
+PUBLIC_SCHEMA_URLCONF = 'config.urls_public'
+DATABASE_ROUTERS = ('django_tenants.routers.TenantSyncRouter',)
+
 MIDDLEWARE = [
+    # Must run first: picks the organization from the /t/<org>/ path and switches to its schema.
+    'django_tenants.middleware.subfolder.TenantSubfolderMiddleware',
     'django.middleware.security.SecurityMiddleware',
     # Serves the admin's CSS and JS when there is no separate web server (hosted demo).
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -99,7 +124,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     # Lumina's own database.
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_tenants.postgresql_backend',
         'NAME': os.getenv('POSTGRES_DB', 'lumina'),
         'USER': os.getenv('POSTGRES_USER', 'lumina'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
@@ -114,7 +139,7 @@ def _database_from_url(url):
     """Turn postgresql://user:password@host:port/name?sslmode=require into Django settings."""
     parts = urlparse(url)
     return {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_tenants.postgresql_backend',
         'NAME': parts.path.lstrip('/'),
         'USER': unquote(parts.username or ''),
         'PASSWORD': unquote(parts.password or ''),
@@ -140,9 +165,9 @@ if not FLEXCUBE_DB_URL and DATABASE_URL:
 # Required when DJANGO_DEBUG is false; in development a key is derived from DJANGO_SECRET_KEY if missing.
 FIELD_ENCRYPTION_KEY = os.getenv('FIELD_ENCRYPTION_KEY', '')
 
-# Fake Salesforce API response and branch CSV uploads, kept in the repo under fake_sources/.
-SALESFORCE_MOCK_FILE = os.getenv('SALESFORCE_MOCK_FILE') or str(BASE_DIR.parent / 'fake_sources' / 'salesforce' / 'contacts.json')
-BRANCH_CSV_DIR = os.getenv('BRANCH_CSV_DIR') or str(BASE_DIR.parent / 'fake_sources' / 'branch_csv')
+# Synthetic demo data, one folder per organization: fake_sources/<schema>/ holds that bank's core banking
+# rows (flexcube.sql), Salesforce export, branch CSV uploads and compliance feed.
+DEMO_DATA_DIR = os.getenv('DEMO_DATA_DIR') or str(BASE_DIR.parent / 'fake_sources')
 
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
 # The React dev server proxies /api to Django, so the browser sends its own origin with each request.

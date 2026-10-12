@@ -112,6 +112,7 @@ The backend is a **modular monolith**: one Django project split into apps with c
 | `mdm` | Matching, golden records, trust scores, match suggestions, stored corrections |
 | `stewardship` | The corrections workflow: propose with evidence, approve or reject (maker-checker) |
 | `compliance` | KYC, AML risk, PEP, sanctions and consent, linked to customers by PAN fingerprint |
+| `tenants` | Organizations (banks): one PostgreSQL schema each, found by the `/t/<code>/` path. Shared schema only. |
 | `accounts` | Roles, permissions, masking |
 | `audit` | The audit log |
 | `api` | HTTP endpoints only; it calls the other apps' functions |
@@ -119,6 +120,7 @@ The backend is a **modular monolith**: one Django project split into apps with c
 Rules:
 - Each app writes only its own tables.
 - Business logic lives in service files (`sync.py`, `services.py`, `matching.py`), not in views or management commands, so it can be tested and reused.
+- **Organizations never share data.** Customer, user, connector and audit tables live in each organization's own schema (`TENANT_APPS` in settings). Only the list of organizations and platform logins live in the shared schema (`SHARED_APPS`). A new app that stores bank data goes in `TENANT_APPS`. Any code that runs outside a web request (commands, scripts) must run inside one organization: `tenant_command ... --schema=<code>` or `schema_context(code)`. `tenants/tests/test_isolation.py` must keep passing.
 - Dependencies point one way: `sources` ← `ingestion` ← `mdm` ← `stewardship` ← `api`. An app never imports from an app that depends on it.
 - Who may do what is defined in one place, `backend/accounts/roles.py`. Change permissions there, and add a test.
 

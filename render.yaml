@@ -10,8 +10,8 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     # Free plan has no pre-deploy step, so migrations and the one-time demo data load run at start.
-    startCommand: python manage.py migrate --noinput && python manage.py bootstrap_demo && gunicorn config.wsgi --bind 0.0.0.0:$PORT
-    healthCheckPath: /admin/login/
+    startCommand: python manage.py migrate_schemas --noinput && python manage.py bootstrap_demo && gunicorn config.wsgi --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health/
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.8"
