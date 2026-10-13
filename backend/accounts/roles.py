@@ -41,6 +41,9 @@ CAPABILITIES = {
     "view_compliance": {STEWARD, COMPLIANCE, ADMIN},
     # Record that a customer gave or withdrew consent for a purpose.
     "record_consent": {AGENT, RELATIONSHIP_MANAGER, COMPLIANCE, ADMIN},
+    # See balances and amounts owed on a customer's accounts, loans and cards. Data stewards fix identity data
+    # and do not need them; they still see which products a customer holds.
+    "view_balances": {RELATIONSHIP_MANAGER, AGENT, COMPLIANCE, ADMIN},
     # Download the customer list as CSV.
     "export": {STEWARD, COMPLIANCE, ADMIN},
     # Read the audit log.

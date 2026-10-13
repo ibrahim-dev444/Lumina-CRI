@@ -35,6 +35,17 @@ class MappedConnector(BaseConnector):
     def fetch(self):
         return adapter_for(self.source).fetch(self.mapping["object"], self.columns(), settings.CONNECTOR_MAX_ROWS)
 
+    def fetch_accounts(self):
+        """The rows of the optional accounts mapping (accounts, deposits, loans, cards), or None if not set up."""
+        accounts = self.mapping.get("accounts")
+        if not accounts:
+            return None
+        wanted = [accounts["id_column"], accounts["customer_column"], *(accounts.get("fields") or {}).values()]
+        if accounts.get("updated_column"):
+            wanted.append(accounts["updated_column"])
+        columns = list(dict.fromkeys(c for c in wanted if c))
+        return adapter_for(self.source).fetch(accounts["object"], columns, settings.CONNECTOR_MAX_ROWS)
+
     def record_id(self, raw):
         value = raw.get(self.id_column)
         return str(value).strip() if value not in (None, "") else ""

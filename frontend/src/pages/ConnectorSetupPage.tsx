@@ -2,7 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { api } from '../api/client'
-import type { ConnectorMapping, ConnectorType, Field, Source } from '../api/types'
+import type { AccountField, AccountsMapping, ConnectorMapping, ConnectorType, Field, Source } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { ConnectorFields } from '../components/ConnectorFields'
@@ -32,8 +32,31 @@ const GUESS: Record<Field | 'id' | 'updated', { has: string[]; not?: string[] }>
   updated: { has: ['updated', 'modified', 'lastupd', 'changed'] },
 }
 
+// The same kind of guess for the optional accounts table.
+const ACCOUNT_GUESS: Record<AccountField | 'account' | 'customer' | 'updated', { has: string[]; not?: string[] }> = {
+  account: { has: ['acctno', 'accountno', 'accountnumber', 'loanaccount', 'acct', 'account'], not: ['cust', 'type', 'status'] },
+  customer: { has: ['custid', 'customerid', 'custno', 'cust', 'customer'] },
+  product_type: { has: ['producttype', 'productcode', 'loantype', 'accttype', 'accounttype', 'type', 'code'], not: ['cust', 'branch'] },
+  product_name: { has: ['productname', 'productdesc', 'scheme', 'description', 'desc', 'product'], not: ['code', 'type'] },
+  status: { has: ['status', 'state'] },
+  opened_on: { has: ['opendate', 'opened', 'open', 'disburs', 'startdate', 'since'] },
+  balance: { has: ['balance', 'outstanding', 'principal', 'amount', 'amt'], not: ['emi', 'limit'] },
+  updated: { has: ['updated', 'modified', 'lasttxn', 'lastupd', 'changed'] },
+}
+const ACCOUNT_LABELS: Record<AccountField, [string, string]> = {
+  product_type: ['Product type', 'A code or word, e.g. SB, HL, Credit card'],
+  product_name: ['Product name', "The bank's own name, e.g. Prime Savings"],
+  status: ['Status', 'Active, overdue, dormant or closed'],
+  opened_on: ['Opened on', ''],
+  balance: ['Balance or amount owed', 'Rupees'],
+}
+const ACCOUNT_FIELDS = Object.keys(ACCOUNT_LABELS) as AccountField[]
+
 function guess(key: keyof typeof GUESS, columns: string[]): string {
-  const rule = GUESS[key]
+  return pick(GUESS[key], columns)
+}
+
+function pick(rule: { has: string[]; not?: string[] }, columns: string[]): string {
   const norm = (c: string) => c.toLowerCase().replace(/[^a-z0-9]/g, '')
   for (const word of rule.has) {
     const hit = columns.find((c) => norm(c).includes(word) && !(rule.not ?? []).some((n) => norm(c).includes(n)))
@@ -99,7 +122,8 @@ function SetupSteps({ source, type, onChanged }: { source: Source; type: Connect
         <ConnectionStep source={source} type={type} onChanged={onChanged} />
       )}
       <MappingStep source={source} type={type} onChanged={onChanged} />
-      <SyncStep source={source} onChanged={onChanged} />
+      {type.type !== 'file_upload' && <AccountsStep source={source} type={type} onChanged={onChanged} />}
+      <SyncStep source={source} onChanged={onChanged} n={type.type === 'file_upload' ? 3 : 4} />
     </>
   )
 }
@@ -369,7 +393,209 @@ function MappingStep({ source, type, onChanged }: { source: Source; type: Connec
   )
 }
 
-function SyncStep({ source, onChanged, push = false }: { source: Source; onChanged: () => void; push?: boolean }) {
+function AccountsStep({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+  const toast = useToast()
+  const customers = 'object' in source.mapping ? (source.mapping as ConnectorMapping) : null
+  const saved = customers?.accounts ?? null
+  const empty: AccountsMapping = { object: '', id_column: '', customer_column: '', updated_column: '', fields: {} }
+  const [open, setOpen] = useState(Boolean(saved))
+  const [objects, setObjects] = useState<string[] | null>(null)
+  const [columns, setColumns] = useState<string[] | null>(null)
+  const [mapping, setMapping] = useState<AccountsMapping>(saved ?? empty)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const run = async (label: string, work: () => Promise<void>) => {
+    setBusy(label)
+    setError(null)
+    try {
+      await work()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const discover = () =>
+    run('objects', async () => {
+      const found = (await api.discoverObjects(source.code)).objects
+      setObjects(found.filter((o) => o !== customers?.object))
+    })
+
+  const loadColumns = (target = mapping.object) =>
+    run('columns', async () => {
+      const cols = (await api.discoverColumns(source.code, target)).columns
+      setColumns(cols)
+      setMapping((m) => {
+        const same = m.object === target
+        const fields: Partial<Record<AccountField, string>> = same ? { ...m.fields } : {}
+        for (const f of ACCOUNT_FIELDS) if (!fields[f]) fields[f] = pick(ACCOUNT_GUESS[f], cols)
+        return {
+          object: target,
+          id_column: (same && m.id_column) || pick(ACCOUNT_GUESS.account, cols),
+          customer_column: (same && m.customer_column) || pick(ACCOUNT_GUESS.customer, cols),
+          updated_column: (same && m.updated_column) || pick(ACCOUNT_GUESS.updated, cols),
+          fields,
+        }
+      })
+    })
+
+  const save = () =>
+    run('save', async () => {
+      await api.saveAccountsMapping(source.code, mapping)
+      toast('success', 'Accounts mapping saved. Sync to read the products.')
+      onChanged()
+    })
+
+  const remove = () =>
+    run('remove', async () => {
+      await api.removeAccountsMapping(source.code)
+      setMapping(empty)
+      setColumns(null)
+      setOpen(false)
+      toast('success', 'Lumina no longer reads accounts from this connector. Its products were removed.')
+      onChanged()
+    })
+
+  const columnSelect = (value: string, onChange: (v: string) => void, label: string, emptyText: string) => (
+    <select className="select select-sm" aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">{emptyText}</option>
+      {columns?.map((c) => (
+        <option key={c} value={c}>
+          {c}
+        </option>
+      ))}
+    </select>
+  )
+
+  const ready = Boolean(
+    mapping.id_column && mapping.customer_column && (mapping.fields.product_type || mapping.fields.product_name),
+  )
+
+  return (
+    <Card
+      title={<StepTitle n={3} text="Accounts and products (optional)" />}
+      description="If this system also keeps accounts, deposits, loans or cards, choose that table. Each row needs the customer's ID from step 2."
+      actions={
+        saved && (
+          <button type="button" className="btn btn-sm" disabled={busy !== null} onClick={remove}>
+            {busy === 'remove' ? 'Removing...' : 'Stop reading accounts'}
+          </button>
+        )
+      }
+      footer={
+        columns && (
+          <>
+            <span className="text-sm muted">Account numbers are kept as their last four only.</span>
+            <button type="button" className="btn btn-primary" disabled={busy !== null || !ready} onClick={save}>
+              <Icon name="check" size={16} /> {busy === 'save' ? 'Saving...' : 'Save accounts mapping'}
+            </button>
+          </>
+        )
+      }
+    >
+      {!customers ? (
+        <p className="muted">Map the customers first.</p>
+      ) : !open ? (
+        <button type="button" className="btn" onClick={() => setOpen(true)}>
+          <Icon name="file" size={16} /> Add an accounts table
+        </button>
+      ) : (
+        <div className="stack" style={{ gap: 16 }}>
+          {error && <ErrorAlert message={error} />}
+          {saved && !columns && (
+            <p className="text-sm">
+              Reading <span className="mono">{saved.object}</span>. Show its columns to change the mapping.
+            </p>
+          )}
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn" disabled={busy !== null} onClick={discover}>
+              <Icon name="search" size={16} /> {busy === 'objects' ? 'Looking...' : 'Discover'}
+            </button>
+            {(objects || mapping.object) && (
+              <select
+                className="select"
+                aria-label={`Accounts ${type.object_label.toLowerCase()}`}
+                value={mapping.object}
+                onChange={(e) => {
+                  setMapping({ ...empty, object: e.target.value })
+                  setColumns(null)
+                }}
+              >
+                <option value="">Choose {type.object_label.toLowerCase()}</option>
+                {(objects ?? [mapping.object]).map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            )}
+            {mapping.object && (
+              <button type="button" className="btn" disabled={busy !== null} onClick={() => loadColumns()}>
+                {busy === 'columns' ? 'Reading columns...' : columns ? 'Reload columns' : 'Show columns'}
+              </button>
+            )}
+          </div>
+
+          {busy === 'columns' && <Loader kind="pair" label="Reading the columns" size={44} />}
+
+          {columns && (
+            <div className="mapping-grid">
+              <div className="mapping-row is-key">
+                <span>
+                  <strong>Account number</strong>
+                  <span className="text-xs muted">Required. One per account.</span>
+                </span>
+                {columnSelect(mapping.id_column, (v) => setMapping((m) => ({ ...m, id_column: v })), 'Account number column', 'Choose...')}
+              </div>
+              <div className="mapping-row is-key">
+                <span>
+                  <strong>Customer ID</strong>
+                  <span className="text-xs muted">Required. The same ID as the customer&apos;s record ID.</span>
+                </span>
+                {columnSelect(mapping.customer_column, (v) => setMapping((m) => ({ ...m, customer_column: v })), 'Customer ID column', 'Choose...')}
+              </div>
+              <div className="mapping-row is-key">
+                <span>
+                  <strong>Last updated</strong>
+                  <span className="text-xs muted">Optional.</span>
+                </span>
+                {columnSelect(mapping.updated_column, (v) => setMapping((m) => ({ ...m, updated_column: v })), 'Accounts last updated column', 'Not available')}
+              </div>
+              {ACCOUNT_FIELDS.map((f) => (
+                <div key={f} className="mapping-row">
+                  <span>
+                    {ACCOUNT_LABELS[f][0]}
+                    {ACCOUNT_LABELS[f][1] && <span className="text-xs muted"> {ACCOUNT_LABELS[f][1]}</span>}
+                  </span>
+                  {columnSelect(
+                    mapping.fields[f] ?? '',
+                    (v) => setMapping((m) => ({ ...m, fields: { ...m.fields, [f]: v } })),
+                    `Column for ${ACCOUNT_LABELS[f][0]}`,
+                    'Not in this table',
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function SyncStep({
+  source,
+  onChanged,
+  push = false,
+  n = 3,
+}: {
+  source: Source
+  onChanged: () => void
+  push?: boolean
+  n?: number
+}) {
   const toast = useToast()
   const canSync = useCan('manage_sources')
   const runs = useApi(() => api.connectorRuns(source.code), [source.code])
@@ -390,7 +616,8 @@ function SyncStep({ source, onChanged, push = false }: { source: Source; onChang
     setBusy(true)
     try {
       const r = await api.syncSource(source.code)
-      toast('success', `Read ${r.fetched} rows: ${r.created} new, ${r.updated} updated. Customers rebuilt.`)
+      const products = r.accounts === null ? '' : ` and ${r.accounts} products`
+      toast('success', `Read ${r.fetched} rows: ${r.created} new, ${r.updated} updated${products}. Customers rebuilt.`)
       onChanged()
     } catch (e) {
       toast('error', (e as Error).message)
@@ -402,7 +629,7 @@ function SyncStep({ source, onChanged, push = false }: { source: Source; onChang
 
   return (
     <Card
-      title={<StepTitle n={push ? 2 : 3} text={push ? 'Received data' : 'Sync'} />}
+      title={<StepTitle n={push ? 2 : n} text={push ? 'Received data' : 'Sync'} />}
       description={
         push
           ? 'Every batch your systems sent, newest first.'

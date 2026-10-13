@@ -19,6 +19,7 @@ class SyncResult:
     fetched: int = 0
     created: int = 0
     updated: int = 0
+    accounts: int | None = None  # products read, when the source has an accounts mapping
 
 
 def _aware(dt):
@@ -85,7 +86,14 @@ def sync_source(source_code, started_by=""):
 def _sync(source):
     connector = connector_for(source)
     rows = connector.fetch()  # read the external system before opening our transaction
-    return _store(source, connector, rows)
+    accounts = connector.fetch_accounts() if hasattr(connector, "fetch_accounts") else None
+    with transaction.atomic():  # customers and their products are saved together or not at all
+        result = _store(source, connector, rows)
+        if accounts is not None:
+            from products.services import store_accounts
+
+            result.accounts = store_accounts(source, accounts, source.mapping["accounts"])
+    return result
 
 
 def ingest_records(source, rows, started_by):

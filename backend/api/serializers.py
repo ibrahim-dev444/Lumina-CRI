@@ -8,6 +8,7 @@ from security.fields import compare_key, display
 from accounts.roles import can
 from compliance.models import PURPOSES, KycRecord
 from compliance.services import current_consents, summary as kyc_summary
+from products.services import holdings_for, summary as product_summary
 from audit.models import AuditEvent
 
 from ingestion.models import SourceRecord
@@ -221,10 +222,43 @@ class CustomerDetailSerializer(CustomerListSerializer):
     masked = serializers.SerializerMethodField()
     corrections = serializers.SerializerMethodField()
     compliance = serializers.SerializerMethodField()
+    products = serializers.SerializerMethodField()
 
     class Meta(CustomerListSerializer.Meta):
         fields = CustomerListSerializer.Meta.fields + ["golden", "records", "weights", "masked", "corrections",
-                                                       "compliance"]
+                                                       "compliance", "products"]
+
+    def get_products(self, obj):
+        """Accounts, deposits, loans and cards from every switched-on source. Amounts only for roles that may
+        see them; account numbers always as their last four characters."""
+        request = self.context.get("request")
+        amounts = bool(request and can(request.user, "view_balances"))
+        holdings = list(holdings_for(obj))
+        totals = product_summary(holdings)
+        return {
+            "amounts_hidden": not amounts,
+            "count": totals["count"],
+            "overdue": totals["overdue"],
+            "dormant": totals["dormant"],
+            "deposits": str(totals["deposits"]) if amounts else None,
+            "owed": str(totals["owed"]) if amounts else None,
+            "items": [
+                {
+                    "id": h.id,
+                    "type": h.product_type,
+                    "type_label": h.get_product_type_display(),
+                    "name": h.product_name,
+                    "account": f"XX{h.account_last4}" if h.account_last4 else "",
+                    "status": h.status,
+                    "opened_on": h.opened_on.isoformat() if h.opened_on else None,
+                    "balance": str(h.balance) if amounts and h.balance is not None else None,
+                    "source_code": h.source.code,
+                    "source_name": h.source.name,
+                    "updated_at": (h.source_updated_at or h.synced_at).isoformat(),
+                }
+                for h in holdings
+            ],
+        }
 
     def get_compliance(self, obj):
         """KYC status and consent for everyone; AML risk, PEP and sanctions only for compliance roles."""

@@ -22,6 +22,7 @@ from audit.services import record
 from ingestion.connectors.adapters import ConnectorError, parse_csv_upload
 from ingestion.connectors.catalog import BY_TYPE, adapter_for, public_catalog, split_settings, write_secrets
 from mdm.models import FIELDS
+from products.services import ACCOUNT_FIELDS
 from security import crypto
 from sources.models import Source, UploadedFile
 
@@ -179,9 +180,61 @@ def save_mapping(request, code):
     missing = [c for c in used if c not in columns]
     if missing:
         return _bad(f"{', '.join(missing)} not found in {obj}.")
+    accounts = (source.mapping or {}).get("accounts")  # the accounts mapping is saved on its own
     source.mapping = {"object": obj, "id_column": id_column, "updated_column": updated_column, "fields": fields}
+    if accounts:
+        source.mapping["accounts"] = accounts
     source.save(update_fields=["mapping"])
     record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", mapping=source.mapping)
+    return Response(_source_json(source))
+
+
+@api_view(["PUT", "DELETE"])
+@permission_classes(ADMIN_ONLY)
+def save_accounts_mapping(request, code):
+    """PUT /api/connectors/<code>/accounts-mapping/
+    {object, id_column, customer_column, updated_column?, fields: {account_field: source_column}}
+    Optional second table with the customers' accounts, deposits, loans and cards. DELETE stops reading it."""
+    source, error = _configurable(code)
+    if error:
+        return error
+    if not source.mapping.get("object"):
+        return _bad("Map the customers first.")
+    mapping = dict(source.mapping)
+    if request.method == "DELETE":
+        mapping.pop("accounts", None)
+        source.mapping = mapping
+        source.save(update_fields=["mapping"])
+        source.holdings.all().delete()
+        record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", accounts_mapping=None)
+        return Response(_source_json(source))
+
+    d = request.data
+    obj = str(d.get("object") or "").strip()
+    id_column = str(d.get("id_column") or "").strip()
+    customer_column = str(d.get("customer_column") or "").strip()
+    updated_column = str(d.get("updated_column") or "").strip()
+    fields = {k: v for k, v in (d.get("fields") or {}).items() if v}
+    unknown = [f for f in fields if f not in ACCOUNT_FIELDS]
+    if unknown:
+        return _bad(f"Unknown account field(s): {', '.join(unknown)}.")
+    if not obj or not id_column or not customer_column:
+        return _bad("Choose the accounts table, its account number column and its customer ID column.")
+    if not (fields.get("product_type") or fields.get("product_name")):
+        return _bad("Map the product type or the product name, so Lumina knows what each account is.")
+    try:
+        columns = adapter_for(source).list_columns(obj)
+    except ConnectorError as exc:
+        return _bad(exc)
+    used = [id_column, customer_column, *fields.values()] + ([updated_column] if updated_column else [])
+    missing = [c for c in used if c not in columns]
+    if missing:
+        return _bad(f"{', '.join(missing)} not found in {obj}.")
+    mapping["accounts"] = {"object": obj, "id_column": id_column, "customer_column": customer_column,
+                           "updated_column": updated_column, "fields": fields}
+    source.mapping = mapping
+    source.save(update_fields=["mapping"])
+    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", accounts_mapping=mapping["accounts"])
     return Response(_source_json(source))
 
 

@@ -1,6 +1,7 @@
 // One place that talks to the backend. Every page calls the functions at the bottom, never fetch() directly.
 
 import type {
+  AccountsMapping,
   AuditEvent,
   ComplianceQueue,
   CustomerDetail,
@@ -163,6 +164,9 @@ export const api = {
   discoverColumns: (code: string, object: string) =>
     post<{ object: string; columns: string[] }>(`/connectors/${code}/discover/`, { object }),
   saveMapping: (code: string, mapping: ConnectorMapping) => put<Source>(`/connectors/${code}/mapping/`, mapping),
+  saveAccountsMapping: (code: string, mapping: AccountsMapping) =>
+    put<Source>(`/connectors/${code}/accounts-mapping/`, mapping),
+  removeAccountsMapping: (code: string) => request<Source>('DELETE', `/connectors/${code}/accounts-mapping/`),
   connectorRuns: (code: string) => get<SyncRun[]>(`/connectors/${code}/runs/`),
   createApiKey: (code: string) => post<{ api_key: string; key_prefix: string }>(`/connectors/${code}/api-key/`),
   uploadConnectorFile: async (code: string, file: File): Promise<{ name: string; rows: number }> => {
