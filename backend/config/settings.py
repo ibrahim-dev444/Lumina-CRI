@@ -84,7 +84,9 @@ PUBLIC_SCHEMA_URLCONF = 'config.urls_public'
 DATABASE_ROUTERS = ('django_tenants.routers.TenantSyncRouter',)
 
 MIDDLEWARE = [
-    # Must run first: picks the organization from the /t/<org>/ path and switches to its schema.
+    # Answers /api/health/ without touching the database, so the free database can sleep (config/health.py).
+    'config.health.HealthCheckMiddleware',
+    # Must run first after that: picks the organization from the /t/<org>/ path and switches to its schema.
     'django_tenants.middleware.subfolder.TenantSubfolderMiddleware',
     # A suspended organization is closed to everyone, even people already signed in.
     'tenants.middleware.SuspendedOrganizationMiddleware',
