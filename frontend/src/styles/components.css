@@ -3605,3 +3605,13 @@ a.add-tile:hover {
     display: none;
   }
 }
+
+/* Connector cards: buttons wrap inside the card instead of spilling out, and sit at the bottom of every card */
+.connector-actions {
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.connector-actions > .btn {
+  flex: 1 1 auto;
+  justify-content: center;
+}

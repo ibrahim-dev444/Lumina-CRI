@@ -10,7 +10,7 @@ const STEPS: { kind: LoaderKind; title: string; text: string }[] = [
   {
     kind: 'orbit',
     title: 'Connect',
-    text: 'Read customers from core banking, CRM, branch files and APIs, read-only and with your own credentials.',
+    text: 'Read customers and their accounts from core banking, loan systems, mobile apps, CRM, files and APIs: read-only, with your own credentials.',
   },
   {
     kind: 'stack',
@@ -60,6 +60,21 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
     title: 'Audit log',
     text: 'Every sign-in, view, merge, change and revealed number is recorded in a log nobody can edit.',
   },
+  {
+    icon: 'alert',
+    title: 'Before you speak',
+    text: 'Ten seconds before a call: open complaints, overdue products, re-KYC and consent, each with what to do.',
+  },
+  {
+    icon: 'file',
+    title: 'Every product, one view',
+    text: 'Accounts, deposits, loans and cards from every connected system, with totals and overdue warnings.',
+  },
+  {
+    icon: 'edit',
+    title: 'Conversation history',
+    text: 'Calls, branch visits and messages logged in one place. Complaints stay open until someone closes them.',
+  },
 ]
 
 const SECURITY: { icon: IconName; title: string; text: string }[] = [
@@ -71,7 +86,7 @@ const SECURITY: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'lock',
     title: 'Identity numbers encrypted',
-    text: 'PAN and CKYC are encrypted at rest and masked on screen. Only the last 4 digits of Aadhaar are kept.',
+    text: 'PAN and CKYC are encrypted and masked on screen. Aadhaar and account numbers keep only their last 4 digits.',
   },
   {
     icon: 'customers',
@@ -86,8 +101,8 @@ const SECURITY: { icon: IconName; title: string; text: string }[] = [
 ]
 
 const ROLES = [
-  { title: 'Relationship managers', text: 'See the full, trusted profile of their customers and suggest corrections.' },
-  { title: 'Contact centre agents', text: 'Confirm callers with masked details and record consent on the call.' },
+  { title: 'Relationship managers', text: 'See the trusted profile and every product a customer holds, and suggest corrections.' },
+  { title: 'Contact centre agents', text: 'Read the briefing before speaking, log the call, and record consent with masked details.' },
   { title: 'Data stewards', text: 'Merge duplicates, approve changes and keep every source system in sync.' },
   { title: 'Compliance officers', text: 'Track re-KYC, AML risk, PEP and sanctions, and read the full audit trail.' },
 ]
