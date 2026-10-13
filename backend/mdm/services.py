@@ -7,6 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from ingestion.models import SourceRecord
+from interactions.models import Interaction
 from security.fields import compare_key
 
 from .golden import pick_winner, trust_score
@@ -60,7 +61,7 @@ def match_records():
             )
 
     # Customers left with no records (because they were merged into another) are removed.
-    # Their corrections move to the customer their records went to, so no approved fix is lost.
+    # Their corrections and conversations move to the customer their records went to, so nothing is lost.
     empty = list(Customer.objects.filter(links__isnull=True).values_list("id", flat=True))
     if empty:
         now_linked = dict(CustomerLink.objects.values_list("source_record_id", "customer_id"))
@@ -68,7 +69,8 @@ def match_records():
             moved_to = next((now_linked[r] for r, c in current.items() if c == old_id and r in now_linked), None)
             if moved_to:
                 FieldCorrection.objects.filter(customer_id=old_id).update(customer_id=moved_to)
-        Customer.objects.filter(id__in=empty, corrections__isnull=True).delete()
+                Interaction.objects.filter(customer_id=old_id).update(customer_id=moved_to)
+        Customer.objects.filter(id__in=empty, corrections__isnull=True, interactions__isnull=True).delete()
 
     # A pending suggestion is stale once both records already belong to the same customer
     # (for example, a steward merged them through a different pair). Nothing is left to decide.

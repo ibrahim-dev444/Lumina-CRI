@@ -185,6 +185,19 @@ resets the rows and keeps the login, so the connector keeps working (`--new-pass
 to exercise matching: shared people across systems, a typo duplicate and a person without a PAN (both go to match
 review), a family member sharing a phone (never merged) and a newer address in one system.
 
+## Before you speak and conversations
+
+A customer's profile opens on **Before you speak**: what to know in the ten seconds before a call or a meeting.
+Warnings come first, each with what to do: open complaints, missed follow-ups, overdue or dormant products, re-KYC due,
+missing PAN, a possible duplicate under review, fields the systems disagree on, and withdrawn marketing consent.
+Talking points list what the customer holds, and suggest offers only when they agreed to cross-sell. Data stewards see
+no amounts; AML risk, politically exposed person and sanctions flags appear only for compliance roles, marked internal.
+
+**Conversations** holds every call, branch visit, email, WhatsApp, chat and SMS that staff logged, with an outcome.
+Complaints and anything not resolved stay open (and in the briefing) until someone marks them done with a note. Card,
+account, Aadhaar and PAN numbers typed into a note are masked before saving. Logging and closing go to the audit log
+(without the note itself), and conversations follow the customer through merges.
+
 ## Platform console
 
 The Lumina platform team works at **/platform** (not linked from the landing page). Platform logins live in the shared

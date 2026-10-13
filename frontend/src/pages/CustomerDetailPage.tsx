@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import { api } from '../api/client'
@@ -5,8 +6,10 @@ import type { CustomerDetail } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { AgreementGrid } from '../components/AgreementGrid'
+import { BriefingPanel } from '../components/BriefingPanel'
 import { ComplianceTab, KycBadge } from '../components/ComplianceTab'
 import { RISK_LABEL } from '../compliance'
+import { ConversationsTab } from '../components/ConversationsTab'
 import { CorrectionsCard } from '../components/CorrectionsCard'
 import { GoldenFieldRow } from '../components/GoldenFieldRow'
 import { Loader } from '../components/Loader'
@@ -27,24 +30,33 @@ import {
 } from '../components/ui'
 import { FIELD_LABELS, FIELD_SHORT, FIELDS, MONO_FIELDS, formatDateTime, formatFieldValue, formatRelative, formatScore } from '../format'
 
-type Tab = 'identity' | 'products' | 'sources' | 'compliance' | 'activity'
+type Tab = 'brief' | 'identity' | 'products' | 'conversations' | 'sources' | 'compliance' | 'activity'
 
 export function CustomerDetailPage() {
   const id = Number(useParams().id)
   const [params, setParams] = useSearchParams()
   const canSeeAudit = useCan('view_audit')
   const { data: c, error, reload } = useApi(() => api.customer(id), [id])
+  // Bumped after a conversation is logged or closed, so the briefing and the list read again.
+  const [version, setVersion] = useState(0)
+  const [logOpen, setLogOpen] = useState(false)
 
   const tabs: { value: Tab; label: string }[] = [
+    { value: 'brief', label: 'Before you speak' },
     { value: 'identity', label: 'Identity' },
     { value: 'products', label: c ? `Products (${c.products.count})` : 'Products' },
+    { value: 'conversations', label: 'Conversations' },
     { value: 'sources', label: 'Sources' },
     { value: 'compliance', label: 'Compliance' },
     ...(canSeeAudit ? [{ value: 'activity' as Tab, label: 'Activity' }] : []),
   ]
   const wanted = params.get('tab') as Tab | null
-  const tab: Tab = tabs.some((t) => t.value === wanted) ? (wanted as Tab) : 'identity'
-  const setTab = (t: Tab) => setParams(t === 'identity' ? {} : { tab: t }, { replace: true })
+  const tab: Tab = tabs.some((t) => t.value === wanted) ? (wanted as Tab) : 'brief'
+  const setTab = (t: Tab) => setParams(t === 'brief' ? {} : { tab: t }, { replace: true })
+  const startLog = () => {
+    setLogOpen(true)
+    setTab('conversations')
+  }
 
   const crumbs = [{ label: 'Customers', to: '/customers' }, { label: c?.code ?? '...' }]
 
@@ -141,8 +153,18 @@ export function CustomerDetailPage() {
         </div>
       )}
 
+      {tab === 'brief' && <BriefingPanel customerId={c.id} version={version} onLog={startLog} />}
       {tab === 'identity' && <IdentityTab c={c} onChanged={reload} />}
       {tab === 'products' && <ProductsTab c={c} />}
+      {tab === 'conversations' && (
+        <ConversationsTab
+          customerId={c.id}
+          version={version}
+          formOpen={logOpen}
+          setFormOpen={setLogOpen}
+          onChanged={() => setVersion((v) => v + 1)}
+        />
+      )}
       {tab === 'sources' && <SourcesTab c={c} />}
       {tab === 'compliance' && <ComplianceTab c={c} onChanged={reload} />}
       {tab === 'activity' && <ActivityTab c={c} />}

@@ -30,6 +30,8 @@ class AuditEvent(models.Model):
     SETTINGS_CHANGED = "settings_changed"
     CONNECTOR_ADDED = "connector_added"
     CONNECTOR_CHANGED = "connector_changed"
+    INTERACTION_LOGGED = "interaction"
+    INTERACTION_CLOSED = "interaction_closed"
 
     ACTION_CHOICES = [
         (LOGIN, "Signed in"),
@@ -54,6 +56,8 @@ class AuditEvent(models.Model):
         (SETTINGS_CHANGED, "Changed settings"),
         (CONNECTOR_ADDED, "Added a connector"),
         (CONNECTOR_CHANGED, "Changed a connector"),
+        (INTERACTION_LOGGED, "Logged a conversation"),
+        (INTERACTION_CLOSED, "Closed a complaint or follow-up"),
     ]
 
     at = models.DateTimeField(auto_now_add=True, db_index=True)

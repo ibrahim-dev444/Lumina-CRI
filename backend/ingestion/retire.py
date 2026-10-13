@@ -76,7 +76,10 @@ def remove_demo_sources():
     # Corrections to customers that no longer exist described data that is gone too.
     from mdm.models import Customer
 
+    from interactions.models import Interaction
+
     FieldCorrection.objects.filter(customer_id__in=customers).delete()
+    Interaction.objects.filter(customer_id__in=customers).delete()
     Customer.objects.filter(id__in=customers).delete()
 
     build_customers()

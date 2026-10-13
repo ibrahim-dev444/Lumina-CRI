@@ -3426,3 +3426,124 @@ a.add-tile:hover {
     font-size: var(--text-xl);
   }
 }
+
+/* Customer profile, Before you speak */
+.briefing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .briefing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.briefing-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.briefing-headline.is-bad {
+  color: var(--bad-text);
+}
+.briefing-headline.is-warn {
+  color: var(--warn-text);
+}
+.briefing-headline.is-calm {
+  color: var(--good-text, var(--text-1));
+}
+.briefing-alerts,
+.briefing-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.briefing-alert {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.briefing-alert.is-bad {
+  border-color: var(--bad-dot, var(--border));
+  background: var(--bad-bg, var(--surface));
+}
+.briefing-alert.is-warn {
+  border-color: var(--warn-dot);
+  background: var(--warn-bg);
+}
+.briefing-alert-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text-2);
+}
+.briefing-alert.is-bad .briefing-alert-icon {
+  color: var(--bad-text);
+}
+.briefing-alert.is-warn .briefing-alert-icon {
+  color: var(--warn-text);
+}
+.briefing-points li {
+  position: relative;
+  padding-left: 18px;
+}
+.briefing-points li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.6em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.briefing-last {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Customer profile, Conversations */
+.convo-list {
+  margin: 0;
+  padding: 8px 20px 16px;
+  list-style: none;
+}
+.convo-item {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.convo-item:last-child {
+  border-bottom: 0;
+}
+.convo-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+  border: 2px solid var(--text-3);
+  background: var(--surface);
+}
+.convo-item.is-open .convo-dot {
+  border-color: var(--bad-text);
+  background: var(--bad-text);
+}
+.convo-item p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

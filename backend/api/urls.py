@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from . import admin_views, connector_views, ingest_views, views
+from . import admin_views, connector_views, ingest_views, interaction_views, views
 
 router = DefaultRouter()
 router.register("sources", views.SourceViewSet, basename="source")
@@ -12,6 +12,10 @@ router.register("corrections", views.FieldCorrectionViewSet, basename="correctio
 router.register("users", admin_views.UserViewSet, basename="user")
 
 urlpatterns = [
+    path("customers/<int:pk>/interactions/", interaction_views.customer_interactions),
+    path("customers/<int:pk>/briefing/", interaction_views.customer_briefing),
+    path("interactions/open/", interaction_views.open_items),
+    path("interactions/<int:pk>/close/", interaction_views.close),
     path("auth/csrf/", views.csrf),
     path("auth/login/", views.login_view),
     path("auth/logout/", views.logout_view),

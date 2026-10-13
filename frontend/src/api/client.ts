@@ -3,6 +3,7 @@
 import type {
   AccountsMapping,
   AuditEvent,
+  Briefing,
   ComplianceQueue,
   CustomerDetail,
   ConnectorMapping,
@@ -10,6 +11,8 @@ import type {
   CustomerSummary,
   Field,
   FieldCorrection,
+  Interaction,
+  NewInteraction,
   MatchSuggestion,
   OrgUser,
   Overview,
@@ -187,6 +190,11 @@ export const api = {
   customers: (params: { search?: string; ordering?: string; band?: string; page?: string }) =>
     get<Page<CustomerSummary>>(`/customers/${query(params)}`),
   customer: (id: number) => get<CustomerDetail>(`/customers/${id}/`),
+  briefing: (id: number) => get<Briefing>(`/customers/${id}/briefing/`),
+  interactions: (id: number) => get<Interaction[]>(`/customers/${id}/interactions/`),
+  logInteraction: (id: number, body: NewInteraction) => post<Interaction>(`/customers/${id}/interactions/`, body),
+  closeInteraction: (id: number, note: string) => post<Interaction>(`/interactions/${id}/close/`, { note }),
+  openInteractions: () => get<Interaction[]>('/interactions/open/'),
 
   // Full PAN or CKYC number, with an audited reason (compliance officers and admins)
   reveal: (customerId: number, field: 'pan' | 'ckyc', reason: string) =>
