@@ -6,6 +6,7 @@ The platform team never sees inside an organization. organization_health() retur
 
 import re
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Max
@@ -125,6 +126,10 @@ def create_organization(code, name, brand_color, admin_username, admin_first_nam
             is_superuser=True,
         )
         AccountProfile.objects.create(user=admin, must_change_password=True, created_by="platform")
+        if not settings.DEMO_SOURCES:
+            from ingestion.retire import remove_demo_sources
+
+            remove_demo_sources()  # the migrations add the built-in demo sources to every new organization
     return tenant, admin_username, password
 
 

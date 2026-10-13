@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -8,6 +9,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django_tenants.utils import schema_context
 
 from accounts.management.commands.seed_demo_users import DEMO_USERS
+from compliance.services import feed_file, import_feed
+from ingestion.retire import remove_demo_sources
 from tenants.models import Tenant
 
 
@@ -16,7 +19,8 @@ class Command(BaseCommand):
         "Hosted demo start-up, safe on every start. Creates the demo organizations and loads their data once "
         "(setup_tenants), then sets logins from environment variables in every organization: DEMO_PASSWORD for "
         "the four role logins, DJANGO_SUPERUSER_USERNAME / DJANGO_SUPERUSER_PASSWORD for the organization admin. "
-        "The same admin name and password are also the platform login in the shared schema."
+        "The same admin name and password are also the platform login in the shared schema. With DEMO_SOURCES=off "
+        "it removes the built-in demo sources from every organization."
     )
 
     def handle(self, *args, **options):
@@ -32,6 +36,15 @@ class Command(BaseCommand):
 
         for tenant in Tenant.objects.exclude(schema_name="public"):
             with schema_context(tenant.schema_name):
+                if not settings.DEMO_SOURCES:
+                    removed = remove_demo_sources()
+                    if removed.sources:
+                        self.stdout.write(
+                            f"{tenant.name}: removed {removed.sources} demo sources, {removed.records} records, "
+                            f"{removed.customers_removed} customers."
+                        )
+                if feed_file().exists():
+                    import_feed()  # picks up changes to the compliance feed; unchanged rows stay as they are
                 if demo_password:
                     for username, first, last, group_name in DEMO_USERS:
                         user, _ = User.objects.get_or_create(

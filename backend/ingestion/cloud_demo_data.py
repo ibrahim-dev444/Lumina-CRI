@@ -1,9 +1,17 @@
 """Synthetic customers for the cloud demo sources (Phase 6). Nobody here is a real person.
 
-Each bank's systems overlap on purpose: some people already exist in that bank's demo data under the same PAN
-(so they merge), some appear with a typo or a new phone number (so matching and review have work to do), and
-the rest are new. Generated from fixed lists, so every run produces exactly the same rows.
+Each bank's systems overlap on purpose, so matching and review have real work to do:
+- the same four people in every system of that bank, under the same PAN (they merge automatically);
+- one of them moved and changed phone number, but only the mobile app knows (newer value wins);
+- a duplicate account with a typo in the name and no PAN in core banking (goes to match review);
+- one person without a PAN in two systems, spelled differently (goes to match review);
+- a family member sharing a phone number but with a different name (never merged).
+Seeds: 1 = core banking on PostgreSQL, 2 = core banking on MySQL, 3 = mobile app on MongoDB.
+Generated from fixed lists, so every run produces exactly the same rows.
 """
+
+CORE_SEEDS = (1, 2)
+APP_SEED = 3
 
 FIRST = [
     "Aarav", "Diya", "Kabir", "Meera", "Rohan", "Isha", "Vikram", "Ananya", "Arjun", "Kavya", "Siddharth", "Nisha",
@@ -39,6 +47,23 @@ OVERLAP = {
 }
 
 
+# The deliberate edge cases, per bank. Same dob as the person they echo, so matching compares them.
+TRICKY = {
+    "axis": {
+        "typo": "Suresh Kumaar",  # duplicate of OVERLAP[0] in core banking, no PAN
+        "no_pan": [("Neha Kapoor", "Neha Kapur"), "1993-09-14", "neha.k@mail.example"],  # core / app spelling
+        "family": "Lata Iyer",  # shares OVERLAP[2]'s phone, different person
+        "moved_to": "402, Prestige Shantiniketan, Whitefield, Bengaluru 560048",
+    },
+    "hdfc": {
+        "typo": "Amit Varma",
+        "no_pan": [("Farhan Qureshi", "Farhan Qureshy"), "1988-02-27", "farhan.q@mail.example"],
+        "family": "Sana Shaikh",
+        "moved_to": "B-1204, Lodha Splendora, Ghodbunder Road, Thane 400615",
+    },
+}
+
+
 def _pan(first, last, n):
     letters = "ABCDEFGHJKLMNPQRSTUVWXYZ"
     a, b, c = letters[n % 24], letters[(n * 7) % 24], letters[(n * 11) % 24]
@@ -48,10 +73,27 @@ def _pan(first, last, n):
 def customers(bank, count=24, seed=0):
     """`count` synthetic customers for one bank's source. Different `seed` gives a different but overlapping set."""
     rows = []
+    tricky = TRICKY[bank]
     for i, (name, pan, dob, mobile, email, gender) in enumerate(OVERLAP[bank]):
-        if seed % 2 and i == 1:
-            mobile = mobile[:-2] + "99"  # same person, newer phone number in this system
-        rows.append({"name": name, "pan": pan, "dob": dob, "mobile": mobile, "email": email, "gender": gender})
+        area, pin = CITIES[i]
+        address = f"{12 + i * 9}, {area} {pin}"
+        if seed == APP_SEED and i == 1:  # moved house and changed number; only the app has heard about it
+            mobile, address = mobile[:-2] + "99", tricky["moved_to"]
+        rows.append({"name": name, "pan": pan, "dob": dob, "mobile": mobile, "email": email, "gender": gender,
+                     "address": address})
+
+    first = OVERLAP[bank][0]
+    if seed in CORE_SEEDS:  # a second account opened with a typo and no PAN
+        rows.append({"name": tricky["typo"], "pan": None, "dob": first[2], "mobile": "9" + first[3][1:5] + "70707",
+                     "email": None, "gender": first[5]})
+    (core_name, app_name), dob, email = tricky["no_pan"]
+    rows.append({"name": app_name if seed == APP_SEED else core_name, "pan": None, "dob": dob,
+                 "mobile": "9" + dob.replace("-", "")[2:8] + "321" if seed == APP_SEED else "8" + dob.replace("-", "")[2:8] + "456",
+                 "email": email if seed == APP_SEED else None, "gender": "F" if bank == "axis" else "M"})
+    if seed == APP_SEED:  # a relative using the same phone number
+        echo = OVERLAP[bank][2]
+        rows.append({"name": tricky["family"], "pan": None, "dob": "1999-05-18", "mobile": echo[3], "email": None,
+                     "gender": "F"})
     n = 0
     while len(rows) < count:
         k = n + seed * 7 + (0 if bank == "axis" else 100)
