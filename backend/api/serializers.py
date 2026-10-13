@@ -70,13 +70,14 @@ class CustomerListSerializer(serializers.ModelSerializer):
     band = serializers.SerializerMethodField()
     record_count = serializers.SerializerMethodField()
     sources = serializers.SerializerMethodField()
+    source_names = serializers.SerializerMethodField()
     conflict_fields = serializers.SerializerMethodField()
     needs_review = serializers.SerializerMethodField()
     kyc_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
-        fields = ["id", "code", "name", "trust_score", "band", "record_count", "sources", "conflict_fields",
+        fields = ["id", "code", "name", "trust_score", "band", "record_count", "sources", "source_names", "conflict_fields",
                   "kyc_status",
                   "needs_review", "score_updated_at"]
 
@@ -101,10 +102,17 @@ class CustomerListSerializer(serializers.ModelSerializer):
     def get_record_count(self, obj):
         return len(obj.links.all())
 
+    def _sources(self, obj):
+        sources = {link.source_record.source for link in obj.links.all()}
+        return sorted(sources, key=lambda s: (-s.trust, s.code))
+
     def get_sources(self, obj):
         """Codes of the sources this customer was found in, most trusted first."""
-        sources = {link.source_record.source for link in obj.links.all()}
-        return [s.code for s in sorted(sources, key=lambda s: (-s.trust, s.code))]
+        return [s.code for s in self._sources(obj)]
+
+    def get_source_names(self, obj):
+        """The same sources' display names, in the same order (connectors added by the bank have their own names)."""
+        return [s.name for s in self._sources(obj)]
 
     def get_conflict_fields(self, obj):
         return sum(1 for g in self._golden(obj).values() if g.conflicts)

@@ -26,6 +26,7 @@ export interface Page<T> {
 
 export type Capability =
   | 'view_pii'
+  | 'view_balances'
   | 'manage_sources'
   | 'view_matches'
   | 'decide_matches'
@@ -172,6 +173,7 @@ export interface CustomerSummary {
   band: Band
   record_count: number
   sources: string[]
+  source_names: string[] // display names, same order as sources
   conflict_fields: number
   kyc_status: 'verified' | 'due_soon' | 'overdue' | 'no_record'
   needs_review: number

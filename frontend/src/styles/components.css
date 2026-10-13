@@ -3547,3 +3547,61 @@ a.add-tile:hover {
   margin: 0;
   overflow-wrap: anywhere;
 }
+
+/* Overview, Waiting on us */
+.open-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.open-items li + li {
+  border-top: 1px solid var(--border);
+}
+.open-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 20px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.open-item:hover,
+.open-item:focus-visible {
+  background: var(--surface-sunken);
+}
+.open-item-summary {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.open-item-meta {
+  align-items: flex-end;
+}
+@media (max-width: 480px) {
+  .open-item {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 12px 16px;
+  }
+  .open-item-meta {
+    grid-column: 2;
+    flex-direction: row !important;
+    align-items: center;
+  }
+}
+
+/* Customers list: keep short cells on one line; on phones show name and trust only */
+.table td.nowrap {
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .table .col-xs {
+    display: none;
+  }
+}

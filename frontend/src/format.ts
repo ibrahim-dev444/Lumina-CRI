@@ -66,7 +66,11 @@ const SOURCE_HUES: Record<string, number> = { flexcube: 1, salesforce: 4, branch
 
 
 export function sourceHue(code: string): string {
-  return `hue-${SOURCE_HUES[code] ?? 1}`
+  if (SOURCE_HUES[code]) return `hue-${SOURCE_HUES[code]}`
+  // Connectors a bank adds get a stable hue from their code, so each keeps its colour everywhere.
+  let sum = 0
+  for (const ch of code) sum = (sum * 31 + ch.charCodeAt(0)) % 997
+  return `hue-${(sum % 5) + 1}`
 }
 
 // A stable pastel for a person's avatar, picked from their name so it is the same on every screen.

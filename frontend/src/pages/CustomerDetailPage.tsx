@@ -97,7 +97,7 @@ export function CustomerDetailPage() {
                   Found in {c.record_count} source{c.record_count === 1 ? '' : 's'}
                 </span>
               </div>
-              <SourceChips codes={c.sources} />
+              <SourceChips codes={c.sources} names={c.source_names} />
               <div className="row" style={{ gap: 6 }}>
                 <KycBadge status={c.compliance.kyc_status} />
                 {c.compliance.aml && (

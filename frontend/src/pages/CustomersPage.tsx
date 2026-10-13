@@ -139,7 +139,7 @@ export function CustomersPage() {
                 <th className="col-sm">Found in</th>
                 <th className="right col-md">Conflicts</th>
                 <th className="col-md">Review</th>
-                <th>KYC</th>
+                <th className="col-xs">KYC</th>
                 <th className="right col-md">Updated</th>
               </tr>
             </thead>
@@ -164,10 +164,10 @@ export function CustomersPage() {
                       <TrustCell score={c.trust_score} band={c.band} />
                     </td>
                     <td className="col-sm">
-                      <SourceChips codes={c.sources} />
+                      <SourceChips codes={c.sources} names={c.source_names} />
                     </td>
                     <td className="right mono col-md">{c.conflict_fields ? c.conflict_fields : <span className="muted">-</span>}</td>
-                    <td className="col-md">
+                    <td className="col-md nowrap">
                       {c.needs_review ? (
                         <span className="text-sm">
                           {c.needs_review} field{c.needs_review > 1 ? 's' : ''}
@@ -176,10 +176,10 @@ export function CustomersPage() {
                         <span className="muted">-</span>
                       )}
                     </td>
-                    <td>
+                    <td className="col-xs">
                       <KycBadge status={c.kyc_status} />
                     </td>
-                    <td className="right text-sm muted col-md">{formatRelative(c.score_updated_at)}</td>
+                    <td className="right text-sm muted col-md nowrap">{formatRelative(c.score_updated_at)}</td>
                   </tr>
                 ))}
               </tbody>
