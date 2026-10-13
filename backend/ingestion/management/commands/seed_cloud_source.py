@@ -6,7 +6,8 @@
 
 The command asks for the database's admin connection string with hidden typing, so it never appears in the
 screen, the shell history or a chat. It prints the read-only login once: type those details into Lumina's
-connector screen. Run it again any time to reset the rows (and the read-only password).
+connector screen. Run it again any time to reset the rows: the read-only login keeps its password, so the
+connector in Lumina keeps working. Add --new-password to change it (then type the new one into Lumina).
 """
 
 import getpass
@@ -27,8 +28,9 @@ class Command(BaseCommand):
         parser.add_argument("kind", choices=["postgres", "mysql", "mongodb"])
         parser.add_argument("--bank", choices=["axis", "hdfc"], required=True)
         parser.add_argument("--count", type=int, default=24)
+        parser.add_argument("--new-password", action="store_true", help="Give the read-only login a new password.")
 
-    def handle(self, *args, kind, bank, count, **options):
+    def handle(self, *args, kind, bank, count, new_password=False, **options):
         if kind == "mysql":
             url = self._ask_mysql()
         else:
@@ -36,6 +38,7 @@ class Command(BaseCommand):
         if not url:
             raise CommandError("No connection string given.")
         rows = customers(bank, count=count, seed=SEEDS[kind])
+        self.rotate = new_password
         reader_password = secrets.token_urlsafe(18)
         getattr(self, f"_{kind}")(url, rows, bank, reader_password)
 
@@ -68,8 +71,12 @@ class Command(BaseCommand):
             exists = conn.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", [role]).fetchone()
             from psycopg import sql
 
-            verb = "ALTER" if exists else "CREATE"
-            conn.execute(sql.SQL(verb + " ROLE {} LOGIN PASSWORD {}").format(sql.Identifier(role), sql.Literal(password)))
+            if not exists:
+                conn.execute(sql.SQL("CREATE ROLE {} LOGIN PASSWORD {}").format(sql.Identifier(role), sql.Literal(password)))
+            elif self.rotate:
+                conn.execute(sql.SQL("ALTER ROLE {} PASSWORD {}").format(sql.Identifier(role), sql.Literal(password)))
+            else:
+                password = None
             database = parts.path.lstrip("/")
             conn.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(sql.Identifier(database), sql.Identifier(role)))
             conn.execute(sql.SQL("GRANT USAGE ON SCHEMA core TO {}").format(sql.Identifier(role)))
@@ -129,8 +136,14 @@ class Command(BaseCommand):
                         for i, r in enumerate(rows)
                     ],
                 )
-                cur.execute("CREATE USER IF NOT EXISTS %s@'%%' IDENTIFIED BY %s", [reader, password])
-                cur.execute("ALTER USER %s@'%%' IDENTIFIED BY %s", [reader, password])
+                cur.execute("SELECT COUNT(*) FROM mysql.user WHERE User = %s", [reader])
+                exists = cur.fetchone()[0] > 0
+                if not exists:
+                    cur.execute("CREATE USER %s@'%%' IDENTIFIED BY %s", [reader, password])
+                elif self.rotate:
+                    cur.execute("ALTER USER %s@'%%' IDENTIFIED BY %s", [reader, password])
+                else:
+                    password = None
                 cur.execute(f"GRANT SELECT ON `{database}`.`customer_master` TO %s@'%%'", [reader])
         finally:
             conn.close()
@@ -173,6 +186,9 @@ class Command(BaseCommand):
 
     def _report(self, count, label, details):
         self.stdout.write(self.style.SUCCESS(f"{count} synthetic customers written to {label}."))
+        if dict(details)["Password"] is None:
+            self.stdout.write("Read-only login unchanged: the connector in Lumina keeps working. Press Sync now there.")
+            return
         self.stdout.write("Read-only login for Lumina (shown once; type these into the connector screen):")
         for key, value in details:
             self.stdout.write(f"  {key:<28} {value}")

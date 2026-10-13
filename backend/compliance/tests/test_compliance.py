@@ -117,10 +117,10 @@ def test_agent_can_record_consent_and_it_is_audited(gurpreet):
 
 def test_feed_import_links_by_pan_and_is_safe_to_rerun(db):
     kyc_rows, changes = import_feed()
-    assert kyc_rows == 10 and changes > 0
+    assert kyc_rows == 34 and changes > 0
     assert KycRecord.objects.filter(pan_hash=fingerprint(PAN), risk="high", pep=True).exists()
     assert not KycRecord.objects.filter(pan_hash=PAN).exists()  # never the readable PAN
-    assert import_feed() == (10, 0)  # unchanged consent is not duplicated
+    assert import_feed() == (34, 0)  # unchanged consent is not duplicated
 
 
 def test_compliance_follows_the_customer_through_a_merge(gurpreet):

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django_tenants.utils import schema_context
@@ -19,12 +20,14 @@ def ensure_public_tenant():
 
 
 def load_demo_data(code, stdout):
-    """Fill one organization from fake_sources/<code>/: core banking, Salesforce, branch files, compliance."""
+    """Fill one organization from fake_sources/<code>/: core banking, Salesforce, branch files, compliance.
+    With DEMO_SOURCES=off only the compliance feed is loaded; customers come from the bank's own connectors."""
     with schema_context(code):
-        call_command("load_fake_flexcube", stdout=stdout)
-        for source in ["flexcube", "salesforce", "branch_csv"]:
-            call_command("sync", source, stdout=stdout)
-        call_command("build_customers", stdout=stdout)
+        if settings.DEMO_SOURCES:
+            call_command("load_fake_flexcube", stdout=stdout)
+            for source in ["flexcube", "salesforce", "branch_csv"]:
+                call_command("sync", source, stdout=stdout)
+            call_command("build_customers", stdout=stdout)
         call_command("sync_compliance", stdout=stdout)
 
 

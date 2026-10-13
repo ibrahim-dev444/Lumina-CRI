@@ -178,6 +178,10 @@ CONNECTOR_TIMEOUT_SECONDS = int(os.getenv('CONNECTOR_TIMEOUT_SECONDS', '30'))
 # Synthetic demo data, one folder per organization: fake_sources/<schema>/ holds that bank's core banking
 # rows (flexcube.sql), Salesforce export, branch CSV uploads and compliance feed.
 DEMO_DATA_DIR = os.getenv('DEMO_DATA_DIR') or str(BASE_DIR.parent / 'fake_sources')
+# The built-in demo sources (fake FLEXCUBE, Salesforce export, branch files). On for local work and tests.
+# The hosted demo sets DEMO_SOURCES=off: banks there read only their real cloud systems, so start-up removes
+# the built-in sources and their records (the compliance feed stays).
+DEMO_SOURCES = os.getenv('DEMO_SOURCES', 'on').lower() not in ('off', 'false', '0', 'no')
 
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
 # The React dev server proxies /api to Django, so the browser sends its own origin with each request.

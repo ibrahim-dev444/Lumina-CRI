@@ -9,3 +9,27 @@ GKLPM7890M,Low,Standard profile,2022-08-19,No,,Clear,2026-09-27,granted,granted,
 HLMPJ8901N,Low,Standard profile,2016-04-11,No,,Clear,2026-09-26,granted,granted,granted,pending,pending
 JMNPF9012P,Medium,Retail cash business,2020-07-07,No,,Clear,2026-10-01,granted,revoked,granted,granted,granted
 KNPPC0123Q,Low,Standard profile,2023-05-30,No,,Clear,2026-09-30,granted,granted,granted,granted,granted
+HBFPI1259M,Low,Standard profile,2017-01-01,No,,Clear,2026-09-30,granted,granted,granted,pending,revoked
+KRDPR1333X,Low,Standard profile,2018-02-08,No,,Clear,2026-09-30,granted,granted,pending,revoked,granted
+LYQPK1370C,Medium,High-value account,2020-03-15,No,,Clear,2026-09-30,granted,pending,revoked,granted,granted
+MFBPC1407H,Low,Standard profile,2020-04-22,No,,Clear,2026-09-30,granted,revoked,granted,granted,granted
+PVZPS1481T,High,Cash-intensive business,2024-05-01,No,,Clear,2026-09-30,granted,granted,granted,granted,pending
+QCLPN1518Y,Low,Politically exposed,2022-06-08,Yes,Relative of a state legislator,Clear,2026-09-30,granted,granted,granted,pending,revoked
+RKXPG1555D,Medium,High-value account,2024-07-15,No,,Clear,2026-09-30,granted,granted,pending,revoked,granted
+TZVPB1629P,Low,Standard profile,2024-08-22,No,,Clear,2026-09-30,granted,pending,revoked,granted,granted
+UGGPM1666U,Low,Standard profile,2025-09-01,No,,Potential match,2026-09-30,granted,revoked,granted,granted,granted
+VPTPK1703Z,Medium,High-value account,2019-10-08,No,,Clear,2026-09-30,granted,granted,granted,granted,pending
+XDRPR1777K,Low,Standard profile,2018-11-15,No,,Clear,2026-09-30,granted,granted,granted,pending,revoked
+YLCPM1814Q,High,Cash-intensive business,2025-12-22,No,,Clear,2026-09-30,granted,granted,pending,revoked,granted
+ZTPPD1851V,Low,Standard profile,2020-01-01,No,,Clear,2026-09-30,granted,pending,revoked,granted,granted
+BHMPB1925F,Medium,High-value account,2023-02-08,No,,Clear,2026-09-30,granted,revoked,granted,granted,granted
+CQYPV1962L,Low,Standard profile,2022-03-15,No,,Clear,2026-09-30,granted,granted,granted,granted,pending
+DXKPI1999R,Low,Standard profile,2023-04-22,No,,Clear,2026-09-30,granted,granted,granted,pending,revoked
+FMHPR2073B,Medium,Politically exposed,2018-05-01,Yes,Relative of a state legislator,Clear,2026-09-30,granted,granted,pending,revoked,granted
+GUUPK2110G,Low,Standard profile,2025-06-08,No,,Clear,2026-09-30,granted,pending,revoked,granted,granted
+HBFPC2147M,High,Cash-intensive business,2023-07-15,No,,Clear,2026-09-30,granted,revoked,granted,granted,granted
+KRDPS2221X,Low,Standard profile,2018-08-22,No,,Clear,2026-09-30,granted,granted,granted,granted,pending
+LYQPN2258C,Medium,High-value account,2022-09-01,No,,Clear,2026-09-30,granted,granted,granted,pending,revoked
+MFBPG2295H,Low,Standard profile,2020-10-08,No,,Potential match,2026-09-30,granted,granted,pending,revoked,granted
+PVZPB2369T,Low,Standard profile,2021-11-15,No,,Clear,2026-09-30,granted,pending,revoked,granted,granted
+QCLPM2406Y,Medium,High-value account,2025-12-22,No,,Clear,2026-09-30,granted,revoked,granted,granted,granted

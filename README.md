@@ -169,7 +169,14 @@ instead. Create an API key (shown once) and the setup page shows a ready-to-copy
 Safety rules: connectors may only reach public internet addresses (private and internal addresses are refused, except
 in local development where `CONNECTORS_ALLOW_PRIVATE_HOSTS` is on), sessions are read-only, queries time out after
 `CONNECTOR_TIMEOUT_SECONDS` (30) and read at most `CONNECTOR_MAX_ROWS` (50,000) rows. The three demo connectors keep
-reading the sample data in `fake_sources/`.
+reading the sample data in `fake_sources/` (locally; the hosted demo removes them, see below).
+
+**Real cloud sources for the demo**: `python manage.py seed_cloud_source postgres|mysql|mongodb --bank axis|hdfc`
+fills a free cloud database with synthetic customers (`ingestion/cloud_demo_data.py`) and creates a read-only login.
+It asks for the admin connection details with hidden typing and prints the read-only login once. Running it again
+resets the rows and keeps the login, so the connector keeps working (`--new-password` changes it). The data is built
+to exercise matching: shared people across systems, a typo duplicate and a person without a PAN (both go to match
+review), a family member sharing a phone (never merged) and a newer address in one system.
 
 ## Platform console
 
@@ -241,8 +248,10 @@ Render environment values (set in the Render dashboard, never in the repo):
 | `CSRF_TRUSTED_ORIGINS` | The Vercel address, e.g. `https://lumina-cri.vercel.app` |
 | `DEMO_PASSWORD` | Password for `rm.demo`, `agent.demo`, `steward.demo`, `compliance.demo` |
 | `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_PASSWORD` | Admin login |
+| `DEMO_SOURCES` | `off`: banks read only their real cloud connectors. Start-up removes the built-in demo sources, their records and the customers only they described (cannot be undone). The compliance feed stays. |
 
-On every start Render runs `migrate_schemas` and `bootstrap_demo`. That command creates the demo organizations, loads each one's data once (only when it has no customers) and sets the logins from the values above in every organization. The same admin name and password are also the platform login. The free plan sleeps when idle, so the first request after a pause takes up to a minute.
+On every start Render runs `migrate_schemas` and `bootstrap_demo`. That command creates the demo organizations, loads each one's data once (only when it has no customers) and sets the logins from the values above in every organization. It also re-reads each organization's compliance feed,
+and with `DEMO_SOURCES=off` removes the built-in demo sources (also from organizations created later). The same admin name and password are also the platform login. The free plan sleeps when idle, so the first request after a pause takes up to a minute.
 
 Two things soften that:
 

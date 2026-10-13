@@ -29,6 +29,8 @@ services:
         generateValue: true  # copy it into the GitHub secret of the same name (scheduled-sync.yml)
       - key: DEMO_PASSWORD
         sync: false
+      - key: DEMO_SOURCES
+        value: "off"  # banks read only their real cloud connectors; start-up removes the built-in demo sources
       - key: DJANGO_SUPERUSER_USERNAME
         sync: false
       - key: DJANGO_SUPERUSER_PASSWORD
