@@ -117,6 +117,15 @@ export function formatRelative(value: string | null): string {
   return formatDate(value)
 }
 
+// Rupees the Indian way: "₹1,85,000". With compact, large sums as lakh and crore: "₹38.5 L", "₹1.2 Cr".
+export function formatMoney(value: string | number | null, compact = false): string {
+  if (value === null || value === '') return '-'
+  const n = Number(value)
+  if (compact && Math.abs(n) >= 1e7) return `₹${(n / 1e7).toFixed(n >= 1e8 ? 0 : 1)} Cr`
+  if (compact && Math.abs(n) >= 1e5) return `₹${(n / 1e5).toFixed(n >= 1e6 ? 0 : 1)} L`
+  return '₹' + Math.round(n).toLocaleString('en-IN')
+}
+
 // Scores and trust are stored from 0 to 1 and shown from 0 to 100: 0.85 is shown as 85.
 export function formatScore(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === '') return '-'

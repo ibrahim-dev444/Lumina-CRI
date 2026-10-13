@@ -16,7 +16,7 @@ from urllib.parse import quote, unquote, urlparse
 
 from django.core.management.base import BaseCommand, CommandError
 
-from ingestion.cloud_demo_data import customers
+from ingestion.cloud_demo_data import accounts, customers
 
 SEEDS = {"postgres": 1, "mysql": 2, "mongodb": 3}
 
@@ -38,6 +38,7 @@ class Command(BaseCommand):
         if not url:
             raise CommandError("No connection string given.")
         rows = customers(bank, count=count, seed=SEEDS[kind])
+        self.accounts = accounts(bank, SEEDS[kind]) if kind != "mongodb" else []
         self.rotate = new_password
         reader_password = secrets.token_urlsafe(18)
         getattr(self, f"_{kind}")(url, rows, bank, reader_password)
@@ -68,6 +69,18 @@ class Command(BaseCommand):
                         for i, r in enumerate(rows)
                     ],
                 )
+            conn.execute("DROP TABLE IF EXISTS core.accounts")
+            conn.execute(
+                "CREATE TABLE core.accounts (acct_no varchar(20) PRIMARY KEY, cust_id varchar(20) NOT NULL, "
+                "product_code varchar(6), product_desc varchar(80), acct_status varchar(10), open_date date, "
+                "curr_balance numeric(16, 2), branch_code varchar(10), last_txn_at timestamp)"
+            )
+            with conn.cursor() as cur:
+                cur.executemany(
+                    "INSERT INTO core.accounts VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    [(a["account"], a["customer"], a["code"], a["name"], a["status"], a["opened"], a["amount"],
+                      f"BR{100 + i % 40}", a["updated_at"]) for i, a in enumerate(self.accounts)],
+                )
             exists = conn.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", [role]).fetchone()
             from psycopg import sql
 
@@ -80,11 +93,12 @@ class Command(BaseCommand):
             database = parts.path.lstrip("/")
             conn.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(sql.Identifier(database), sql.Identifier(role)))
             conn.execute(sql.SQL("GRANT USAGE ON SCHEMA core TO {}").format(sql.Identifier(role)))
-            conn.execute(sql.SQL("GRANT SELECT ON core.customers TO {}").format(sql.Identifier(role)))
+            conn.execute(sql.SQL("GRANT SELECT ON core.customers, core.accounts TO {}").format(sql.Identifier(role)))
         self._report(len(rows), "PostgreSQL", [
             ("Server address", parts.hostname), ("Port", str(parts.port or 5432)), ("Database name", database),
             ("Username", role), ("Password", password), ("Encryption (SSL)", "Required"),
             ("Table to choose in Discover", "core.customers"),
+            ("Accounts table", "core.accounts"),
         ])
 
     # ---------- MySQL (e.g. TiDB Cloud Serverless) ----------
@@ -136,6 +150,17 @@ class Command(BaseCommand):
                         for i, r in enumerate(rows)
                     ],
                 )
+                cur.execute("DROP TABLE IF EXISTS loan_accounts")
+                cur.execute(
+                    "CREATE TABLE loan_accounts (LOAN_ACCOUNT_NO varchar(20) PRIMARY KEY, CUSTOMER_ID varchar(20) NOT NULL, "
+                    "LOAN_TYPE varchar(6), SCHEME_NAME varchar(80), LOAN_STATUS varchar(12), DISBURSED_ON date, "
+                    "OUTSTANDING_AMT decimal(16, 2), EMI_AMOUNT decimal(12, 2), MODIFIED_AT datetime)"
+                )
+                cur.executemany(
+                    "INSERT INTO loan_accounts VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    [(a["account"], a["customer"], a["code"], a["name"], a["status"], a["opened"], a["amount"],
+                      round(a["amount"] / 60, 2), a["updated_at"].replace("T", " ")) for a in self.accounts],
+                )
                 cur.execute("SELECT COUNT(*) FROM mysql.user WHERE User = %s", [reader])
                 exists = cur.fetchone()[0] > 0
                 if not exists:
@@ -145,12 +170,14 @@ class Command(BaseCommand):
                 else:
                     password = None
                 cur.execute(f"GRANT SELECT ON `{database}`.`customer_master` TO %s@'%%'", [reader])
+                cur.execute(f"GRANT SELECT ON `{database}`.`loan_accounts` TO %s@'%%'", [reader])
         finally:
             conn.close()
         self._report(len(rows), "MySQL", [
             ("Server address", parts.hostname), ("Port", str(parts.port or 3306)), ("Database name", database),
             ("Username", reader), ("Password", password), ("Encryption (TLS)", "On"),
             ("Table to choose in Discover", "customer_master"),
+            ("Accounts table", "loan_accounts"),
         ])
 
     # ---------- MongoDB (e.g. MongoDB Atlas) ----------
@@ -185,7 +212,8 @@ class Command(BaseCommand):
         )
 
     def _report(self, count, label, details):
-        self.stdout.write(self.style.SUCCESS(f"{count} synthetic customers written to {label}."))
+        self.stdout.write(self.style.SUCCESS(
+            f"{count} synthetic customers and {len(self.accounts)} accounts written to {label}."))
         if dict(details)["Password"] is None:
             self.stdout.write("Read-only login unchanged: the connector in Lumina keeps working. Press Sync now there.")
             return

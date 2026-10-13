@@ -119,3 +119,49 @@ def customers(bank, count=24, seed=0):
         row.setdefault("occupation", "")
         row.setdefault("income", "")
     return rows
+
+
+# Products in each bank's core system: (code the system uses, its own product name, typical amount).
+# Axis's core banking holds deposits, loans and cards; HDFC's MySQL source is a loan system.
+PRODUCTS = {
+    "axis": [
+        ("SB", "Prime Savings Account", 185000), ("CA", "Easy Current Account", 420000),
+        ("FD", "Tax Saver Fixed Deposit", 150000), ("HL", "Home Loan - Floating", 3850000),
+        ("CC", "Platinum Credit Card", 64000), ("PL", "Personal Loan", 275000),
+    ],
+    "hdfc": [
+        ("HL", "Home Loan - Regular", 4600000), ("PL", "Personal Loan - Salaried", 380000),
+        ("VL", "New Car Loan", 520000), ("CC", "Rewards Credit Card", 48000), ("LAP", "Loan Against Property", 1900000),
+    ],
+}
+STATUS_CODES = {
+    "axis": {"active": "ACTIVE", "overdue": "OVERDUE", "dormant": "DORMANT", "closed": "CLOSED"},
+    "hdfc": {"active": "Regular", "overdue": "Overdue", "dormant": "Regular", "closed": "Closed"},
+}
+
+
+def accounts(bank, seed):
+    """Accounts for the customers of one core system (CORE_SEEDS only), 1 to 3 each. The first shared customer
+    has an overdue card or loan, so the "before you speak" summary has something to warn about."""
+    rows = []
+    products = PRODUCTS[bank]
+    for i, person in enumerate(customers(bank, seed=seed)):
+        for j in range(3 if i == 0 else 1 + i % 3):
+            code, name, amount = products[(i + j * 2) % len(products)]
+            if i == 0:  # the first shared customer: an overdue card plus two healthy products
+                wanted = ["CC", "SB", "HL"] if bank == "axis" else ["CC", "HL", "PL"]
+                code, name, amount = next(p for p in products if p[0] == wanted[j])
+            status = "overdue" if i == 0 and j == 0 else "closed" if (i + j) % 11 == 7 else (
+                "dormant" if (i + j) % 13 == 5 else "active")
+            number = f"{(9 if bank == 'axis' else 5)}{seed}{(i * 7919 + j * 104729 + seed * 31) % 10**8:08d}"
+            rows.append({
+                "account": number,
+                "customer": person["id"],
+                "code": code,
+                "name": name,
+                "status": STATUS_CODES[bank][status],
+                "opened": f"{2012 + (i + j) % 13}-{1 + (i * 5 + j) % 12:02d}-{1 + (i * 3 + j * 7) % 28:02d}",
+                "amount": round(amount * (0.35 + ((i * 7 + j * 3) % 13) / 10), 2),
+                "updated_at": person["updated_at"],
+            })
+    return rows

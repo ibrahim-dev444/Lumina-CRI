@@ -108,6 +108,18 @@ export interface ConnectorMapping {
   id_column: string
   updated_column: string
   fields: Partial<Record<Field, string>>
+  accounts?: AccountsMapping
+}
+
+export type AccountField = 'product_type' | 'product_name' | 'status' | 'opened_on' | 'balance'
+
+// Optional second table: the customers' accounts, deposits, loans and cards.
+export interface AccountsMapping {
+  object: string
+  id_column: string
+  customer_column: string
+  updated_column: string
+  fields: Partial<Record<AccountField, string>>
 }
 
 export interface ConnectorField {
@@ -147,6 +159,7 @@ export interface SyncResult {
   fetched: number
   created: number
   updated: number
+  accounts: number | null // products read, when the connector has an accounts mapping
   customers: number
   new_suggestions: number
 }
@@ -222,7 +235,35 @@ export interface SourceRecord {
   agreement?: Partial<Record<Field, boolean | null>>
 }
 
+export type ProductType =
+  | 'savings' | 'current' | 'deposit' | 'home_loan' | 'personal_loan' | 'vehicle_loan' | 'loan' | 'credit_card' | 'other'
+
+export interface Product {
+  id: number
+  type: ProductType
+  type_label: string
+  name: string
+  account: string // last four characters only, e.g. "XX1234"
+  status: 'active' | 'overdue' | 'dormant' | 'closed'
+  opened_on: string | null
+  balance: string | null // null when the role may not see amounts
+  source_code: string
+  source_name: string
+  updated_at: string
+}
+
+export interface Products {
+  amounts_hidden: boolean
+  count: number // not closed
+  overdue: number
+  dormant: number
+  deposits: string | null
+  owed: string | null
+  items: Product[]
+}
+
 export interface CustomerDetail extends CustomerSummary {
+  products: Products
   golden: GoldenField[]
   records: SourceRecord[]
   weights: Partial<Record<Field, string>>

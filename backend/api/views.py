@@ -129,6 +129,7 @@ class SourceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Upd
             "fetched": synced.fetched,
             "created": synced.created,
             "updated": synced.updated,
+            "accounts": synced.accounts,
             "customers": built.customers,
             "new_suggestions": built.new_suggestions,
         })

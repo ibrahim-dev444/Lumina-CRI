@@ -10,6 +10,7 @@ import { RISK_LABEL } from '../compliance'
 import { CorrectionsCard } from '../components/CorrectionsCard'
 import { GoldenFieldRow } from '../components/GoldenFieldRow'
 import { Loader } from '../components/Loader'
+import { ProductsTab } from '../components/ProductsTab'
 import { RevealPanel } from '../components/RevealPanel'
 import { Icon } from '../components/Icon'
 import { ScoreBreakdown } from '../components/ScoreBreakdown'
@@ -26,7 +27,7 @@ import {
 } from '../components/ui'
 import { FIELD_LABELS, FIELD_SHORT, FIELDS, MONO_FIELDS, formatDateTime, formatFieldValue, formatRelative, formatScore } from '../format'
 
-type Tab = 'identity' | 'sources' | 'compliance' | 'activity'
+type Tab = 'identity' | 'products' | 'sources' | 'compliance' | 'activity'
 
 export function CustomerDetailPage() {
   const id = Number(useParams().id)
@@ -36,6 +37,7 @@ export function CustomerDetailPage() {
 
   const tabs: { value: Tab; label: string }[] = [
     { value: 'identity', label: 'Identity' },
+    { value: 'products', label: c ? `Products (${c.products.count})` : 'Products' },
     { value: 'sources', label: 'Sources' },
     { value: 'compliance', label: 'Compliance' },
     ...(canSeeAudit ? [{ value: 'activity' as Tab, label: 'Activity' }] : []),
@@ -95,6 +97,11 @@ export function CustomerDetailPage() {
                 {c.compliance.aml?.sanctions === 'potential_match' && (
                   <StatusBadge tone="bad">Sanctions review</StatusBadge>
                 )}
+                {c.products.overdue > 0 && (
+                  <StatusBadge tone="bad">
+                    {c.products.overdue} overdue product{c.products.overdue === 1 ? '' : 's'}
+                  </StatusBadge>
+                )}
               </div>
             </div>
           </div>
@@ -135,6 +142,7 @@ export function CustomerDetailPage() {
       )}
 
       {tab === 'identity' && <IdentityTab c={c} onChanged={reload} />}
+      {tab === 'products' && <ProductsTab c={c} />}
       {tab === 'sources' && <SourcesTab c={c} />}
       {tab === 'compliance' && <ComplianceTab c={c} onChanged={reload} />}
       {tab === 'activity' && <ActivityTab c={c} />}

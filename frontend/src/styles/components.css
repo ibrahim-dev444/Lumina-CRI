@@ -3398,3 +3398,31 @@ a.add-tile:hover {
   line-height: 1.6;
   white-space: pre;
 }
+
+/* Customer profile, Products tab */
+.table tr.is-muted td {
+  color: var(--text-3);
+}
+.amount-owed {
+  color: var(--text-2);
+}
+.kpi-value.tone-bad {
+  color: var(--bad-text);
+}
+.kpi-value.tone-warn {
+  color: var(--warn-text);
+}
+.kpis.kpis-compact {
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+}
+@media (max-width: 480px) {
+  .kpis.kpis-compact {
+    gap: 10px;
+  }
+  .kpis.kpis-compact .kpi {
+    padding: 14px;
+  }
+  .kpis.kpis-compact .kpi-value {
+    font-size: var(--text-xl);
+  }
+}

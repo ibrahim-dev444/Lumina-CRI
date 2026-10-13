@@ -156,7 +156,13 @@ Setup has three steps:
    encrypted and never shown again; leave the box empty to keep the stored one. **Test connection** checks it.
 2. **What to read**: **Discover** lists tables, views or collections; pick one and Lumina shows its columns and
    suggests which column feeds which field. Only the mapped columns are ever read.
-3. **Sync**: reads the rows, then matches and scores customers as usual. Every attempt is in the sync history.
+3. **Accounts and products (optional)**: if the same system keeps accounts, deposits, loans or cards, pick that table
+   and map its account number, customer ID, product type or name, status, opening date and balance. Lumina recognises
+   common bank codes (SB, CA, FD, HL, PL, CC, NPA...) and keeps only the last four characters of each account number
+   (plus a keyed fingerprint to follow it between syncs). Products then appear on the customer's **Products** tab.
+   Balances are shown to relationship managers, contact centre agents, compliance and admins; data stewards see the
+   products without amounts.
+4. **Sync**: reads the rows, then matches and scores customers as usual. Every attempt is in the sync history.
 
 **Scheduled sync**: on the Sync step choose every 6, 12 or 24 hours. Once an hour the scheduler
 (`.github/workflows/scheduled-sync.yml`, or `python manage.py run_due_syncs` locally) syncs whatever is due in every
@@ -172,7 +178,8 @@ in local development where `CONNECTORS_ALLOW_PRIVATE_HOSTS` is on), sessions are
 reading the sample data in `fake_sources/` (locally; the hosted demo removes them, see below).
 
 **Real cloud sources for the demo**: `python manage.py seed_cloud_source postgres|mysql|mongodb --bank axis|hdfc`
-fills a free cloud database with synthetic customers (`ingestion/cloud_demo_data.py`) and creates a read-only login.
+fills a free cloud database with synthetic customers (`ingestion/cloud_demo_data.py`), plus an accounts table for
+PostgreSQL (`core.accounts`) and MySQL (`loan_accounts`), and creates a read-only login.
 It asks for the admin connection details with hidden typing and prints the read-only login once. Running it again
 resets the rows and keeps the login, so the connector keeps working (`--new-password` changes it). The data is built
 to exercise matching: shared people across systems, a typo duplicate and a person without a PAN (both go to match
