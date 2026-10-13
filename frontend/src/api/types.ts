@@ -294,6 +294,55 @@ export interface CustomerDetail extends CustomerSummary {
   }
 }
 
+export type Channel = 'call' | 'branch' | 'email' | 'whatsapp' | 'chat' | 'sms'
+export type InteractionKind = 'query' | 'request' | 'complaint' | 'sales' | 'feedback'
+export type Outcome = 'resolved' | 'follow_up' | 'escalated'
+
+export interface Interaction {
+  id: number
+  channel: Channel
+  channel_label: string
+  inbound: boolean
+  kind: InteractionKind
+  kind_label: string
+  summary: string // card and identity numbers already masked by the server
+  outcome: Outcome
+  outcome_label: string
+  follow_up_on: string | null
+  state: 'open' | 'closed'
+  created_at: string
+  created_by: string
+  closed_at: string | null
+  closed_by: string
+  closing_note: string
+  customer?: { id: number; code: string; name: string } // only in the open items list
+}
+
+export interface NewInteraction {
+  channel: Channel
+  kind: InteractionKind
+  summary: string
+  outcome: Outcome
+  inbound: boolean
+  follow_up_on?: string
+}
+
+export interface BriefingAlert {
+  level: 'bad' | 'warn' | 'info'
+  title: string
+  action: string
+  kind: string
+}
+
+export interface Briefing {
+  headline: string
+  alerts: BriefingAlert[]
+  talking_points: string[]
+  last_contact: { at: string; channel: string; by: string; summary: string } | null
+  contacts_last_90_days: number
+  open_items: number
+}
+
 export interface ComplianceQueue {
   summary: {
     customers: number
