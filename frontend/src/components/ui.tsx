@@ -111,12 +111,12 @@ export function Avatar({ name, large = false }: { name: string; large?: boolean 
   )
 }
 
-export function SourceChips({ codes }: { codes: string[] }) {
+export function SourceChips({ codes, names }: { codes: string[]; names?: string[] }) {
   return (
     <span className="chips">
-      {codes.map((c) => (
+      {codes.map((c, i) => (
         <span key={c} className={`chip hued ${sourceHue(c)}`}>
-          {sourceLabel(c)}
+          {names?.[i] || sourceLabel(c)}
         </span>
       ))}
     </span>

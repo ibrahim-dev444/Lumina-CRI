@@ -6,6 +6,7 @@ import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { Icon, type IconName } from '../components/Icon'
 import { Loader } from '../components/Loader'
+import { OpenItemsCard } from '../components/OpenItemsCard'
 import { useToast } from '../components/Toasts'
 import { BarList } from '../components/BarList'
 import { TrustRunway } from '../components/TrustRunway'
@@ -143,6 +144,8 @@ export function OverviewPage() {
         {data ? <TrustRunway scores={data.scores} /> : <Loader label="Checking data quality" />}
       </Card>
 
+      <OpenItemsCard />
+
       <div className="grid-halves">
         <Card title="Where records disagree" description="Customers whose sources hold different values, by field.">
           {data ? (
@@ -237,7 +240,7 @@ export function OverviewPage() {
                     <TrustCell score={c.trust_score} band={c.band} />
                   </td>
                   <td className="col-sm">
-                    <SourceChips codes={c.sources} />
+                    <SourceChips codes={c.sources} names={c.source_names} />
                   </td>
                   <td className="right col-sm">
                     <Link to={`/customers/${c.id}`} className="btn btn-sm" onClick={(e) => e.stopPropagation()}>

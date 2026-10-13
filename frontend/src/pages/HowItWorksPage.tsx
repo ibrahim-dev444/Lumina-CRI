@@ -20,6 +20,7 @@ const CAPABILITY_LABELS: { key: Capability; label: string }[] = [
   { key: 'manage_sources', label: 'Sync or switch sources' },
   { key: 'export', label: 'Export customer list' },
   { key: 'record_consent', label: 'Record customer consent' },
+  { key: 'view_balances', label: 'See balances and amounts owed' },
   { key: 'view_compliance', label: 'See AML risk, PEP and sanctions' },
   { key: 'reveal_identity', label: 'Reveal full PAN or CKYC (with reason)' },
   { key: 'view_audit', label: 'Read the audit log' },
@@ -43,9 +44,9 @@ export function HowItWorksPage() {
         </p>
         <div className="hiw-problem">
           <div className="hiw-sources">
-            <SourceBox name="FLEXCUBE" note="Suresh Kumar · 9822104521" />
-            <SourceBox name="Salesforce" note="Sooresh Kumar · 9822107788" />
-            <SourceBox name="Branch upload" note="Suresh K · 9822107788" />
+            <SourceBox name="Core banking (PostgreSQL)" note="Suresh Kumar · 9822104521" />
+            <SourceBox name="Mobile app (MongoDB)" note="Suresh Kumar · 9822104599" />
+            <SourceBox name="Loan system (MySQL)" note="Suresh Kumaar · no PAN" />
           </div>
           <Arrow />
           <div className="hiw-node accent">
@@ -71,8 +72,8 @@ export function HowItWorksPage() {
           <Step icon="overview" title="Score" text="A trust score from 0 to 100 says how reliable the record is." />
         </ol>
         <p className="muted text-sm">
-          Steps 1 to 6 run when someone clicks <strong>Sync</strong> on Connectors, or a developer runs{' '}
-          <code>manage.py sync</code>.
+          Steps 1 to 6 run when someone clicks <strong>Sync now</strong> on a connector, or on the schedule the bank
+          chose (every 6, 12 or 24 hours). A connector can also read the customers' accounts, loans and cards.
         </p>
       </Section>
 
@@ -189,7 +190,20 @@ export function HowItWorksPage() {
         </p>
       </Section>
 
-      <Section n={7} title="Fixing wrong data: two people, every time">
+      <Section n={7} title="Before you speak to a customer">
+        <ol className="hiw-steps">
+          <Step icon="alert" title="Warnings first" text="Open complaints, missed follow-ups, overdue products, re-KYC and withdrawn consent, each with what to do." />
+          <Step icon="file" title="What they hold" text="Accounts, deposits, loans and cards from every connected system. Account numbers show the last four only." />
+          <Step icon="edit" title="Log the conversation" text="Channel, topic, outcome and a short note. Card and identity numbers are masked on save." />
+          <Step icon="check" title="Close the loop" text="Complaints and follow-ups stay open, and in the briefing, until someone marks them done." />
+        </ol>
+        <p className="muted text-sm">
+          Front-line staff never see AML risk, politically exposed person or sanctions flags: hinting at them to a
+          customer is an offence. Data stewards see products without amounts.
+        </p>
+      </Section>
+
+      <Section n={8} title="Fixing wrong data: two people, every time">
         <ol className="hiw-steps">
           <Step icon="edit" title="Propose" text="Someone enters the right value, an evidence reference and a reason." />
           <Step icon="approve" title="Check" text="A different person approves or rejects it. Nobody approves their own." />
@@ -198,9 +212,9 @@ export function HowItWorksPage() {
         </ol>
       </Section>
 
-      <Section n={8} title="Words used in Lumina">
+      <Section n={9} title="Words used in Lumina">
         <dl className="hiw-glossary">
-          <Term word="Source" meaning="A bank system Lumina reads from, such as FLEXCUBE or Salesforce." />
+          <Term word="Source" meaning="A bank system Lumina reads from, such as core banking, a loan system or a mobile app." />
           <Term word="Source trust" meaning="How much a source is believed, from 0 to 100. Set by the bank." />
           <Term word="Golden record" meaning="The single best value for each field of a customer." />
           <Term word="Trust score" meaning="How reliable a customer's golden record is, from 0 to 100." />
@@ -208,6 +222,8 @@ export function HowItWorksPage() {
           <Term word="Correction" meaning="A fix backed by evidence, applied only after a second person approves it." />
           <Term word="Masking" meaning="Hiding part of a value, like 98xxxx4521, from roles that do not need it." />
           <Term word="Audit log" meaning="The permanent list of who did what and when." />
+          <Term word="Product" meaning="An account, deposit, loan or card the customer holds, as a connected system reports it." />
+          <Term word="Briefing" meaning="The Before you speak summary: warnings, talking points and the last conversation." />
         </dl>
       </Section>
     </>
