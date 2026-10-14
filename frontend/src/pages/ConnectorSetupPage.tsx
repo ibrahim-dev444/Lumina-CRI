@@ -6,6 +6,7 @@ import type { AccountField, AccountsMapping, ConnectorMapping, ConnectorType, Fi
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { ConnectorFields } from '../components/ConnectorFields'
+import { DeleteConnectorCard } from '../components/DeleteConnectorCard'
 import { Icon } from '../components/Icon'
 import { Loader, LoaderRow } from '../components/Loader'
 import { useToast } from '../components/Toasts'
@@ -95,11 +96,17 @@ export function ConnectorSetupPage() {
           </div>
         )
       ) : s.is_demo || !type ? (
-        <Card title="Built-in demo connector">
-          <p className="muted">This demo connector reads Lumina&apos;s sample data and cannot be reconfigured.</p>
-        </Card>
+        <>
+          <Card title="Built-in demo connector">
+            <p className="muted">This demo connector reads Lumina&apos;s sample data and cannot be reconfigured.</p>
+          </Card>
+          <DeleteConnectorCard source={s} onChanged={source.reload} />
+        </>
       ) : (
-        <SetupSteps source={s} type={type} onChanged={source.reload} />
+        <>
+          <SetupSteps source={s} type={type} onChanged={source.reload} />
+          <DeleteConnectorCard source={s} onChanged={source.reload} />
+        </>
       )}
     </>
   )

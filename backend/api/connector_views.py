@@ -21,6 +21,7 @@ from audit.models import AuditEvent
 from audit.services import record
 from ingestion.connectors.adapters import ConnectorError, parse_csv_upload
 from ingestion.connectors.catalog import BY_TYPE, adapter_for, public_catalog, split_settings, write_secrets
+from ingestion.retire import plan, remove_sources
 from mdm.models import FIELDS
 from products.services import ACCOUNT_FIELDS
 from security import crypto
@@ -187,6 +188,29 @@ def save_mapping(request, code):
     source.save(update_fields=["mapping"])
     record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", mapping=source.mapping)
     return Response(_source_json(source))
+
+
+@api_view(["GET", "POST"])
+@permission_classes(ADMIN_ONLY)
+def delete_connector(request, code):
+    """GET  /api/connectors/<code>/delete/  what deleting would remove (counts only)
+    POST /api/connectors/<code>/delete/  {confirm: "<the connector's name>"}  deletes it for good.
+    Removes everything read from it and the customers no other system describes. Cannot be undone; the audit
+    log keeps a record of who deleted what."""
+    source = Source.objects.filter(code=code).first()
+    if source is None:
+        return Response({"detail": "No such connector."}, status=status.HTTP_404_NOT_FOUND)
+    impact = plan([source])
+    counts = {"records": impact.records, "products": impact.products, "customers": impact.customers_removed,
+              "conversations": impact.conversations_removed, "corrections": impact.corrections_removed}
+    if request.method == "GET":
+        return Response({"name": source.name, **counts})
+    if str(request.data.get("confirm", "")).strip() != source.name:
+        return _bad(f"Type the connector's name exactly ({source.name}) to delete it.")
+    name = source.name
+    remove_sources([source])
+    record(request, AuditEvent.CONNECTOR_DELETED, target=f"source {code}", name=name, **counts)
+    return Response({"deleted": code, **counts})
 
 
 @api_view(["PUT", "DELETE"])
