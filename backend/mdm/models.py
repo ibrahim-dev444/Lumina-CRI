@@ -14,8 +14,18 @@ FIELDS = [
 FIELD_CHOICES = [(f, f) for f in FIELDS]
 
 
+class CustomerQuerySet(models.QuerySet):
+    def visible(self):
+        """Customers that at least one connected (switched-on) system still describes. A customer whose systems
+        are all disconnected is hidden everywhere, and comes back with the same ID when one is reconnected."""
+        described = CustomerLink.objects.filter(source_record__source__enabled=True).values("customer_id")
+        return self.filter(id__in=described)
+
+
 class Customer(models.Model):
     """One real person, after matching. Built from one or more SourceRecords."""
+
+    objects = CustomerQuerySet.as_manager()
 
     created_at = models.DateTimeField(auto_now_add=True)
     trust_score = models.DecimalField(max_digits=4, decimal_places=3, null=True, blank=True)  # 0.000 to 1.000
@@ -115,6 +125,12 @@ class GoldenField(models.Model):
         return f"{self.customer} {self.field}={self.value}"
 
 
+class MatchSuggestionQuerySet(models.QuerySet):
+    def visible(self):
+        """Pairs whose two records both come from connected systems; the rest wait until reconnected."""
+        return self.filter(record_a__source__enabled=True, record_b__source__enabled=True)
+
+
 class MatchSuggestion(models.Model):
     """Two records that are probably the same person, but not sure enough to merge automatically.
 
@@ -123,6 +139,8 @@ class MatchSuggestion(models.Model):
 
     PENDING, ACCEPTED, REJECTED = "pending", "accepted", "rejected"
     STATUS_CHOICES = [(PENDING, "Pending"), (ACCEPTED, "Accepted"), (REJECTED, "Rejected")]
+
+    objects = MatchSuggestionQuerySet.as_manager()
 
     record_a = models.ForeignKey(SourceRecord, on_delete=models.CASCADE, related_name="+")
     record_b = models.ForeignKey(SourceRecord, on_delete=models.CASCADE, related_name="+")

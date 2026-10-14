@@ -220,7 +220,12 @@ function ConnectorCard({
     setBusy('toggle')
     try {
       await api.updateSource(s.code, { enabled: !s.enabled })
-      toast('success', `${s.name} ${s.enabled ? 'disconnected' : 'connected'}. Trust scores recalculated.`)
+      toast(
+        'success',
+        s.enabled
+          ? `${s.name} disconnected. Customers found only there are hidden until you reconnect it.`
+          : `${s.name} connected. Its customers are back, with the same IDs.`,
+      )
       onChanged()
     } catch (e) {
       toast('error', (e as Error).message)
