@@ -18,6 +18,10 @@ const TYPE_ICON: Record<string, IconName> = {
   push_api: 'cloud',
   file_upload: 'file',
   salesforce: 'cloud',
+  snowflake: 'cloud',
+  databricks: 'cloud',
+  servicenow: 'cloud',
+  cloudera: 'connectors',
 }
 
 // Step 1 of adding a connector: pick a type from the catalog (the same for every organization), then enter

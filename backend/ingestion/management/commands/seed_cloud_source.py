@@ -3,6 +3,7 @@
     python manage.py seed_cloud_source postgres --bank axis
     python manage.py seed_cloud_source mysql --bank hdfc      (asks host, port, user, password one by one)
     python manage.py seed_cloud_source mongodb --bank axis
+    python manage.py seed_cloud_source snowflake|databricks|servicenow|salesforce --bank axis   (free trial accounts)
 
 The command asks for the database's admin connection string with hidden typing, so it never appears in the
 screen, the shell history or a chat. It prints the read-only login once: type those details into Lumina's
@@ -25,12 +26,18 @@ class Command(BaseCommand):
     help = "Fill a cloud database with synthetic customers and create a read-only login for Lumina."
 
     def add_arguments(self, parser):
-        parser.add_argument("kind", choices=["postgres", "mysql", "mongodb"])
+        parser.add_argument("kind", choices=["postgres", "mysql", "mongodb", "snowflake", "databricks", "servicenow",
+                                             "salesforce"])
         parser.add_argument("--bank", choices=["axis", "hdfc"], required=True)
         parser.add_argument("--count", type=int, default=24)
         parser.add_argument("--new-password", action="store_true", help="Give the read-only login a new password.")
 
     def handle(self, *args, kind, bank, count, new_password=False, **options):
+        from ingestion.enterprise_seed import SEEDERS
+
+        if kind in SEEDERS:
+            SEEDERS[kind](self.stdout, bank, new_password)
+            return
         if kind == "mysql":
             url = self._ask_mysql()
         else:

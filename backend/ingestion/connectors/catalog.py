@@ -9,6 +9,8 @@ import json
 from security import crypto
 
 from .adapters import FileUploadAdapter, MongoAdapter, MySQLAdapter, PostgresAdapter, RestApiAdapter
+from .enterprise import (ClouderaAdapter, DatabricksAdapter, SalesforceAdapter, ServiceNowAdapter,
+                         SnowflakeAdapter)
 
 
 def field(name, label, kind="text", required=True, secret=False, default="", help="", choices=None):
@@ -115,14 +117,86 @@ CATALOG = [
         "adapter": None,  # data arrives at /api/ingest/<code>/ instead of being read
     },
     {
+        "type": "snowflake",
+        "label": "Snowflake",
+        "category": "Data platform",
+        "description": "Read a table or view from a Snowflake warehouse, signed in with a key pair.",
+        "object_label": "Table (SCHEMA.TABLE)",
+        "available": True,
+        "fields": [
+            field("account", "Account identifier", help="e.g. MYORG-MYACCOUNT or xy12345.ap-southeast-1"),
+            field("username", "Username", help="A user whose role may only SELECT the customer tables."),
+            field("private_key", "Private key (PEM)", "password", secret=True,
+                  help="The unencrypted private key matching the RSA_PUBLIC_KEY set on that user."),
+            field("warehouse", "Warehouse", help="e.g. COMPUTE_WH"),
+            field("database", "Database"),
+            field("role", "Role", required=False, help="Optional. A read-only role, e.g. LUMINA_READER."),
+        ],
+        "adapter": SnowflakeAdapter,
+    },
+    {
+        "type": "databricks",
+        "label": "Databricks",
+        "category": "Data platform",
+        "description": "Read a Unity Catalog table through a Databricks SQL warehouse.",
+        "object_label": "Table (catalog.schema.table)",
+        "available": True,
+        "fields": [
+            field("host", "Workspace address", help="e.g. dbc-1a2b3c4d-5e6f.cloud.databricks.com"),
+            field("warehouse_id", "SQL warehouse ID",
+                  help="From the warehouse's Connection details: the last part of its HTTP path."),
+            field("token", "Access token", "password", secret=True,
+                  help="A personal access token or service principal token that may only read the tables."),
+        ],
+        "adapter": DatabricksAdapter,
+    },
+    {
+        "type": "servicenow",
+        "label": "ServiceNow",
+        "category": "Service desk",
+        "description": "Read customer contacts from a ServiceNow table with the Table API.",
+        "object_label": "Table",
+        "available": True,
+        "fields": [
+            field("instance", "Instance", help="e.g. dev12345 or yourbank.service-now.com"),
+            field("username", "Username", help="An integration user with read access to the table."),
+            field("password", "Password", "password", secret=True),
+            field("table", "Table", default="customer_contact", help="e.g. customer_contact, csm_consumer, sys_user"),
+        ],
+        "adapter": ServiceNowAdapter,
+    },
+    {
         "type": "salesforce",
         "label": "Salesforce",
         "category": "CRM",
-        "description": "Read Contacts from Salesforce with an approved connected app.",
+        "description": "Read Contacts, Accounts or Leads through a connected app (client credentials).",
         "object_label": "Object",
-        "available": False,  # comes with the real Salesforce sign-in
-        "fields": [],
-        "adapter": None,
+        "available": True,
+        "fields": [
+            field("domain", "My Domain address", help="e.g. yourbank.my.salesforce.com"),
+            field("client_id", "Consumer key", help="From the connected app; its run-as user should be read-only."),
+            field("client_secret", "Consumer secret", "password", secret=True),
+        ],
+        "adapter": SalesforceAdapter,
+    },
+    {
+        "type": "cloudera",
+        "label": "Cloudera",
+        "category": "Data platform",
+        "description": "Read a Hive or Impala table from Cloudera (CDP Data Warehouse or a cluster) over HiveServer2.",
+        "object_label": "Table (database.table)",
+        "available": True,
+        "fields": [
+            field("host", "Server address", help="e.g. hs2-yourwarehouse.dw.cloudera.site"),
+            field("port", "Port", "number", default="443"),
+            field("transport", "Connection", "select", default="http",
+                  choices=[["http", "HTTP (Data Warehouse, Knox)"], ["binary", "Binary (cluster, port 10000)"]]),
+            field("http_path", "HTTP path", required=False, default="cliservice"),
+            field("database", "Database", default="default"),
+            field("username", "Username", help="A user that may only read the customer tables."),
+            field("password", "Password", "password", secret=True),
+        ],
+        "adapter": ClouderaAdapter,
     },
 ]
 
