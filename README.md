@@ -149,7 +149,8 @@ python manage.py tenant_command createsuperuser --schema=axis
 ## Connectors
 
 Each organization connects its own systems under **Connectors > Add connector** (organization admins). Every
-organization sees the same catalog: **PostgreSQL, MySQL, MongoDB, REST API, CSV file upload** (Salesforce comes later).
+organization sees the same catalog: **PostgreSQL, MySQL, MongoDB, REST API, CSV file upload, Lumina push API,
+Snowflake, Databricks, ServiceNow, Salesforce and Cloudera**.
 Setup has three steps:
 
 1. **Connection**: the system's address and a read-only login. Passwords, tokens and connection strings are stored
@@ -168,6 +169,17 @@ Setup has three steps:
 (`.github/workflows/scheduled-sync.yml`, or `python manage.py run_due_syncs` locally) syncs whatever is due in every
 organization. On the hosted demo it needs the same `SYNC_RUNNER_TOKEN` value in Render and in the GitHub repository
 secrets.
+
+**Enterprise platforms** (`ingestion/connectors/enterprise.py`): Snowflake through its SQL API with key-pair sign-in
+(password-only sign-in is being retired by Snowflake), Databricks through the SQL Statement Execution API and an
+access token, ServiceNow through the Table API, Salesforce through its REST API with a connected app (client
+credentials), and Cloudera Hive or Impala through HiveServer2 (impyla). `seed_cloud_source snowflake|databricks|
+servicenow|salesforce --bank axis` fills free trial accounts with the synthetic customers; keys it creates are kept
+in `~/.lumina`, never in the project. Cloudera has no free cloud account, so it is tested against a fake driver.
+
+**Deleting a connector**: at the bottom of its setup page (organization admins). It shows what goes first, offers
+Disconnect instead (which can be undone: customers only that system knew are hidden, then come back with the same
+IDs), and needs the connector's name typed to confirm.
 
 **Push API**: choose **Lumina push API** in the catalog when the bank's own system should send customers to Lumina
 instead. Create an API key (shown once) and the setup page shows a ready-to-copy example request.

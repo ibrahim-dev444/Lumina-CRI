@@ -15,6 +15,9 @@ const CATEGORY_ICON: Record<string, IconName> = {
   'Core banking': 'connectors',
   CRM: 'cloud',
   Files: 'file',
+  'Data platform': 'cloud',
+  'Service desk': 'cloud',
+  API: 'cloud',
 }
 
 // Source trust tiers: why one system's value beats another's when they disagree.
@@ -142,7 +145,7 @@ export function ConnectorsPage() {
                 <Icon name="connectors" size={20} />
               </span>
               <strong>Add a bank system</strong>
-              <span>PostgreSQL, MySQL, MongoDB, a REST API or a CSV file, with your own login. Read-only.</span>
+              <span>Databases, Snowflake, Databricks, Cloudera, Salesforce, ServiceNow, an API or a CSV file. Read-only.</span>
             </Link>
           ) : (
             <div className="add-tile">
