@@ -46,7 +46,7 @@ def interaction_json(i, with_customer=False):
 def customer_interactions(request, pk):
     """GET  /api/customers/<id>/interactions/  newest first (50)
     POST /api/customers/<id>/interactions/  {channel, kind, summary, outcome, inbound?, follow_up_on?}"""
-    customer = get_object_or_404(Customer, pk=pk)
+    customer = get_object_or_404(Customer.objects.visible(), pk=pk)
     if request.method == "GET":
         return Response([interaction_json(i) for i in customer.interactions.all()[:50]])
     d = request.data
@@ -65,7 +65,7 @@ def customer_interactions(request, pk):
 @permission_classes([HasRole])
 def customer_briefing(request, pk):
     """GET /api/customers/<id>/briefing/  What to know before speaking to this customer."""
-    customer = get_object_or_404(Customer, pk=pk)
+    customer = get_object_or_404(Customer.objects.visible(), pk=pk)
     return Response(build_briefing(customer, request.user))
 
 
@@ -86,5 +86,6 @@ def close(request, pk):
 @permission_classes([HasRole])
 def open_items(request):
     """GET /api/interactions/open/  Open complaints and follow-ups across all customers, oldest first."""
-    items = Interaction.objects.filter(state=Interaction.OPEN).select_related("customer").order_by("created_at")
+    items = (Interaction.objects.filter(state=Interaction.OPEN, customer__in=Customer.objects.visible())
+             .select_related("customer").order_by("created_at"))
     return Response([interaction_json(i, with_customer=True) for i in items[:200]])

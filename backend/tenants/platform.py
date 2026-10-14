@@ -51,12 +51,12 @@ def organization_health(tenant):
         return {
             "users": User.objects.filter(is_active=True).count(),
             "admins": User.objects.filter(is_active=True, is_superuser=True).count(),
-            "customers": Customer.objects.count(),
-            "source_records": SourceRecord.objects.count(),
+            "customers": Customer.objects.visible().count(),
+            "source_records": SourceRecord.objects.filter(source__enabled=True).count(),
             "sources_enabled": sources.filter(enabled=True).count(),
             "sources_total": sources.count(),
             "last_sync": _iso(sources.aggregate(m=Max("last_synced_at"))["m"]),
-            "pending_reviews": MatchSuggestion.objects.filter(status=MatchSuggestion.PENDING).count(),
+            "pending_reviews": MatchSuggestion.objects.visible().filter(status=MatchSuggestion.PENDING).count(),
             "last_activity": _iso(AuditEvent.objects.aggregate(m=Max("at"))["m"]),
         }
 

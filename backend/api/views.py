@@ -147,7 +147,7 @@ BAND_FILTERS = {
 def customers_with_details():
     """Customers with their name and related rows loaded up front, so serializing a page takes a few queries."""
     golden_name = GoldenField.objects.filter(customer=OuterRef("pk"), field="name").values("value")[:1]
-    return Customer.objects.annotate(golden_name=Subquery(golden_name)).prefetch_related(
+    return Customer.objects.visible().annotate(golden_name=Subquery(golden_name)).prefetch_related(
         "golden_fields__source",
         "golden_fields__source_record",
         "golden_fields__correction",
@@ -247,6 +247,13 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
                         status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args, **kwargs):
+        pk = str(kwargs.get("pk", ""))
+        if pk.isdigit() and not Customer.objects.visible().filter(pk=pk).exists()                 and Customer.objects.filter(pk=pk).exists():
+            return Response(
+                {"detail": "Every system this customer comes from is disconnected. "
+                           "Reconnect one on Connectors to see this customer again."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         response = super().retrieve(request, *args, **kwargs)
         # One entry per user per customer per minute: a page reload is not a second look at the data.
         recent = AuditEvent.objects.filter(
@@ -291,7 +298,7 @@ class MatchSuggestionViewSet(viewsets.ReadOnlyModelViewSet):
         return [HasRole(), requires("view_matches")()]
 
     def get_queryset(self):
-        qs = MatchSuggestion.objects.select_related(
+        qs = MatchSuggestion.objects.visible().select_related(
             "record_a__source", "record_b__source",
             "record_a__customer_link__customer", "record_b__customer_link__customer",
         )
@@ -335,7 +342,8 @@ class FieldCorrectionViewSet(viewsets.ReadOnlyModelViewSet):
         return [HasRole(), requires("propose_corrections", "approve_corrections")()]
 
     def get_queryset(self):
-        qs = FieldCorrection.objects.select_related("customer").prefetch_related("customer__golden_fields")
+        qs = FieldCorrection.objects.filter(customer__in=Customer.objects.visible()).select_related(
+            "customer").prefetch_related("customer__golden_fields")
         wanted = self.request.query_params.get("status")
         if wanted:
             qs = qs.filter(status=wanted)
@@ -383,7 +391,7 @@ def compliance_queue(request):
     names = dict(GoldenField.objects.filter(field="name").values_list("customer_id", "value"))
     kyc = {k.pan_hash: k for k in KycRecord.objects.all()}
     rows = []
-    for c in Customer.objects.all():
+    for c in Customer.objects.visible():
         k = kyc.get(c.pan_hash) if c.pan_hash else None
         rows.append({
             "id": c.id, "code": c.code, "name": names.get(c.id, ""),
@@ -446,7 +454,7 @@ class AuditEventViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(["GET"])
 def overview(request):
     """Headline numbers for the Overview screen, in one request."""
-    customers = Customer.objects.all()
+    customers = Customer.objects.visible()
     scores = [float(s) for s in customers.exclude(trust_score=None).values_list("trust_score", flat=True)]
 
     # Customers per 0.1 band of trust score: 0.0-0.1, ..., 0.9-1.0 (a score of exactly 1.0 goes in the last).
@@ -458,12 +466,13 @@ def overview(request):
 
     return Response({
         "customers": customers.count(),
-        "source_records": SourceRecord.objects.count(),
+        "source_records": SourceRecord.objects.filter(source__enabled=True).count(),
         "average_trust": f"{customers.aggregate(a=Avg('trust_score'))['a'] or 0:.3f}",
         "bands": {band: customers.filter(q).count() for band, q in BAND_FILTERS.items()},
         "histogram": [{"from": i / 10, "to": (i + 1) / 10, "count": n} for i, n in enumerate(histogram)],
-        "pending_reviews": MatchSuggestion.objects.filter(status=MatchSuggestion.PENDING).count(),
-        "pending_corrections": FieldCorrection.objects.filter(status=FieldCorrection.PENDING).count(),
+        "pending_reviews": MatchSuggestion.objects.visible().filter(status=MatchSuggestion.PENDING).count(),
+        "pending_corrections": FieldCorrection.objects.filter(
+            status=FieldCorrection.PENDING, customer__in=Customer.objects.visible()).count(),
         "last_synced_at": Source.objects.aggregate(m=Max("last_synced_at"))["m"],
         "sources": SourceSerializer(
             Source.objects.annotate(record_count=Count("records")).order_by("-trust", "name"), many=True
@@ -481,14 +490,15 @@ def _quality_breakdown():
 
     golden = {}
     names = {}
-    for g in GoldenField.objects.values("customer_id", "field", "value", "conflicts"):
+    for g in GoldenField.objects.filter(customer__in=Customer.objects.visible()).values(
+            "customer_id", "field", "value", "conflicts"):
         golden[(g["customer_id"], g["field"])] = (compare_key(g["field"], g["value"]), g["conflicts"])
         if g["field"] == "name":
             names[g["customer_id"]] = g["value"]
 
     scores = [
         {"id": c.id, "code": c.code, "name": names.get(c.id, ""), "score": str(c.trust_score)}
-        for c in Customer.objects.exclude(trust_score=None).order_by("trust_score", "id")[:2000]
+        for c in Customer.objects.visible().exclude(trust_score=None).order_by("trust_score", "id")[:2000]
     ]
 
     conflicts = {f: 0 for f in FIELDS}

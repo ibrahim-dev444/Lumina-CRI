@@ -40,7 +40,13 @@ def test_signed_in_bank_staff_get_nothing_from_the_platform(db):
 def test_health_cards_show_counts_not_customers(platform):
     # Test requests switch the connection's schema, so bank data is set up explicitly inside Axis.
     with schema_context("axis"):
-        Customer.objects.create()
+        from ingestion.models import SourceRecord
+        from mdm.services import build_customers
+        from sources.models import Source
+
+        SourceRecord.objects.create(source=Source.objects.get(code="flexcube"), source_record_id="1", name="Asha")
+        build_customers()
+        Customer.objects.create()  # no connected system describes this one: not counted
     cards = {o["code"]: o for o in platform.get("/api/platform/organizations/").json()}
     assert set(cards) >= {"axis", "hdfc"}
     axis = cards["axis"]["health"]
