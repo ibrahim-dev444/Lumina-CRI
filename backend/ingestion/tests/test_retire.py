@@ -86,3 +86,39 @@ def test_cloud_data_gives_review_work_but_keeps_family_apart(bank, seeds):
     assert len(suggestions) == 2  # the typo duplicate and the person without a PAN in two systems
     family = next(r for r in records if r["name"] in ("Lata Iyer", "Sana Shaikh"))
     assert any(group == {family["id"]} for group in groups)  # shares a phone, but never merged
+
+
+def test_admin_deletes_one_connector_after_seeing_what_goes(mixed, admin_client_for_delete):
+    admin = admin_client_for_delete
+    preview = admin.get("/api/connectors/salesforce/delete/").json()
+    assert preview == {"name": "Salesforce", "records": 1, "products": 0, "customers": 1, "conversations": 0,
+                       "corrections": 0}  # Meera's look-alike record exists only in Salesforce
+    assert admin.post("/api/connectors/salesforce/delete/", {"confirm": "salesforce"}, format="json").status_code == 400
+    done = admin.post("/api/connectors/salesforce/delete/", {"confirm": "Salesforce"}, format="json")
+    assert done.status_code == 200 and done.json()["records"] == 1
+    assert not Source.objects.filter(code="salesforce").exists()
+    assert Source.objects.filter(code="flexcube").exists() and Source.objects.filter(code="cloud-core").exists()
+    assert Customer.objects.filter(golden_fields__value="Suresh Kumar").exists()
+    from audit.models import AuditEvent
+
+    event = AuditEvent.objects.get(action="connector_deleted")
+    assert event.target == "source salesforce" and event.detail["customers"] == 1
+
+
+def test_only_admins_delete_connectors(mixed):
+    steward = User.objects.create_user("st.del", password="Strong-pass-123")
+    from django.contrib.auth.models import Group
+
+    steward.groups.add(Group.objects.get(name="Data steward"))
+    c = APIClient()
+    c.force_authenticate(steward)
+    assert c.get("/api/connectors/salesforce/delete/").status_code == 403
+    assert c.post("/api/connectors/salesforce/delete/", {"confirm": "Salesforce"}, format="json").status_code == 403
+    assert Source.objects.filter(code="salesforce").exists()
+
+
+@pytest.fixture
+def admin_client_for_delete(db):
+    c = APIClient()
+    c.force_authenticate(User.objects.create_user("del.admin", password="Strong-pass-123", is_superuser=True))
+    return c

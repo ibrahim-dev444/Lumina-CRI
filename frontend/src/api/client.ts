@@ -170,6 +170,11 @@ export const api = {
   saveAccountsMapping: (code: string, mapping: AccountsMapping) =>
     put<Source>(`/connectors/${code}/accounts-mapping/`, mapping),
   removeAccountsMapping: (code: string) => request<Source>('DELETE', `/connectors/${code}/accounts-mapping/`),
+  connectorDeletePreview: (code: string) =>
+    get<{ name: string; records: number; products: number; customers: number; conversations: number; corrections: number }>(
+      `/connectors/${code}/delete/`,
+    ),
+  deleteConnector: (code: string, confirm: string) => post<{ deleted: string }>(`/connectors/${code}/delete/`, { confirm }),
   connectorRuns: (code: string) => get<SyncRun[]>(`/connectors/${code}/runs/`),
   createApiKey: (code: string) => post<{ api_key: string; key_prefix: string }>(`/connectors/${code}/api-key/`),
   uploadConnectorFile: async (code: string, file: File): Promise<{ name: string; rows: number }> => {
