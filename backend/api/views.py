@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
@@ -28,6 +28,7 @@ from compliance.services import ConsentError, record_consent
 from stewardship.services import CorrectionError, decide, propose
 
 from .permissions import HasRole, requires
+from .throttles import LoginThrottle
 from .serializers import (
     AuditEventSerializer,
     FieldCorrectionSerializer,
@@ -50,6 +51,7 @@ def csrf(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([LoginThrottle])
 def login_view(request):
     username = str(request.data.get("username", ""))[:150]
     minutes = org_lock_minutes(username)
@@ -278,11 +280,18 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
         writer.writerow(["Customer ID", "Name", "Trust score", "Band", "Sources", "Fields in conflict",
                          "Fields to review"])
         for c in serializer.data:
-            writer.writerow([c["code"], c["name"], c["trust_score"], c["band"], "; ".join(c["sources"]),
-                             c["conflict_fields"], c["needs_review"]])
+            writer.writerow([_cell(v) for v in [c["code"], c["name"], c["trust_score"], c["band"],
+                                                "; ".join(c["sources"]), c["conflict_fields"], c["needs_review"]]])
         record(request, AuditEvent.EXPORT, target="customers", rows=len(serializer.data),
                filters=dict(request.query_params))
         return response
+
+
+def _cell(value):
+    """A spreadsheet runs a cell starting with = + - @ as a formula. Names come from bank systems, so such a
+    cell is prefixed with an apostrophe and opens as plain text."""
+    text = "" if value is None else str(value)
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
 
 
 # ---------- Match suggestions (steward review) ----------

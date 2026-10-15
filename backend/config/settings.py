@@ -201,7 +201,22 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['api.permissions.HasRole'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    # Rate limits against guessing and abuse: per IP address when signed out, per user when signed in.
+    # Sign-in has its own tighter limit on top of the account lockout (accounts/lockout.py).
+    'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.AnonRateThrottle',
+                                 'rest_framework.throttling.UserRateThrottle'],
+    'DEFAULT_THROTTLE_RATES': {'anon': '60/min', 'user': '600/min', 'login': '10/min', 'ingest': '120/min'},
 }
+
+# Passwords are hashed with Argon2id. Older PBKDF2 hashes still work and are upgraded at the next sign-in.
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+]
+
+# At most 25 files in one request (a connector upload takes up to 20).
+DATA_UPLOAD_MAX_NUMBER_FILES = 25
 
 
 # Password validation

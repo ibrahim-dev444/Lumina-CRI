@@ -5,9 +5,11 @@ administrators cannot open an organization's data."""
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.response import Response
+
+from api.throttles import LoginThrottle
 
 from accounts.lockout import locked_message, platform_lock_minutes
 
@@ -44,6 +46,7 @@ def csrf(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([LoginThrottle])
 def platform_login(request):
     username = str(request.data.get("username", ""))[:150]
     minutes = platform_lock_minutes(username)

@@ -73,7 +73,7 @@ def customer_briefing(request, pk):
 @permission_classes([HasRole])
 def close(request, pk):
     """POST /api/interactions/<id>/close/  {note}  Closes a complaint or follow-up."""
-    item = get_object_or_404(Interaction, pk=pk)
+    item = get_object_or_404(Interaction, pk=pk, customer__in=Customer.objects.visible())
     try:
         close_interaction(item, request.user, request.data.get("note"))
     except InteractionError as exc:

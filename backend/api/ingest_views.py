@@ -14,7 +14,7 @@ import json
 
 from django.db import transaction
 from rest_framework import status
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -27,6 +27,7 @@ from security import crypto
 from sources.models import Source
 
 from .connector_views import hash_api_key
+from .throttles import IngestThrottle
 
 MAX_RECORDS = 1000
 ALLOWED_KEYS = set(PUSH_FIELDS) | {"id", "updated_at"}
@@ -42,6 +43,7 @@ def _key_matches(source, given):
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
+@throttle_classes([IngestThrottle])
 def ingest(request, code):
     source = Source.objects.filter(code=code, connector_type="push_api").first()
     auth = request.headers.get("Authorization", "")

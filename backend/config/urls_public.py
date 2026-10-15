@@ -1,12 +1,12 @@
 """Addresses outside any organization: no /t/<org>/ prefix. Runs in the shared "public" schema."""
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 
 from tenants import platform_views, scheduler_views, views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('api/health/', views.health),
     path('api/organizations/<slug:code>/', views.organization),
     # Platform console (super admin): organizations, their health, the platform activity log.
@@ -20,3 +20,8 @@ urlpatterns = [
     # Hourly scheduled syncs, protected by SYNC_RUNNER_TOKEN.
     path('api/internal/run-due-syncs/', scheduler_views.run_scheduled_syncs),
 ]
+
+# Django's own admin pages only in development: on the hosted site every change goes through the app, where
+# roles, lockout and the audit log apply.
+if settings.DEBUG:
+    urlpatterns.append(path('admin/', admin.site.urls))
