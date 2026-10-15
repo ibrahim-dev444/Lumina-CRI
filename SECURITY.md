@@ -12,7 +12,10 @@ How Lumina protects the customer data it holds. Each point says where the rule l
 
 ## Signing in
 
-- Passwords are stored only as one-way hashes (PBKDF2). Nobody can read them back.
+- Passwords are stored only as one-way **Argon2id** hashes; older PBKDF2 hashes are upgraded at the next sign-in.
+  Nobody can read them back.
+- **Rate limits** (`REST_FRAMEWORK` in settings, `api/throttles.py`): 10 sign-in attempts a minute per address,
+  60 requests a minute when signed out, 600 when signed in, 120 push batches a minute per connector.
 - **Lockout**: 5 wrong passwords lock that username for 15 minutes, for bank and platform logins
   (`accounts/lockout.py`). Every attempt is in the audit log.
 - **Idle sign-out**: 30 minutes without activity ends the session (`SESSION_COOKIE_AGE`).
@@ -64,3 +67,15 @@ How Lumina protects the customer data it holds. Each point says where the rule l
 - No two-factor sign-in yet.
 
 Found a problem? Tell the project owner privately; do not open a public issue.
+
+## Other safeguards
+
+- Django's own admin pages are served only in development; on the hosted site every change goes through the app,
+  where roles, lockout and the audit log apply.
+- Customer exports guard against spreadsheet formulas: a cell starting with `=`, `+`, `-` or `@` opens as text.
+- Uploads: at most 20 CSV files a request, 5 MB each, checked as UTF-8 CSV with a header and the mapped columns;
+  file content is stored in the database, never on disk under the uploaded name. Logos: PNG, JPEG or WebP up to
+  256 KB, checked by their content; SVG is refused.
+- The production website ships no source maps. Dependencies are checked by `pip-audit` and `npm audit` in CI.
+- Not yet: multi-factor sign-in.
+

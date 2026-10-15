@@ -14,10 +14,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
 ]
+
+# Django's own admin pages only in development: on the hosted site every change goes through the app, where
+# roles, lockout and the audit log apply.
+if settings.DEBUG:
+    urlpatterns.append(path('admin/', admin.site.urls))

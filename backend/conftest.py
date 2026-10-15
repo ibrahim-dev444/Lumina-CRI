@@ -66,3 +66,11 @@ def field_encryption_key(settings):
     yield
     for cached in (crypto._key_material, crypto._fernet, crypto._hash_key):
         cached.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits():
+    """Rate-limit counters live in the cache; each test starts with none used."""
+    from django.core.cache import cache
+
+    cache.clear()

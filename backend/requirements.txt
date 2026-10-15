@@ -1,4 +1,7 @@
+argon2-cffi-bindings==26.1.0
+argon2-cffi==25.1.0
 bitarray==3.11.0
+cffi==2.1.1
 cryptography==50.0.2
 django-cors-headers==4.9.0
 django-tenants==4.0.0
@@ -9,6 +12,7 @@ gunicorn==26.2.0
 impyla==0.24.0
 psycopg[binary]==3.3.6
 pure-sasl==0.6.2
+pycparser==3.0
 pymongo==4.18.3
 PyMySQL==1.2.3
 pytest-django==4.14.0
