@@ -7,33 +7,69 @@ from .base import BaseConnector
 from .catalog import adapter_for
 
 IDENTITY_FIELDS = ("pan", "aadhaar", "ckyc")
+TABLE_KEY = "_lumina_table"  # added to each row: which of the connector's customer tables it came from
+MAIN = "main"
+
+
+def customer_tables(mapping):
+    """Every customer table of a connector: the main one (the mapping's own keys) and any added later
+    (mapping["tables"]). Each: {key, object, id_column, updated_column, fields, status}."""
+    mapping = mapping or {}
+    tables = []
+    if mapping.get("object"):
+        tables.append({"key": MAIN, "object": mapping["object"], "id_column": mapping.get("id_column"),
+                       "updated_column": mapping.get("updated_column") or "", "fields": mapping.get("fields") or {},
+                       "status": mapping.get("status") or "active"})
+    for t in mapping.get("tables") or []:
+        tables.append({"updated_column": "", "fields": {}, "status": "active", **t})
+    return tables
+
+
+def record_key(table_key, raw_id):
+    """Rows from added tables carry their table's key, so the same ID in two tables stays two records. The main
+    table keeps plain IDs, so existing records and the accounts table keep matching."""
+    return raw_id if table_key == MAIN else f"{table_key}:{raw_id}"
 
 
 class MappedConnector(BaseConnector):
-    """A connector set up from the catalog: it reads the object and columns its mapping names, and renames them
+    """A connector set up from the catalog: it reads the tables and columns its mapping names, and renames them
     to Lumina's fields. Cleaning, encryption and matching then happen exactly as for the built-in connectors."""
 
     def __init__(self, source):
         self.source = source
         self.mapping = source.mapping or {}
-        self.fields = self.mapping.get("fields") or {}
-        self.id_column = self.mapping.get("id_column")
-        self.updated_column = self.mapping.get("updated_column") or ""
-        if not self.mapping.get("object") or not self.id_column or not self.fields.get("name"):
+        self.tables = {t["key"]: t for t in customer_tables(self.mapping)}
+        main = self.tables.get(MAIN)
+        if not main or not main["id_column"] or not main["fields"].get("name"):
             from .adapters import ConnectorError
 
             raise ConnectorError("Finish the field mapping first (table, record ID and at least the name).")
         self.source_code = source.code
-        self.sensitive_columns = {self.fields[f]: f for f in IDENTITY_FIELDS if self.fields.get(f)}
+        self.sensitive_columns = {t["fields"][f]: f for t in self.tables.values() for f in IDENTITY_FIELDS
+                                  if t["fields"].get(f)}
 
-    def columns(self):
-        wanted = [self.id_column, *self.fields.values()]
-        if self.updated_column:
-            wanted.append(self.updated_column)
+    @staticmethod
+    def _columns(table):
+        wanted = [table["id_column"], *table["fields"].values()]
+        if table["updated_column"]:
+            wanted.append(table["updated_column"])
         return list(dict.fromkeys(c for c in wanted if c))  # each column once, order kept
 
+    def columns(self):
+        return self._columns(self.tables[MAIN])
+
+    def suspended_tables(self):
+        return [k for k, t in self.tables.items() if t["status"] != "active"]
+
     def fetch(self):
-        return adapter_for(self.source).fetch(self.mapping["object"], self.columns(), settings.CONNECTOR_MAX_ROWS)
+        """Rows from every active table, each tagged with its table."""
+        adapter, rows = adapter_for(self.source), []
+        for key, table in self.tables.items():
+            if table["status"] != "active":
+                continue
+            for row in adapter.fetch(table["object"], self._columns(table), settings.CONNECTOR_MAX_ROWS):
+                rows.append({**row, TABLE_KEY: key})
+        return rows
 
     def fetch_accounts(self):
         """The rows of the optional accounts mapping (accounts, deposits, loans, cards), or None if not set up."""
@@ -46,13 +82,19 @@ class MappedConnector(BaseConnector):
         columns = list(dict.fromkeys(c for c in wanted if c))
         return adapter_for(self.source).fetch(accounts["object"], columns, settings.CONNECTOR_MAX_ROWS)
 
+    def _table(self, raw):
+        return self.tables.get(raw.get(TABLE_KEY) or MAIN) or self.tables[MAIN]
+
     def record_id(self, raw):
-        value = raw.get(self.id_column)
-        return str(value).strip() if value not in (None, "") else ""
+        table = self._table(raw)
+        value = raw.get(table["id_column"])
+        return record_key(table["key"], str(value).strip()) if value not in (None, "") else ""
 
     def to_standard(self, raw):
-        std = {field: raw.get(column) for field, column in self.fields.items()}
-        std["source_updated_at"] = _when(raw.get(self.updated_column)) if self.updated_column else None
+        table = self._table(raw)
+        std = {field: raw.get(column) for field, column in table["fields"].items()}
+        updated = table["updated_column"]
+        std["source_updated_at"] = _when(raw.get(updated)) if updated else None
         return std
 
 

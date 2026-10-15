@@ -23,6 +23,8 @@ from ingestion.connectors.adapters import ConnectorError
 from ingestion.connectors.catalog import BY_TYPE, adapter_for, public_catalog, split_settings, write_secrets
 from ingestion.files import refresh, remove_files, removal_plan, set_status, upload_files
 from ingestion.retire import plan, remove_sources
+from ingestion.tables import remove_tables, save_table, set_table_status
+from ingestion.tables import removal_plan as table_removal_plan
 from mdm.models import FIELDS
 from products.services import ACCOUNT_FIELDS
 from security import crypto
@@ -182,10 +184,9 @@ def save_mapping(request, code):
     missing = [c for c in used if c not in columns]
     if missing:
         return _bad(f"{', '.join(missing)} not found in {obj}.")
-    accounts = (source.mapping or {}).get("accounts")  # the accounts mapping is saved on its own
-    source.mapping = {"object": obj, "id_column": id_column, "updated_column": updated_column, "fields": fields}
-    if accounts:
-        source.mapping["accounts"] = accounts
+    kept = {k: v for k, v in (source.mapping or {}).items() if k in ("accounts", "tables", "status") and v}
+    source.mapping = {"object": obj, "id_column": id_column, "updated_column": updated_column, "fields": fields,
+                      **kept}  # the accounts table and added customer tables are saved on their own
     source.save(update_fields=["mapping"])
     record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", mapping=source.mapping)
     return Response(_source_json(source))
@@ -314,6 +315,85 @@ def _ids(request):
     if isinstance(raw, str):
         raw = raw.split(",")
     return [int(i) for i in raw or [] if str(i).strip().isdigit()]
+
+
+MULTI_TABLE_TYPES = {"postgresql", "mysql", "mongodb", "snowflake", "databricks", "servicenow", "salesforce",
+                     "cloudera"}
+
+
+def _table_source(code):
+    source, error = _configurable(code)
+    if error:
+        return None, error
+    if source.connector_type not in MULTI_TABLE_TYPES:
+        return None, _bad("This kind of connector reads one place only.")
+    return source, None
+
+
+def _keys(request):
+    raw = request.data.get("keys") if request.method == "POST" else request.query_params.get("keys", "")
+    if isinstance(raw, str):
+        raw = raw.split(",")
+    return [str(k).strip() for k in raw or [] if str(k).strip()]
+
+
+@api_view(["PUT"])
+@permission_classes(ADMIN_ONLY)
+def save_customer_table(request, code):
+    """PUT /api/connectors/<code>/tables/  {key?, object, id_column, updated_column?, fields}
+    Adds another customer table (no key) or changes an added one. Checked against the live columns."""
+    source, error = _table_source(code)
+    if error:
+        return error
+    key = str(request.data.get("key") or "").strip() or None
+    try:
+        key = save_table(source, request.data, key)
+    except ConnectorError as exc:
+        return _bad(exc)
+    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", table=key,
+           object=str(request.data.get("object", ""))[:100])
+    return Response({"key": key, **_source_json(source)})
+
+
+@api_view(["POST"])
+@permission_classes(ADMIN_ONLY)
+def table_status(request, code):
+    """POST /api/connectors/<code>/tables/status/  {keys: ["main", "t2"], status: "active" | "suspended"}"""
+    source, error = _table_source(code)
+    if error:
+        return error
+    keys, wanted = _keys(request), request.data.get("status")
+    if not keys:
+        return _bad("Choose one or more tables.")
+    try:
+        changed = set_table_status(source, keys, wanted, request.user.get_username())
+    except (ConnectorError, ValueError) as exc:
+        return _bad(exc)
+    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", tables=keys, status=wanted)
+    return Response({"changed": changed, **_source_json(source)})
+
+
+@api_view(["GET", "POST"])
+@permission_classes(ADMIN_ONLY)
+def remove_tables_view(request, code):
+    """GET  /api/connectors/<code>/tables/remove/?keys=t2  what removing those tables would remove (counts)
+    POST /api/connectors/<code>/tables/remove/  {keys: [..], confirm: true}  removes them for good."""
+    source, error = _table_source(code)
+    if error:
+        return error
+    keys = _keys(request)
+    if not keys:
+        return _bad("Choose one or more tables.")
+    try:
+        if request.method == "GET":
+            return Response(table_removal_plan(source, keys).__dict__)
+        if request.data.get("confirm") is not True:
+            return _bad("Confirm the removal.")
+        plan = remove_tables(source, keys, request.user.get_username())
+    except (ConnectorError, ValueError) as exc:
+        return _bad(exc)
+    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", removed_tables=keys, **plan.__dict__)
+    return Response({**plan.__dict__, **_source_json(source)})
 
 
 @api_view(["GET"])
