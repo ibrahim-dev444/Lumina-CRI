@@ -32,6 +32,9 @@ urlpatterns = [
     path("connectors/<slug:code>/accounts-mapping/", connector_views.save_accounts_mapping),
     path("connectors/<slug:code>/delete/", connector_views.delete_connector),
     path("connectors/<slug:code>/upload/", connector_views.upload_file),
+    path("connectors/<slug:code>/files/", connector_views.list_files),
+    path("connectors/<slug:code>/files/status/", connector_views.file_status),
+    path("connectors/<slug:code>/files/remove/", connector_views.remove_files_view),
     path("connectors/<slug:code>/runs/", connector_views.sync_runs),
     path("connectors/<slug:code>/api-key/", connector_views.create_api_key),
     # Push API: a bank system sends records with its connector's API key (no sign-in session).

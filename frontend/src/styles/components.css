@@ -3670,3 +3670,46 @@ button.link {
   align-items: center;
   gap: 12px;
 }
+
+/* File-upload connector: many files */
+.dropzone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 16px 20px;
+  padding: 18px 20px;
+  border: 1.5px dashed var(--border-strong, var(--border));
+  border-radius: var(--radius-md);
+  color: var(--text-2);
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.dropzone.is-over {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.dropzone .text-sm {
+  margin-left: auto;
+}
+.files-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+}
+.files-removal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 20px 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--bad-dot);
+  border-radius: var(--radius-md);
+  background: var(--bad-bg);
+}
+.btn-danger-ghost {
+  color: var(--bad-text);
+}

@@ -398,37 +398,53 @@ class RestApiAdapter(BaseAdapter):
 
 # ---------- File upload (CSV) ----------
 
+FILE_KEY = "_lumina_file"  # added to each row read from an uploaded file: which file it came from
+FILES_OBJECT = "Uploaded files"
+
+
 class FileUploadAdapter(BaseAdapter):
-    def _latest(self):
-        upload = self.source.uploads.first() if self.source is not None and self.source.pk else None
-        if upload is None:
-            raise ConnectorError("Upload a CSV file first.")
-        return upload
+    """Reads every active CSV uploaded to the connector. Columns come from the newest active file; uploads are
+    checked against the mapping, so every active file has the mapped columns."""
+
+    def _active(self):
+        files = list(self.source.uploads.filter(status="active")) if self.source is not None and self.source.pk             else []
+        if not files:
+            raise ConnectorError("Upload a CSV file first, or resume a suspended one.")
+        return files  # newest first
 
     def test(self):
-        upload = self._latest()
-        return f"Using {upload.name}: {upload.rows} rows."
+        files = self._active()
+        rows = sum(f.rows for f in files)
+        return f"{len(files)} active file{'s' if len(files) != 1 else ''}, {rows} rows."
 
     def list_objects(self):
-        return [self._latest().name]
+        self._active()
+        return [FILES_OBJECT]
 
-    def list_columns(self, obj):
-        reader = csv.reader(io.StringIO(self._latest().content))
-        header = next(reader, [])
-        if not header:
-            raise ConnectorError("The file has no header row.")
-        return [h.strip() for h in header]
+    def list_columns(self, obj=None):
+        return csv_header(self._active()[0].content)
 
     def fetch(self, obj, columns, limit):
         _checked(columns, self.list_columns(obj))
-        reader = csv.DictReader(io.StringIO(self._latest().content))
-        rows = []
-        for row in reader:
-            clean = {(k or "").strip(): v for k, v in row.items()}
-            rows.append({c: clean.get(c) for c in columns})
-            if len(rows) >= limit:
-                break
-        return rows
+        id_column = (self.source.mapping or {}).get("id_column") or columns[0]
+        by_id, without_id = {}, []
+        for upload in reversed(self._active()):  # oldest first, so a newer file overwrites the same customer ID
+            for row in csv.DictReader(io.StringIO(upload.content)):
+                clean = {(k or "").strip(): v for k, v in row.items()}
+                picked = {**{c: clean.get(c) for c in columns}, FILE_KEY: upload.id}
+                key = (clean.get(id_column) or "").strip()
+                if key:
+                    by_id[key] = picked
+                else:
+                    without_id.append(picked)  # counted as read; the sync skips rows without an ID
+        return (list(by_id.values()) + without_id)[:limit]
+
+
+def csv_header(text):
+    header = next(csv.reader(io.StringIO(text)), [])
+    if not header:
+        raise ConnectorError("The file has no header row.")
+    return [h.strip() for h in header]
 
 
 def parse_csv_upload(name, raw_bytes):

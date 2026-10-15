@@ -55,9 +55,13 @@ class SyncRun(models.Model):
 
 
 class UploadedFile(models.Model):
-    """A CSV file uploaded to a file-upload connector. The newest one is what the next sync reads."""
+    """A CSV file uploaded to a file-upload connector. A sync reads every active file; when the same customer ID
+    is in several, the newest file wins. Suspending a file hides the customers only it contains, until resumed."""
+
+    ACTIVE, SUSPENDED = "active", "suspended"
 
     source = models.ForeignKey(Source, on_delete=models.CASCADE, related_name="uploads")
+    status = models.CharField(max_length=10, choices=[(ACTIVE, "Active"), (SUSPENDED, "Suspended")], default=ACTIVE)
     name = models.CharField(max_length=200)
     content = models.TextField()
     rows = models.PositiveIntegerField(default=0)

@@ -9,6 +9,7 @@ from sources.models import Source, SyncRun
 
 from .clean import clean_aadhaar, clean_record
 from .connectors import CONNECTORS
+from .connectors.adapters import FILE_KEY
 from .connectors.catalog import DEMO_TYPES
 from .connectors.generic import MappedConnector
 from .models import RawRecord, SourceRecord
@@ -117,16 +118,23 @@ def _store(source, connector, rows):
     result = SyncResult(fetched=len(rows))
     # All rows are saved together or not at all, so a failure halfway leaves no half-synced data.
     with transaction.atomic():
+        seen = set()
         for raw in rows:
+            raw = dict(raw)
+            origin_file = raw.pop(FILE_KEY, None)  # which uploaded file the row came from (file uploads only)
             record_id = connector.record_id(raw)
             if not record_id:
                 continue  # a row without an ID cannot be followed over time; skip it
+            seen.add(record_id)
             RawRecord.objects.create(
                 source=source, source_record_id=record_id, payload=_protect_raw(raw, connector.sensitive_columns)
             )
 
             std = _protect_record(clean_record(connector.to_standard(raw)))
             std["source_updated_at"] = _aware(std.get("source_updated_at"))
+            std["active"] = True
+            if origin_file is not None:
+                std["origin_file_id"] = origin_file
             _, created = SourceRecord.objects.update_or_create(
                 source=source, source_record_id=record_id, defaults=std
             )
@@ -135,6 +143,9 @@ def _store(source, connector, rows):
             else:
                 result.updated += 1
 
+        if source.connector_type == "file_upload":
+            # Rows only suspended files hold are kept but switched off, so resuming brings back the same customer.
+            SourceRecord.objects.filter(source=source).exclude(source_record_id__in=seen).update(active=False)
         source.last_synced_at = timezone.now()
         source.save(update_fields=["last_synced_at"])
     return result

@@ -100,10 +100,10 @@ class CustomerListSerializer(serializers.ModelSerializer):
         return trust_band(obj.trust_score)
 
     def get_record_count(self, obj):
-        return len(obj.links.all())
+        return sum(1 for link in obj.links.all() if link.source_record.active)
 
     def _sources(self, obj):
-        sources = {link.source_record.source for link in obj.links.all()}
+        sources = {link.source_record.source for link in obj.links.all() if link.source_record.active}
         return sorted(sources, key=lambda s: (-s.trust, s.code))
 
     def get_sources(self, obj):
@@ -320,7 +320,8 @@ class CustomerDetailSerializer(CustomerListSerializer):
         return GoldenFieldSerializer(golden, many=True, context=self.context).data
 
     def get_records(self, obj):
-        records = sorted((link.source_record for link in obj.links.all()), key=lambda r: -r.source.trust)
+        records = sorted((link.source_record for link in obj.links.all() if link.source_record.active),
+                         key=lambda r: -r.source.trust)
         golden_keys = {g.field: compare_key(g.field, g.value) for g in obj.golden_fields.all()}
         return SourceRecordSerializer(records, many=True, context={**self.context, "golden_keys": golden_keys}).data
 

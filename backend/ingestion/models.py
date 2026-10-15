@@ -43,6 +43,11 @@ class SourceRecord(models.Model):
     occupation = models.CharField(max_length=100, blank=True)
     income = models.CharField(max_length=60, blank=True)  # an income band, e.g. "10 to 25 lakh"
     source_updated_at = models.DateTimeField(null=True, blank=True)  # when the source system last changed this row
+    # False while the part of the source it came from is switched off (a suspended file), so it is left out of
+    # matching and golden records without being deleted: switching back on restores it with the same customer.
+    active = models.BooleanField(default=True)
+    origin_file = models.ForeignKey("sources.UploadedFile", null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name="+")  # for file uploads: the file this row was last read from
     synced_at = models.DateTimeField(auto_now=True)  # when Lumina last read it
 
     class Meta:

@@ -100,7 +100,7 @@ class SourceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Upd
 
     serializer_class = SourceSerializer
     lookup_field = "code"
-    queryset = Source.objects.annotate(record_count=Count("records")).order_by("-trust", "name")
+    queryset = Source.objects.annotate(record_count=Count("records", filter=Q(records__active=True))).order_by("-trust", "name")
 
     def get_permissions(self):
         # Everyone with a role may look at sources; only stewards and admins may change or sync them.
@@ -466,7 +466,7 @@ def overview(request):
 
     return Response({
         "customers": customers.count(),
-        "source_records": SourceRecord.objects.filter(source__enabled=True).count(),
+        "source_records": SourceRecord.objects.filter(source__enabled=True, active=True).count(),
         "average_trust": f"{customers.aggregate(a=Avg('trust_score'))['a'] or 0:.3f}",
         "bands": {band: customers.filter(q).count() for band, q in BAND_FILTERS.items()},
         "histogram": [{"from": i / 10, "to": (i + 1) / 10, "count": n} for i, n in enumerate(histogram)],
@@ -475,7 +475,7 @@ def overview(request):
             status=FieldCorrection.PENDING, customer__in=Customer.objects.visible()).count(),
         "last_synced_at": Source.objects.aggregate(m=Max("last_synced_at"))["m"],
         "sources": SourceSerializer(
-            Source.objects.annotate(record_count=Count("records")).order_by("-trust", "name"), many=True
+            Source.objects.annotate(record_count=Count("records", filter=Q(records__active=True))).order_by("-trust", "name"), many=True
         ).data,
         "lowest_trust": CustomerListSerializer(lowest, many=True).data,
         **_quality_breakdown(),
@@ -507,7 +507,8 @@ def _quality_breakdown():
             conflicts[field] += 1
 
     agreement = {}
-    records = SourceRecord.objects.filter(source__enabled=True).select_related("source", "customer_link")
+    records = SourceRecord.objects.filter(source__enabled=True, active=True).select_related("source",
+                                                                                           "customer_link")
     for r in records:
         link = getattr(r, "customer_link", None)
         if not link:

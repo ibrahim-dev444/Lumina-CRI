@@ -113,7 +113,7 @@ def holdings_for(customer):
     match = Q()
     for link in customer.links.select_related("source_record__source"):
         record = link.source_record
-        if record.source.enabled:
+        if record.source.enabled and record.active:
             match |= Q(source_id=record.source_id, customer_ref=record.source_record_id)
     if not match:
         return Holding.objects.none()

@@ -31,7 +31,7 @@ def _record_dict(r):
 @transaction.atomic
 def match_records():
     """Group every source record into customers. Customer IDs stay the same between runs."""
-    records = list(SourceRecord.objects.filter(source__enabled=True))
+    records = list(SourceRecord.objects.filter(source__enabled=True, active=True))
     confirmed = set(
         MatchSuggestion.objects.filter(status=MatchSuggestion.ACCEPTED).values_list("record_a_id", "record_b_id")
     )
@@ -98,7 +98,7 @@ def rebuild_golden_record(customer):
     records = [
         link.source_record
         for link in customer.links.select_related("source_record__source")
-        if link.source_record.source.enabled
+        if link.source_record.source.enabled and link.source_record.active
     ]
 
     # The latest approved correction per field joins the candidates at trust 1.00.

@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { api } from '../api/client'
@@ -8,6 +8,7 @@ import { useCan } from '../auth/AuthContext'
 import { ConnectorFields } from '../components/ConnectorFields'
 import { ConnectorLogo } from '../components/ConnectorLogo'
 import { DeleteConnectorCard } from '../components/DeleteConnectorCard'
+import { UploadedFilesCard } from '../components/UploadedFilesCard'
 import { Icon } from '../components/Icon'
 import { Loader, LoaderRow } from '../components/Loader'
 import { useToast } from '../components/Toasts'
@@ -134,7 +135,7 @@ function SetupSteps({ source, type, onChanged }: { source: Source; type: Connect
   return (
     <>
       {type.type === 'file_upload' ? (
-        <UploadStep source={source} onChanged={onChanged} />
+        <UploadedFilesCard source={source} title={<StepTitle n={1} text="Files" />} onChanged={onChanged} />
       ) : (
         <ConnectionStep source={source} type={type} onChanged={onChanged} />
       )}
@@ -215,42 +216,6 @@ function ConnectionStep({ source, type, onChanged }: { source: Source; type: Con
     >
       <div className="form-grid">
         <ConnectorFields fields={type.fields} values={values} onChange={setValues} secretStored={source.has_secret} />
-      </div>
-    </Card>
-  )
-}
-
-function UploadStep({ source, onChanged }: { source: Source; onChanged: () => void }) {
-  const toast = useToast()
-  const input = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
-
-  const pick = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    setBusy(true)
-    try {
-      const done = await api.uploadConnectorFile(source.code, file)
-      toast('success', `${done.name} uploaded: ${done.rows} rows. Now map its columns.`)
-      onChanged()
-    } catch (err) {
-      toast('error', (err as Error).message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <Card title={<StepTitle n={1} text="File" />} description="A CSV file with a header row, up to 5 MB. A new upload replaces the old one at the next sync.">
-      <div className="row" style={{ gap: 12 }}>
-        <input ref={input} type="file" accept=".csv,text/csv" hidden onChange={pick} />
-        <button type="button" className="btn btn-primary" disabled={busy} onClick={() => input.current?.click()}>
-          <Icon name="file" size={16} /> {busy ? 'Uploading...' : 'Upload CSV'}
-        </button>
-        {source.mapping && 'object' in source.mapping && (
-          <span className="text-sm muted">Mapped file: {source.mapping.object}</span>
-        )}
       </div>
     </Card>
   )
