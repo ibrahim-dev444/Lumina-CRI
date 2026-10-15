@@ -5,20 +5,12 @@ import { api } from '../api/client'
 import type { Source } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
-import { Icon, type IconName } from '../components/Icon'
+import { Icon } from '../components/Icon'
 import { Loader } from '../components/Loader'
 import { useToast } from '../components/Toasts'
 import { Card, ErrorAlert, PageHeader, StatusBadge } from '../components/ui'
+import { ConnectorLogo } from '../components/ConnectorLogo'
 import { formatRelative, formatScore, sourceHue, sourceTier } from '../format'
-
-const CATEGORY_ICON: Record<string, IconName> = {
-  'Core banking': 'connectors',
-  CRM: 'cloud',
-  Files: 'file',
-  'Data platform': 'cloud',
-  'Service desk': 'cloud',
-  API: 'cloud',
-}
 
 // Source trust tiers: why one system's value beats another's when they disagree.
 const TIERS = [
@@ -240,9 +232,7 @@ function ConnectorCard({
   return (
     <article className={`card connector${s.enabled ? '' : ' off'}`}>
       <div className="connector-head">
-        <span className={`connector-icon ${sourceHue(s.code)}`}>
-          <Icon name={CATEGORY_ICON[s.category] ?? 'connectors'} size={20} />
-        </span>
+        <ConnectorLogo type={s.connector_type} />
         <div className="stack" style={{ flex: 1, minWidth: 0 }}>
           <h3>{s.name}</h3>
           <span className="text-sm muted">
