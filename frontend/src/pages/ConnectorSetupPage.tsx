@@ -6,6 +6,7 @@ import type { AccountField, AccountsMapping, ConnectorMapping, ConnectorType, Fi
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { ConnectorFields } from '../components/ConnectorFields'
+import { ConnectorLogo } from '../components/ConnectorLogo'
 import { DeleteConnectorCard } from '../components/DeleteConnectorCard'
 import { Icon } from '../components/Icon'
 import { Loader, LoaderRow } from '../components/Loader'
@@ -77,7 +78,16 @@ export function ConnectorSetupPage() {
   return (
     <>
       <PageHeader
-        title={s?.name ?? 'Connector'}
+        title={
+          s ? (
+            <span className="title-with-logo">
+              <ConnectorLogo type={s.connector_type} size={36} />
+              {s.name}
+            </span>
+          ) : (
+            'Connector'
+          )
+        }
         description={
           type?.type === 'push_api'
             ? 'Your own systems send customers to Lumina with an API key.'

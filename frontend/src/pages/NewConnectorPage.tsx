@@ -5,24 +5,11 @@ import { api } from '../api/client'
 import type { ConnectorType } from '../api/types'
 import { useApi } from '../api/useApi'
 import { ConnectorFields } from '../components/ConnectorFields'
-import { Icon, type IconName } from '../components/Icon'
+import { Icon } from '../components/Icon'
 import { Loader } from '../components/Loader'
+import { ConnectorLogo } from '../components/ConnectorLogo'
 import { useToast } from '../components/Toasts'
 import { Card, ErrorAlert, PageHeader, StatusBadge } from '../components/ui'
-
-const TYPE_ICON: Record<string, IconName> = {
-  postgresql: 'connectors',
-  mysql: 'connectors',
-  mongodb: 'connectors',
-  rest_api: 'cloud',
-  push_api: 'cloud',
-  file_upload: 'file',
-  salesforce: 'cloud',
-  snowflake: 'cloud',
-  databricks: 'cloud',
-  servicenow: 'cloud',
-  cloudera: 'connectors',
-}
 
 // Step 1 of adding a connector: pick a type from the catalog (the same for every organization), then enter
 // this organization's own connection details. The setup page that follows tests it and maps its columns.
@@ -54,9 +41,7 @@ export function NewConnectorPage() {
               disabled={!t.available}
               onClick={() => setChosen(t)}
             >
-              <span className="connector-icon hue-1">
-                <Icon name={TYPE_ICON[t.type] ?? 'connectors'} size={20} />
-              </span>
+              <ConnectorLogo type={t.type} />
               <span className="catalog-text">
                 <strong>{t.label}</strong>
                 <span className="text-sm muted">{t.description}</span>

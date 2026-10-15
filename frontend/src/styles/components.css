@@ -3645,3 +3645,28 @@ button.link {
   font: inherit;
   cursor: pointer;
 }
+
+/* Connector logos: brand marks sit on a light tile in both themes, as brand guides ask */
+.connector-logo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+}
+.connector-logo.is-lettered {
+  border: 0;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.connector-logo.is-generic {
+  background: var(--surface-sunken);
+  color: var(--text-2);
+}
+.title-with-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
