@@ -48,6 +48,7 @@ class SourceRecord(models.Model):
     active = models.BooleanField(default=True)
     origin_file = models.ForeignKey("sources.UploadedFile", null=True, blank=True, on_delete=models.SET_NULL,
                                     related_name="+")  # for file uploads: the file this row was last read from
+    origin_table = models.CharField(max_length=20, blank=True)  # for database connectors: "main" or an added table
     synced_at = models.DateTimeField(auto_now=True)  # when Lumina last read it
 
     class Meta:

@@ -26,6 +26,7 @@ import type {
   UploadResult,
   UploadedFile,
   FileRemoval,
+  TableRemoval,
   User,
 } from './types'
 import { ORG_BASE } from '../organization'
@@ -180,6 +181,14 @@ export const api = {
   deleteConnector: (code: string, confirm: string) => post<{ deleted: string }>(`/connectors/${code}/delete/`, { confirm }),
   connectorRuns: (code: string) => get<SyncRun[]>(`/connectors/${code}/runs/`),
   createApiKey: (code: string) => post<{ api_key: string; key_prefix: string }>(`/connectors/${code}/api-key/`),
+  saveCustomerTable: (code: string, table: ConnectorMapping & { key?: string }) =>
+    put<Source & { key: string }>(`/connectors/${code}/tables/`, table),
+  setTableStatus: (code: string, keys: string[], status: 'active' | 'suspended') =>
+    post<Source & { changed: number }>(`/connectors/${code}/tables/status/`, { keys, status }),
+  tableRemovePreview: (code: string, keys: string[]) =>
+    get<TableRemoval>(`/connectors/${code}/tables/remove/?keys=${keys.join(',')}`),
+  removeTables: (code: string, keys: string[]) =>
+    post<TableRemoval>(`/connectors/${code}/tables/remove/`, { keys, confirm: true }),
   connectorFiles: (code: string) => get<UploadedFile[]>(`/connectors/${code}/files/`),
   setFileStatus: (code: string, ids: number[], status: UploadedFile['status']) =>
     post<{ changed: number; files: UploadedFile[] }>(`/connectors/${code}/files/status/`, { ids, status }),

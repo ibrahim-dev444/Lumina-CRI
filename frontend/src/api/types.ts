@@ -110,6 +110,26 @@ export interface ConnectorMapping {
   updated_column: string
   fields: Partial<Record<Field, string>>
   accounts?: AccountsMapping
+  status?: 'active' | 'suspended' // the main table
+  tables?: CustomerTable[] // customer tables added after the main one
+}
+
+// A customer table added to a database connector; its rows carry the table key in front of their IDs.
+export interface CustomerTable {
+  key: string
+  object: string
+  id_column: string
+  updated_column: string
+  fields: Partial<Record<Field, string>>
+  status: 'active' | 'suspended'
+}
+
+export interface TableRemoval {
+  tables: number
+  records: number
+  customers: number
+  conversations: number
+  corrections: number
 }
 
 export type AccountField = 'product_type' | 'product_name' | 'status' | 'opened_on' | 'balance'

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { api } from '../api/client'
-import type { AccountField, AccountsMapping, ConnectorMapping, ConnectorType, Field, Source } from '../api/types'
+import type { AccountField, AccountsMapping, ConnectorMapping, ConnectorType, CustomerTable, Field, Source, TableRemoval } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useCan } from '../auth/AuthContext'
 import { ConnectorFields } from '../components/ConnectorFields'
@@ -123,6 +123,9 @@ export function ConnectorSetupPage() {
   )
 }
 
+// Connector types that can read customers from several tables or collections.
+const MULTI_TABLE = ['postgresql', 'mysql', 'mongodb', 'snowflake', 'databricks', 'servicenow', 'salesforce', 'cloudera']
+
 function SetupSteps({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
   if (type.type === 'push_api') {
     return (
@@ -140,6 +143,9 @@ function SetupSteps({ source, type, onChanged }: { source: Source; type: Connect
         <ConnectionStep source={source} type={type} onChanged={onChanged} />
       )}
       <MappingStep source={source} type={type} onChanged={onChanged} />
+      {MULTI_TABLE.includes(type.type) && 'object' in source.mapping && (
+        <CustomerTablesCard source={source} type={type} onChanged={onChanged} />
+      )}
       {type.type !== 'file_upload' && <AccountsStep source={source} type={type} onChanged={onChanged} />}
       <SyncStep source={source} onChanged={onChanged} n={type.type === 'file_upload' ? 3 : 4} />
     </>
@@ -224,6 +230,40 @@ function ConnectionStep({ source, type, onChanged }: { source: Source; type: Con
 function MappingStep({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
   const toast = useToast()
   const saved = 'object' in source.mapping ? (source.mapping as ConnectorMapping) : null
+  return (
+    <TableEditor
+      source={source}
+      type={type}
+      saved={saved}
+      title={<StepTitle n={2} text="What to read" />}
+      description="Choose where customers are, then match its columns to Lumina's fields. Unmapped columns are never read."
+      onSave={async (mapping) => {
+        await api.saveMapping(source.code, mapping)
+        toast('success', 'Mapping saved. Sync to read the customers.')
+        onChanged()
+      }}
+    />
+  )
+}
+
+// Picks a table or collection and maps its columns to Lumina's fields. Used for the main table and added ones.
+function TableEditor({
+  source,
+  type,
+  saved,
+  title,
+  description,
+  onSave,
+  onCancel,
+}: {
+  source: Source
+  type: ConnectorType
+  saved: ConnectorMapping | null
+  title: ReactNode
+  description: string
+  onSave: (mapping: ConnectorMapping) => Promise<void>
+  onCancel?: () => void
+}) {
   const [objects, setObjects] = useState<string[] | null>(null)
   const [object, setObject] = useState(saved?.object ?? '')
   const [columns, setColumns] = useState<string[] | null>(null)
@@ -269,12 +309,7 @@ function MappingStep({ source, type, onChanged }: { source: Source; type: Connec
       })
     })
 
-  const save = () =>
-    run('save', async () => {
-      await api.saveMapping(source.code, mapping)
-      toast('success', 'Mapping saved. Sync to read the customers.')
-      onChanged()
-    })
+  const save = () => run('save', () => onSave(mapping))
 
   const setField = (f: Field, column: string) => setMapping((m) => ({ ...m, fields: { ...m.fields, [f]: column } }))
   const columnSelect = (value: string, onChange: (v: string) => void, label: string, emptyText: string) => (
@@ -290,14 +325,19 @@ function MappingStep({ source, type, onChanged }: { source: Source; type: Connec
 
   return (
     <Card
-      title={<StepTitle n={2} text="What to read" />}
-      description="Choose where customers are, then match its columns to Lumina's fields. Unmapped columns are never read."
+      title={title}
+      description={description}
       footer={
-        columns && (
+        (columns || onCancel) && (
           <>
             <span className="text-sm muted">
-              {Object.values(mapping.fields).filter(Boolean).length} of {FIELDS.length} fields mapped
+              {columns ? `${Object.values(mapping.fields).filter(Boolean).length} of ${FIELDS.length} fields mapped` : ''}
             </span>
+            {onCancel && (
+              <button type="button" className="btn" disabled={busy !== null} onClick={onCancel}>
+                Cancel
+              </button>
+            )}
             <button
               type="button"
               className="btn btn-primary"
@@ -370,6 +410,178 @@ function MappingStep({ source, type, onChanged }: { source: Source; type: Connec
             ))}
           </div>
         )}
+      </div>
+    </Card>
+  )
+}
+
+// Database connectors: every customer table the connector reads. The main table is the one mapped above; more
+// can be added, each with its own mapping. Suspend hides the customers only those tables hold (Resume brings
+// them back with the same IDs); Remove deletes an added table's customers after showing what goes.
+function CustomerTablesCard({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+  const toast = useToast()
+  const main = source.mapping as ConnectorMapping
+  const tables: CustomerTable[] = [
+    { key: 'main', object: main.object, id_column: main.id_column, updated_column: main.updated_column,
+      fields: main.fields, status: main.status ?? 'active' },
+    ...(main.tables ?? []),
+  ]
+  const [selected, setSelected] = useState<string[]>([])
+  const [editing, setEditing] = useState<CustomerTable | 'new' | null>(null)
+  const [removal, setRemoval] = useState<TableRemoval | null>(null)
+  const [busy, setBusy] = useState<'status' | 'look' | 'remove' | null>(null)
+
+  const chosen = tables.filter((t) => selected.includes(t.key))
+  const toggle = (key: string) => setSelected((s) => (s.includes(key) ? s.filter((k) => k !== key) : [...s, key]))
+
+  const act = async (label: 'status' | 'look' | 'remove', work: () => Promise<void>) => {
+    setBusy(label)
+    try {
+      await work()
+    } catch (e) {
+      toast('error', (e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const setStatus = (status: 'active' | 'suspended') =>
+    act('status', async () => {
+      const out = await api.setTableStatus(source.code, selected, status)
+      const n = `${out.changed} table${out.changed === 1 ? '' : 's'}`
+      toast('success', status === 'suspended'
+        ? `${n} suspended. Customers found only there are hidden.`
+        : `${n} resumed. Their customers are back, with the same IDs.`)
+      setSelected([])
+      onChanged()
+    })
+
+  const look = () => act('look', async () => setRemoval(await api.tableRemovePreview(source.code, selected)))
+
+  const remove = () =>
+    act('remove', async () => {
+      const out = await api.removeTables(source.code, selected)
+      toast('success', `${out.tables} table${out.tables === 1 ? '' : 's'} removed.`)
+      setSelected([])
+      setRemoval(null)
+      onChanged()
+    })
+
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+
+  if (editing) {
+    const isNew = editing === 'new'
+    return (
+      <TableEditor
+        source={source}
+        type={type}
+        saved={isNew ? null : editing}
+        title={isNew ? 'Add another customer table' : `Change ${editing.object}`}
+        description="Pick the table and match its columns. Its customers are read next to the main table's; IDs from this table never clash with the main table's."
+        onCancel={() => setEditing(null)}
+        onSave={async (mapping) => {
+          await api.saveCustomerTable(source.code, { ...mapping, key: isNew ? undefined : editing.key })
+          toast('success', isNew ? 'Table added. Sync to read its customers.' : 'Table mapping saved.')
+          setEditing(null)
+          onChanged()
+        }}
+      />
+    )
+  }
+
+  return (
+    <Card
+      title="Customer tables"
+      description="Every table this connector reads customers from. Add more when customers are split across tables, for example retail and corporate."
+      actions={
+        <button type="button" className="btn btn-sm" onClick={() => setEditing('new')}>
+          <Icon name="search" size={14} /> Add another table
+        </button>
+      }
+      flush
+    >
+      <div className="files-toolbar">
+        <span className="text-sm muted">
+          {selected.length ? `${selected.length} selected` : 'Select tables to suspend, resume or remove'}
+        </span>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" className="btn btn-sm" disabled={busy !== null || !chosen.some((t) => t.status === 'active')} onClick={() => setStatus('suspended')}>
+            <Icon name="power" size={14} /> Suspend
+          </button>
+          <button type="button" className="btn btn-sm" disabled={busy !== null || !chosen.some((t) => t.status === 'suspended')} onClick={() => setStatus('active')}>
+            <Icon name="refresh" size={14} /> Resume
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-danger-ghost"
+            disabled={busy !== null || !selected.length || selected.includes('main')}
+            title={selected.includes('main') ? 'The main table cannot be removed; suspend it or delete the connector.' : undefined}
+            onClick={look}
+          >
+            <Icon name="x" size={14} /> {busy === 'look' ? 'Checking...' : 'Remove...'}
+          </button>
+        </div>
+      </div>
+
+      {removal && (
+        <div className="files-removal" role="alert">
+          <p>
+            Removing {plural(removal.tables, 'table')} deletes {plural(removal.records, 'customer row')} read from it,
+            and {plural(removal.customers, 'customer')} no other table or system knows, with their{' '}
+            {plural(removal.conversations, 'conversation')} and {plural(removal.corrections, 'correction')}. This cannot
+            be undone; Suspend can.
+          </p>
+          <div className="row" style={{ gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-sm" onClick={() => setRemoval(null)}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn-sm btn-danger" disabled={busy !== null} onClick={remove}>
+              {busy === 'remove' ? 'Removing...' : 'Remove for good'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="table-wrap">
+        <table className="table" style={{ minWidth: 620 }}>
+          <thead>
+            <tr>
+              <th style={{ width: 36 }} />
+              <th>{type.object_label}</th>
+              <th>Record ID</th>
+              <th className="num">Fields</th>
+              <th>Status</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {tables.map((t) => (
+              <tr key={t.key} className={t.status === 'suspended' ? 'is-muted' : undefined}>
+                <td>
+                  <input type="checkbox" aria-label={`Select ${t.object}`} checked={selected.includes(t.key)} onChange={() => toggle(t.key)} />
+                </td>
+                <td>
+                  <span className="mono">{t.object}</span>
+                  {t.key === 'main' && <span className="text-xs muted"> · main</span>}
+                </td>
+                <td className="mono text-sm">{t.id_column}</td>
+                <td className="num">{Object.values(t.fields).filter(Boolean).length}</td>
+                <td>
+                  <StatusBadge tone={t.status === 'active' ? 'good' : 'neutral'}>
+                    {t.status === 'active' ? 'Active' : 'Suspended'}
+                  </StatusBadge>
+                </td>
+                <td className="right">
+                  {t.key !== 'main' && (
+                    <button type="button" className="btn btn-sm" onClick={() => setEditing(t)}>
+                      <Icon name="sliders" size={14} /> Change
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </Card>
   )

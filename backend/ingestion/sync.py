@@ -11,7 +11,7 @@ from .clean import clean_aadhaar, clean_record
 from .connectors import CONNECTORS
 from .connectors.adapters import FILE_KEY
 from .connectors.catalog import DEMO_TYPES
-from .connectors.generic import MappedConnector
+from .connectors.generic import TABLE_KEY, MappedConnector
 from .models import RawRecord, SourceRecord
 
 
@@ -123,11 +123,13 @@ def _store(source, connector, rows):
             raw = dict(raw)
             origin_file = raw.pop(FILE_KEY, None)  # which uploaded file the row came from (file uploads only)
             record_id = connector.record_id(raw)
+            origin_table = raw.get(TABLE_KEY)  # which customer table it came from (database connectors)
             if not record_id:
                 continue  # a row without an ID cannot be followed over time; skip it
             seen.add(record_id)
             RawRecord.objects.create(
-                source=source, source_record_id=record_id, payload=_protect_raw(raw, connector.sensitive_columns)
+                source=source, source_record_id=record_id,
+                payload=_protect_raw({k: v for k, v in raw.items() if k != TABLE_KEY}, connector.sensitive_columns)
             )
 
             std = _protect_record(clean_record(connector.to_standard(raw)))
@@ -135,6 +137,8 @@ def _store(source, connector, rows):
             std["active"] = True
             if origin_file is not None:
                 std["origin_file_id"] = origin_file
+            if origin_table is not None:
+                std["origin_table"] = origin_table
             _, created = SourceRecord.objects.update_or_create(
                 source=source, source_record_id=record_id, defaults=std
             )
@@ -143,6 +147,11 @@ def _store(source, connector, rows):
             else:
                 result.updated += 1
 
+        suspended = getattr(connector, "suspended_tables", lambda: [])()
+        if suspended:
+            # Rows of suspended tables are kept but switched off, so resuming brings back the same customers.
+            tags = suspended + ([""] if "main" in suspended else [])  # rows saved before tables were tagged
+            SourceRecord.objects.filter(source=source, origin_table__in=tags).update(active=False)
         if source.connector_type == "file_upload":
             # Rows only suspended files hold are kept but switched off, so resuming brings back the same customer.
             SourceRecord.objects.filter(source=source).exclude(source_record_id__in=seen).update(active=False)
