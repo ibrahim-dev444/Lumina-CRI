@@ -419,3 +419,28 @@ export interface MatchSuggestion {
   customer_a: { id: number; code: string } | null
   customer_b: { id: number; code: string } | null
 }
+
+// A CSV uploaded to a file-upload connector. A sync reads every active file; the newest wins on the same ID.
+export interface UploadedFile {
+  id: number
+  name: string
+  rows: number
+  status: 'active' | 'suspended'
+  uploaded_at: string
+  uploaded_by: string
+}
+
+export interface UploadResult {
+  name: string
+  ok: boolean
+  rows?: number
+  error?: string
+}
+
+export interface FileRemoval {
+  files: number
+  records: number
+  customers: number
+  conversations: number
+  corrections: number
+}

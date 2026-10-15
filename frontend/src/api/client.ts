@@ -23,6 +23,9 @@ import type {
   SyncResult,
   SyncRun,
   TrustSettings,
+  UploadResult,
+  UploadedFile,
+  FileRemoval,
   User,
 } from './types'
 import { ORG_BASE } from '../organization'
@@ -177,9 +180,17 @@ export const api = {
   deleteConnector: (code: string, confirm: string) => post<{ deleted: string }>(`/connectors/${code}/delete/`, { confirm }),
   connectorRuns: (code: string) => get<SyncRun[]>(`/connectors/${code}/runs/`),
   createApiKey: (code: string) => post<{ api_key: string; key_prefix: string }>(`/connectors/${code}/api-key/`),
-  uploadConnectorFile: async (code: string, file: File): Promise<{ name: string; rows: number }> => {
+  connectorFiles: (code: string) => get<UploadedFile[]>(`/connectors/${code}/files/`),
+  setFileStatus: (code: string, ids: number[], status: UploadedFile['status']) =>
+    post<{ changed: number; files: UploadedFile[] }>(`/connectors/${code}/files/status/`, { ids, status }),
+  fileRemovePreview: (code: string, ids: number[]) =>
+    get<FileRemoval>(`/connectors/${code}/files/remove/?ids=${ids.join(',')}`),
+  removeFiles: (code: string, ids: number[]) =>
+    post<FileRemoval & { files: UploadedFile[] }>(`/connectors/${code}/files/remove/`, { ids, confirm: true }),
+  // Several CSVs at once. Each file is checked on its own; the answer lists what was kept and what was refused.
+  uploadConnectorFiles: async (code: string, files: File[]): Promise<UploadResult[]> => {
     const form = new FormData()
-    form.append('file', file)
+    for (const f of files) form.append('files', f)
     const response = await fetchWhileWaking(`${ORG_BASE}/api/connectors/${code}/upload/`, {
       method: 'POST',
       credentials: 'same-origin',
@@ -187,8 +198,8 @@ export const api = {
       body: form,
     })
     const data = await response.json().catch(() => ({}))
-    if (!response.ok) throw new ApiError(response.status, data.detail ?? `Upload failed (${response.status})`)
-    return data
+    if (Array.isArray(data.files)) return data.files as UploadResult[]
+    throw new ApiError(response.status, data.detail ?? `Upload failed (${response.status})`)
   },
 
   // Customers

@@ -19,13 +19,14 @@ from rest_framework.response import Response
 
 from audit.models import AuditEvent
 from audit.services import record
-from ingestion.connectors.adapters import ConnectorError, parse_csv_upload
+from ingestion.connectors.adapters import ConnectorError
 from ingestion.connectors.catalog import BY_TYPE, adapter_for, public_catalog, split_settings, write_secrets
+from ingestion.files import refresh, remove_files, removal_plan, set_status, upload_files
 from ingestion.retire import plan, remove_sources
 from mdm.models import FIELDS
 from products.services import ACCOUNT_FIELDS
 from security import crypto
-from sources.models import Source, UploadedFile
+from sources.models import Source
 
 from .permissions import HasRole, requires
 from .serializers import SourceSerializer
@@ -34,7 +35,7 @@ ADMIN_ONLY = [HasRole, requires("manage_connectors")]
 
 
 def _source_json(source):
-    source.record_count = source.records.count()
+    source.record_count = source.records.filter(active=True).count()
     return SourceSerializer(source).data
 
 
@@ -266,24 +267,107 @@ def save_accounts_mapping(request, code):
 @permission_classes(ADMIN_ONLY)
 @parser_classes([MultiPartParser])
 def upload_file(request, code):
-    """POST /api/connectors/<code>/upload/  multipart "file": a CSV for a file-upload connector."""
+    """POST /api/connectors/<code>/upload/  multipart "files" (up to 20 CSVs, 5 MB each; "file" also works).
+    Each file is checked on its own; good files are kept even when others are refused. Then the connector is
+    re-read, if its columns are already mapped."""
     source, error = _configurable(code)
     if error:
         return error
     if source.connector_type != "file_upload":
         return _bad("Only file-upload connectors take files.")
-    upload = request.FILES.get("file")
-    if upload is None:
-        return _bad("Choose a CSV file.")
+    uploads = request.FILES.getlist("files") or request.FILES.getlist("file")
     try:
-        text, rows = parse_csv_upload(upload.name, upload.read())
+        results = upload_files(source, uploads, request.user.get_username())
     except ConnectorError as exc:
         return _bad(exc)
-    UploadedFile.objects.create(
-        source=source, name=upload.name[:200], content=text, rows=rows, uploaded_by=request.user.get_username()
-    )
-    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", uploaded=upload.name[:200], rows=rows)
-    return Response({"name": upload.name, "rows": rows})
+    saved = [r for r in results if r["ok"]]
+    if saved:
+        record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}",
+               uploaded=[r["name"] for r in saved], rows=sum(r["rows"] for r in saved))
+        _refresh_or_report(source, request)
+    first = saved[0] if saved else {}
+    return Response({"files": results, "name": first.get("name"), "rows": first.get("rows")},
+                     status=status.HTTP_200_OK if saved else status.HTTP_400_BAD_REQUEST)
+
+
+def _refresh_or_report(source, request):
+    try:
+        refresh(source, request.user.get_username())
+    except (ConnectorError, ValueError):
+        pass  # the sync history records what went wrong; the files themselves are saved
+
+
+def _file_json(f):
+    return {"id": f.id, "name": f.name, "rows": f.rows, "status": f.status,
+            "uploaded_at": f.uploaded_at.isoformat(), "uploaded_by": f.uploaded_by}
+
+
+def _file_source(code):
+    source = Source.objects.filter(code=code, connector_type="file_upload").first()
+    if source is None:
+        return None, Response({"detail": "No such file-upload connector."}, status=status.HTTP_404_NOT_FOUND)
+    return source, None
+
+
+def _ids(request):
+    raw = request.data.get("ids") if request.method == "POST" else request.query_params.get("ids", "")
+    if isinstance(raw, str):
+        raw = raw.split(",")
+    return [int(i) for i in raw or [] if str(i).strip().isdigit()]
+
+
+@api_view(["GET"])
+@permission_classes(ADMIN_ONLY)
+def list_files(request, code):
+    """GET /api/connectors/<code>/files/  Every file uploaded to this connector, newest first."""
+    source, error = _file_source(code)
+    if error:
+        return error
+    return Response([_file_json(f) for f in source.uploads.all()])
+
+
+@api_view(["POST"])
+@permission_classes(ADMIN_ONLY)
+def file_status(request, code):
+    """POST /api/connectors/<code>/files/status/  {ids: [..], status: "active" | "suspended"}
+    Suspending hides the customers only those files hold; resuming brings them back with the same IDs."""
+    source, error = _file_source(code)
+    if error:
+        return error
+    ids, wanted = _ids(request), request.data.get("status")
+    if not ids:
+        return _bad("Choose one or more files.")
+    try:
+        changed = set_status(source, ids, wanted, request.user.get_username())
+    except (ConnectorError, ValueError) as exc:
+        return _bad(exc)
+    names = list(source.uploads.filter(id__in=ids).values_list("name", flat=True))
+    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", files=names, status=wanted)
+    return Response({"changed": changed, "files": [_file_json(f) for f in source.uploads.all()]})
+
+
+@api_view(["GET", "POST"])
+@permission_classes(ADMIN_ONLY)
+def remove_files_view(request, code):
+    """GET  /api/connectors/<code>/files/remove/?ids=1,2  what removing those files would remove (counts only)
+    POST /api/connectors/<code>/files/remove/  {ids: [..], confirm: true}  removes them for good."""
+    source, error = _file_source(code)
+    if error:
+        return error
+    ids = _ids(request)
+    if not ids:
+        return _bad("Choose one or more files.")
+    if request.method == "GET":
+        return Response(removal_plan(source, ids).__dict__)
+    if request.data.get("confirm") is not True:
+        return _bad("Confirm the removal.")
+    names = list(source.uploads.filter(id__in=ids).values_list("name", flat=True))
+    try:
+        plan = remove_files(source, ids, request.user.get_username())
+    except (ConnectorError, ValueError) as exc:
+        return _bad(exc)
+    record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", removed_files=names, **plan.__dict__)
+    return Response({**plan.__dict__, "files": [_file_json(f) for f in source.uploads.all()]})
 
 
 @api_view(["GET"])

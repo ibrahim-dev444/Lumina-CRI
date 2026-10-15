@@ -18,7 +18,8 @@ class CustomerQuerySet(models.QuerySet):
     def visible(self):
         """Customers that at least one connected (switched-on) system still describes. A customer whose systems
         are all disconnected is hidden everywhere, and comes back with the same ID when one is reconnected."""
-        described = CustomerLink.objects.filter(source_record__source__enabled=True).values("customer_id")
+        described = CustomerLink.objects.filter(source_record__source__enabled=True,
+                                                source_record__active=True).values("customer_id")
         return self.filter(id__in=described)
 
 
@@ -128,7 +129,8 @@ class GoldenField(models.Model):
 class MatchSuggestionQuerySet(models.QuerySet):
     def visible(self):
         """Pairs whose two records both come from connected systems; the rest wait until reconnected."""
-        return self.filter(record_a__source__enabled=True, record_b__source__enabled=True)
+        return self.filter(record_a__source__enabled=True, record_b__source__enabled=True,
+                           record_a__active=True, record_b__active=True)
 
 
 class MatchSuggestion(models.Model):

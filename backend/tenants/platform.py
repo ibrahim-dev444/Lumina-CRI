@@ -52,7 +52,7 @@ def organization_health(tenant):
             "users": User.objects.filter(is_active=True).count(),
             "admins": User.objects.filter(is_active=True, is_superuser=True).count(),
             "customers": Customer.objects.visible().count(),
-            "source_records": SourceRecord.objects.filter(source__enabled=True).count(),
+            "source_records": SourceRecord.objects.filter(source__enabled=True, active=True).count(),
             "sources_enabled": sources.filter(enabled=True).count(),
             "sources_total": sources.count(),
             "last_sync": _iso(sources.aggregate(m=Max("last_synced_at"))["m"]),
