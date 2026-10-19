@@ -27,6 +27,8 @@ import type {
   UploadedFile,
   FileRemoval,
   TableRemoval,
+  ProfilingSummary,
+  ProfiledRecords,
   User,
 } from './types'
 import { ORG_BASE } from '../organization'
@@ -189,6 +191,12 @@ export const api = {
     get<TableRemoval>(`/connectors/${code}/tables/remove/?keys=${keys.join(',')}`),
   removeTables: (code: string, keys: string[]) =>
     post<TableRemoval>(`/connectors/${code}/tables/remove/`, { keys, confirm: true }),
+  profiling: (source: string) => get<ProfilingSummary>(`/profiling/?source=${encodeURIComponent(source)}`),
+  profilingRecords: (source: string, checks: string[], page: number, pageSize: 10 | 50) =>
+    get<ProfiledRecords>(
+      `/profiling/records/?source=${encodeURIComponent(source)}&page=${page}&page_size=${pageSize}` +
+        checks.map((c) => `&check=${encodeURIComponent(c)}`).join(''),
+    ),
   connectorFiles: (code: string) => get<UploadedFile[]>(`/connectors/${code}/files/`),
   setFileStatus: (code: string, ids: number[], status: UploadedFile['status']) =>
     post<{ changed: number; files: UploadedFile[] }>(`/connectors/${code}/files/status/`, { ids, status }),

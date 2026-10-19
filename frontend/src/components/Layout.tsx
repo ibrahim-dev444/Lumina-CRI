@@ -31,7 +31,10 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   },
   {
     label: 'Data',
-    items: [{ to: '/connectors', label: 'Connectors', icon: 'connectors' }],
+    items: [
+      { to: '/connectors', label: 'Connectors', icon: 'connectors' },
+      { to: '/profiling', label: 'Data profiling', icon: 'search' },
+    ],
   },
   {
     label: 'Governance',
@@ -65,6 +68,7 @@ const PAGE_TITLES = [
   { path: '/settings', title: 'Settings' },
   { path: '/password', title: 'Change password' },
   { path: '/compliance', title: 'Compliance' },
+  { path: '/profiling', title: 'Data profiling' },
 ]
 
 export function Layout() {

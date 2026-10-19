@@ -14,6 +14,7 @@ import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { CompliancePage } from './pages/CompliancePage'
+import { ProfilingPage } from './pages/ProfilingPage'
 import { ConnectorSetupPage } from './pages/ConnectorSetupPage'
 import { ConnectorsPage } from './pages/ConnectorsPage'
 import { CustomerDetailPage } from './pages/CustomerDetailPage'
@@ -70,6 +71,7 @@ function Routed() {
           <Route path="/approvals" element={<ApprovalsPage />} />
         )}
         <Route path="/connectors" element={<ConnectorsPage />} />
+        <Route path="/profiling" element={<ProfilingPage />} />
         {can('manage_connectors') && <Route path="/connectors/new" element={<NewConnectorPage />} />}
         {can('manage_connectors') && <Route path="/connectors/:code" element={<ConnectorSetupPage />} />}
         <Route path="/how-it-works" element={<HowItWorksPage />} />
