@@ -7,8 +7,8 @@ from django.db import transaction
 
 from sources.models import Source
 
-from .models import FIELD_CHOICES, Customer, FieldWeight
-from .services import rebuild_golden_record
+from .models import FIELD_CHOICES, FieldWeight
+from .services import rebuild_customers
 
 FIELD_LABELS = dict(FIELD_CHOICES)
 
@@ -77,6 +77,5 @@ def update_trust_settings(sources=None, weights=None):
             FieldWeight.objects.update_or_create(field=field, defaults={"weight": Decimal(value) / 100})
 
     if changes:
-        for customer in Customer.objects.all():
-            rebuild_golden_record(customer)
+        rebuild_customers()
     return changes

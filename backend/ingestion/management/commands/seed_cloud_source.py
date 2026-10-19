@@ -29,14 +29,14 @@ class Command(BaseCommand):
         parser.add_argument("kind", choices=["postgres", "mysql", "mongodb", "snowflake", "databricks", "servicenow",
                                              "salesforce"])
         parser.add_argument("--bank", choices=["axis", "hdfc"], required=True)
-        parser.add_argument("--count", type=int, default=24)
+        parser.add_argument("--count", type=int, default=300)
         parser.add_argument("--new-password", action="store_true", help="Give the read-only login a new password.")
 
     def handle(self, *args, kind, bank, count, new_password=False, **options):
         from ingestion.enterprise_seed import SEEDERS
 
         if kind in SEEDERS:
-            SEEDERS[kind](self.stdout, bank, new_password)
+            SEEDERS[kind](self.stdout, bank, new_password, count)
             return
         if kind == "mysql":
             url = self._ask_mysql()
@@ -45,7 +45,7 @@ class Command(BaseCommand):
         if not url:
             raise CommandError("No connection string given.")
         rows = customers(bank, count=count, seed=SEEDS[kind])
-        self.accounts = accounts(bank, SEEDS[kind]) if kind != "mongodb" else []
+        self.accounts = accounts(bank, SEEDS[kind], count) if kind != "mongodb" else []
         self.rotate = new_password
         reader_password = secrets.token_urlsafe(18)
         getattr(self, f"_{kind}")(url, rows, bank, reader_password)
@@ -62,7 +62,7 @@ class Command(BaseCommand):
             conn.execute("DROP TABLE IF EXISTS core.customers")
             conn.execute(
                 "CREATE TABLE core.customers (cust_id varchar(20) PRIMARY KEY, cust_name varchar(100) NOT NULL, "
-                "date_of_birth date, gender_code char(1), pan_no varchar(10), mobile_no varchar(20), "
+                "date_of_birth date, gender_code varchar(10), pan_no varchar(16), mobile_no varchar(24), "
                 "email_id varchar(120), address_line varchar(200), occupation varchar(60), annual_income varchar(40), "
                 "internal_risk_note text, last_updated timestamp)"
             )
@@ -144,15 +144,16 @@ class Command(BaseCommand):
                 cur.execute("DROP TABLE IF EXISTS customer_master")
                 cur.execute(
                     "CREATE TABLE customer_master (CUSTOMER_ID varchar(20) PRIMARY KEY, FULL_NAME varchar(100) NOT NULL, "
-                    "DOB date, SEX varchar(6), PAN varchar(10), PHONE varchar(20), EMAIL varchar(120), "
+                    "DOB date, SEX varchar(10), PAN varchar(16), PHONE varchar(24), EMAIL varchar(120), "
                     "ADDRESS varchar(200), PROFESSION varchar(60), INCOME_BAND varchar(40), CREDIT_SCORE int, "
                     "MODIFIED_AT datetime)"
                 )
                 cur.executemany(
                     "INSERT INTO customer_master VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     [
-                        (r["id"], r["name"], r["dob"], {"M": "Male", "F": "Female"}[r["gender"]], r["pan"],
-                         "+91 " + r["mobile"], r["email"], r["address"], r["occupation"], r["income"], 600 + i * 7,
+                        (r["id"], r["name"], r["dob"], {"M": "Male", "F": "Female"}.get(r["gender"], r["gender"]),
+                         r["pan"], r["mobile"], r["email"], r["address"], r["occupation"], r["income"],
+                         600 + (i * 7) % 300,
                          r["updated_at"].replace("T", " "))
                         for i, r in enumerate(rows)
                     ],
