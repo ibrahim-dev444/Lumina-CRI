@@ -381,7 +381,8 @@ function TableEditor({
           )}
         </div>
 
-        {busy === 'columns' && <Loader kind="pair" label="Reading the columns" size={44} />}
+        {busy === 'objects' && <Loader kind="rows" label="Looking for tables" size={44} />}
+        {busy === 'columns' && <Loader kind="rows" label="Reading the columns" size={44} />}
 
         {columns && (
           <div className="mapping-grid">

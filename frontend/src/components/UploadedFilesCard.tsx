@@ -5,6 +5,7 @@ import type { FileRemoval, Source, UploadResult, UploadedFile } from '../api/typ
 import { useApi } from '../api/useApi'
 import { formatDateTime } from '../format'
 import { Icon } from './Icon'
+import { Loader } from './Loader'
 import { useToast } from './Toasts'
 import { Card, EmptyState, ErrorAlert, StatusBadge } from './ui'
 
@@ -159,6 +160,9 @@ export function UploadedFilesCard({ source, title, onChanged }: { source: Source
           </span>
         )}
       </div>
+
+      {busy === 'upload' && <Loader kind="drop" label="Uploading the files" size={44} />}
+      {!files.data && !files.error && busy !== 'upload' && <Loader kind="drop" label="Loading the files" size={44} />}
 
       {refused.length > 0 && (
         <div className="card-body">

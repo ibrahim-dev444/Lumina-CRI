@@ -10,6 +10,12 @@ import { useId } from 'react'
 //   pingpong - a ball bounces between maker and checker; approvals (maker-checker)
 //   shield   - a shield draws itself and a check appears; compliance
 //   trail    - steps light up one after another along a line; audit log and activity
+//   scan     - column bars rise and fall under a sweeping beam; data profiling
+//   signal   - a speech bubble with a warning mark sends out rings; the "before you speak" briefing
+//   chat     - two bubbles take turns typing; conversations
+//   fan      - an account, a loan and a card fan out and close; products
+//   drop     - files fall into a tray one after another; CSV uploads
+//   rows     - a table's rows light up one by one; tables being read
 // With "reduce motion" switched on in the operating system, the finished picture shows without movement.
 export type LoaderKind =
   | 'overlap'
@@ -20,6 +26,12 @@ export type LoaderKind =
   | 'shield'
   | 'trail'
   | 'pingpong'
+  | 'scan'
+  | 'signal'
+  | 'chat'
+  | 'fan'
+  | 'drop'
+  | 'rows'
 
 
 // Gradient ids must be unique on the page; useId gives ":r1:"-style values, which url(#...) cannot use.
@@ -29,7 +41,7 @@ function useSvgId() {
 
 export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: number; animated: boolean }) {
   const id = useSvgId()
-  const bg = ['overlap', 'orbit', 'shield'].includes(kind) ? `${id}-bg1` : `${id}-bg2`
+  const bg = ['overlap', 'orbit', 'shield', 'signal', 'fan', 'rows'].includes(kind) ? `${id}-bg1` : `${id}-bg2`
   return (
     <svg
       className={`logo-art logo-${kind}${animated ? ' is-animated' : ''}`}
@@ -61,6 +73,11 @@ export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: numb
           <stop offset="0.6" stopColor="#f3e8ff" />
           <stop offset="1" stopColor="#c4b5fd" />
         </radialGradient>
+        <linearGradient id={`${id}-beam`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#5eead4" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#5eead4" />
+          <stop offset="1" stopColor="#5eead4" stopOpacity="0" />
+        </linearGradient>
         <radialGradient id={`${id}-glow`}>
           <stop offset="0" stopColor="#fff" stopOpacity="0.8" />
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
@@ -201,6 +218,102 @@ export function LogoArt({ kind, size, animated }: { kind: LoaderKind; size: numb
               <circle cx="16" cy="36" r="4" fill="#fff" />
             </g>
           </g>
+        </>
+      )}
+
+      {kind === 'scan' && (
+        <>
+          <g className="lk-bars" fill="#fff">
+            <rect x="13" y="22" width="6" height="26" rx="2" fillOpacity="0.55" />
+            <rect x="22" y="16" width="6" height="32" rx="2" fillOpacity="0.75" />
+            <rect x="31" y="26" width="6" height="22" rx="2" fill="#5eead4" />
+            <rect x="40" y="19" width="6" height="29" rx="2" fillOpacity="0.75" />
+            <rect x="49" y="30" width="3" height="18" rx="1.5" fill="#f9a8d4" />
+          </g>
+          <rect className="lk-beam" x="9" y="20" width="46" height="2.5" rx="1.25" fill={`url(#${id}-beam)`} />
+          <rect x="9" y="49" width="46" height="2" rx="1" fill="#fff" fillOpacity="0.45" />
+        </>
+      )}
+
+      {kind === 'signal' && (
+        <>
+          <circle className="lk-ring" cx="32" cy="30" r="12" fill="none" stroke="#fff" strokeOpacity="0.7" strokeWidth="1.5" />
+          <circle className="lk-ring r2" cx="32" cy="30" r="12" fill="none" stroke="#5eead4" strokeOpacity="0.8" strokeWidth="1.5" />
+          <circle className="lk-ring r3" cx="32" cy="30" r="12" fill="none" stroke="#f9a8d4" strokeOpacity="0.7" strokeWidth="1.5" />
+          <path d="M20 22a6 6 0 0 1 6-6h12a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6h-7l-6 5v-5a6 6 0 0 1-5-6z" fill="#fff" />
+          <rect x="30.5" y="20" width="3" height="8" rx="1.5" fill="#5b47e0" />
+          <circle className="lk-pulse" cx="32" cy="31.5" r="1.8" fill="#5b47e0" />
+        </>
+      )}
+
+      {kind === 'chat' && (
+        <>
+          <g className="lk-bubble">
+            <path d="M10 16a5 5 0 0 1 5-5h18a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5h-12l-6 5v-5a5 5 0 0 1-5-5z" fill="#fff" />
+            <g className="lk-typing" fill="#5b47e0">
+              <circle cx="18" cy="20" r="2" />
+              <circle cx="24" cy="20" r="2" />
+              <circle cx="30" cy="20" r="2" />
+            </g>
+          </g>
+          <g className="lk-bubble b2">
+            <path d="M26 36a5 5 0 0 1 5-5h18a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5v5l-6-5h-12a5 5 0 0 1-5-5z" fill="#5eead4" />
+            <g className="lk-typing" fill="#fff">
+              <circle cx="34" cy="40" r="2" />
+              <circle cx="40" cy="40" r="2" />
+              <circle cx="46" cy="40" r="2" />
+            </g>
+          </g>
+        </>
+      )}
+
+      {kind === 'fan' && (
+        <>
+          <g className="lk-fan-l">
+            <rect x="14" y="20" width="26" height="17" rx="3.5" fill="#f9a8d4" />
+            <rect x="17" y="24" width="7" height="5" rx="1.5" fill="#fff" fillOpacity="0.7" />
+          </g>
+          <g className="lk-fan-r">
+            <rect x="24" y="20" width="26" height="17" rx="3.5" fill="#5eead4" />
+            <rect x="27" y="24" width="7" height="5" rx="1.5" fill="#fff" fillOpacity="0.7" />
+          </g>
+          <g className="lk-fan-m">
+            <rect x="19" y="26" width="26" height="17" rx="3.5" fill="#fff" />
+            <rect x="22" y="30" width="7" height="5" rx="1.5" fill="#5b47e0" fillOpacity="0.55" />
+            <rect x="22" y="38" width="14" height="2" rx="1" fill="#5b47e0" fillOpacity="0.35" />
+          </g>
+        </>
+      )}
+
+      {kind === 'drop' && (
+        <>
+          <path d="M12 40h40v8a5 5 0 0 1-5 5H17a5 5 0 0 1-5-5z" fill="#fff" fillOpacity="0.3" />
+          <g className="lk-file">
+            <path d="M20 22h9l4 4v12H20z" fill="#fff" />
+            <rect x="22" y="30" width="8" height="2" rx="1" fill="#5b47e0" fillOpacity="0.5" />
+          </g>
+          <g className="lk-file f2">
+            <path d="M29 18h9l4 4v12H29z" fill="#5eead4" />
+            <rect x="31" y="26" width="8" height="2" rx="1" fill="#fff" fillOpacity="0.8" />
+          </g>
+          <g className="lk-file f3">
+            <path d="M37 24h9l4 4v12H37z" fill="#f9a8d4" />
+            <rect x="39" y="32" width="8" height="2" rx="1" fill="#fff" fillOpacity="0.8" />
+          </g>
+          <path d="M12 40h40" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+        </>
+      )}
+
+      {kind === 'rows' && (
+        <>
+          <rect x="12" y="13" width="40" height="38" rx="5" fill="#fff" fillOpacity="0.16" />
+          <rect x="12" y="13" width="40" height="8" rx="4" fill="#fff" fillOpacity="0.85" />
+          <g fill="#fff">
+            <rect className="lk-row" x="15" y="25" width="34" height="5" rx="2" />
+            <rect className="lk-row g2" x="15" y="32" width="34" height="5" rx="2" fill="#5eead4" />
+            <rect className="lk-row g3" x="15" y="39" width="34" height="5" rx="2" />
+          </g>
+          <path d="M25 21v29M38 21v29" stroke="#3b2fc9" strokeOpacity="0.45" strokeWidth="1.5" />
         </>
       )}
 

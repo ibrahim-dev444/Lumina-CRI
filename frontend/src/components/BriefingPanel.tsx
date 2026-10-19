@@ -21,7 +21,7 @@ export function BriefingPanel({ customerId, version, onLog }: { customerId: numb
   if (!data) {
     return (
       <div className="card">
-        <Loader label="Preparing the briefing" />
+        <Loader kind="signal" label="Preparing the briefing" />
       </div>
     )
   }

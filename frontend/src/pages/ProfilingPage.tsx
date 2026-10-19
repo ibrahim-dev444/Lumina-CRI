@@ -84,6 +84,22 @@ export function ProfilingPage() {
   }, [summary.data])
 
   const overall = columns.length ? columns.reduce((s, c) => s + c.score, 0) / columns.length : 0
+  // Problems found, counted per check, and the biggest ones across every column.
+  const { totals, topIssues } = useMemo(() => {
+    const sum: Record<Tone, number> = { bad: 0, fix: 0, empty: 0, info: 0, good: 0 }
+    const issues: { pick: Pick; column: string; label: string; value: string; count: number; tone: Tone }[] = []
+    for (const c of summary.data?.checks ?? []) {
+      for (const v of c.values) {
+        const tone = toneOf(v.value)
+        sum[tone] += v.count
+        if (tone === 'bad' || tone === 'fix' || tone === 'empty') {
+          issues.push({ pick: `${c.key}:${v.value}`, column: c.column, label: c.label, value: v.value, count: v.count, tone })
+        }
+      }
+    }
+    issues.sort((a, b) => b.count - a.count || TONE_ORDER.indexOf(a.tone) - TONE_ORDER.indexOf(b.tone))
+    return { totals: sum, topIssues: issues.slice(0, 5) }
+  }, [summary.data])
   const active = columns.find((c) => c.name === column) ?? columns[0]
 
   const toggle = (pick: Pick) => {
@@ -129,7 +145,7 @@ export function ProfilingPage() {
       {summary.error && <ErrorAlert message={summary.error} />}
       {!data && !summary.error && (
         <div className="card">
-          <Loader kind="stack" label="Profiling the records" />
+          <Loader kind="scan" label="Profiling the records" />
         </div>
       )}
 
@@ -143,15 +159,47 @@ export function ProfilingPage() {
 
       {data && data.profiled > 0 && active && (
         <>
-          <section className="dq-scorecard" aria-label="Data quality by column">
-            <div className="dq-overall">
-              <span className="dq-overall-label">Overall</span>
-              <span className={`dq-overall-score is-${scoreTone(overall)}`}>{Math.round(overall)}%</span>
-              <span className="text-sm muted">
-                clean across {data.records.toLocaleString('en-IN')} records
-                {data.profiled < data.records && ` · ${data.records - data.profiled} not profiled yet`}
-              </span>
+          <section className="dq-health card" aria-label="Data health">
+            <div className="dq-health-score">
+              <QualityRing score={overall} size={128} />
+              <div className="stack" style={{ gap: 6, minWidth: 0 }}>
+                <span className="dq-eyebrow">Data health</span>
+                <strong className="dq-health-title">
+                  {overall >= 85 ? 'In good shape' : overall >= 60 ? 'Needs some attention' : 'Needs attention'}
+                </strong>
+                <span className="text-sm muted">
+                  {data.records.toLocaleString('en-IN')} records across {columns.length} columns
+                  {data.profiled < data.records && ` · ${data.records - data.profiled} not profiled yet`}
+                </span>
+                <div className="dq-totals">
+                  {(['bad', 'fix', 'empty'] as Tone[]).map((t) => (
+                    <span key={t} className={`dq-total is-${t}`}>
+                      <strong className="num">{totals[t].toLocaleString('en-IN')}</strong> {TONE_LABEL[t].toLowerCase()}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
+            <div className="dq-top">
+              <span className="dq-eyebrow">Top issues</span>
+              <ol className="dq-top-list">
+                {topIssues.map((i) => (
+                  <li key={i.pick}>
+                    <button type="button" className={`dq-top-item${picks.includes(i.pick) ? ' is-on' : ''}`} onClick={() => { setColumn(i.column); toggle(i.pick) }}>
+                      <i className={`dq-dot is-${i.tone}`} aria-label={TONE_LABEL[i.tone]} />
+                      <span className="dq-top-text">
+                        <strong>{i.column}</strong> <span className="muted">{i.label.toLowerCase()}:</span> {i.value}
+                      </span>
+                      <span className="num dq-top-count">{i.count.toLocaleString('en-IN')}</span>
+                      <Icon name="chevronRight" size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
+          <section className="dq-scorecard" aria-label="Data quality by column">
             <div className="dq-tiles" role="tablist" aria-label="Columns">
               {columns.map((c) => (
                 <button
@@ -162,13 +210,12 @@ export function ProfilingPage() {
                   className={`dq-tile${c.name === active.name ? ' is-active' : ''}`}
                   onClick={() => setColumn(c.name)}
                 >
-                  <span className="dq-tile-name">{c.name}</span>
-                  <span className={`dq-tile-score is-${scoreTone(c.score)}`}>{Math.round(c.score)}%</span>
-                  <span className="dq-meter" aria-hidden="true">
-                    <i className={`is-${scoreTone(c.score)}`} style={{ width: `${c.score}%` }} />
-                  </span>
-                  <span className="text-xs muted">
-                    {c.issues ? `${c.issues.toLocaleString('en-IN')} need attention` : 'All clean'}
+                  <QualityRing score={c.score} size={52} />
+                  <span className="stack" style={{ gap: 2, minWidth: 0 }}>
+                    <span className="dq-tile-name">{c.name}</span>
+                    <span className="text-xs muted">
+                      {c.issues ? `${c.issues.toLocaleString('en-IN')} issue${c.issues === 1 ? '' : 's'}` : 'All clean'}
+                    </span>
                   </span>
                 </button>
               ))}
@@ -210,6 +257,36 @@ export function ProfilingPage() {
         />
       )}
     </>
+  )
+}
+
+// A ring that fills with the clean share, coloured by how healthy it is; the number sits inside.
+function QualityRing({ score, size }: { score: number; size: number }) {
+  const stroke = size > 80 ? 10 : 6
+  const radius = (size - stroke) / 2
+  const length = 2 * Math.PI * radius
+  const tone = scoreTone(score)
+  return (
+    <span className="dq-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" className="dq-ring-track" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          className={`dq-ring-value is-${tone}`}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${(length * Math.min(score, 100)) / 100} ${length}`}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      <span className={`dq-ring-label is-${tone}`} style={{ fontSize: size > 80 ? 30 : 14 }}>
+        {Math.round(score)}
+        <small>%</small>
+      </span>
+    </span>
   )
 }
 
@@ -280,6 +357,9 @@ function RecordsPanel({
   )
   const r = records.data
   const pages = r ? Math.max(1, Math.ceil(r.count / r.page_size)) : 1
+  // The fields the chosen checks are about ("mobile.digits" is about mobile), with how serious the pick is.
+  const flagged: Partial<Record<string, Tone>> = {}
+  for (const p of picks) flagged[p.slice(0, p.indexOf('.'))] = toneOf(p.slice(p.indexOf(':') + 1))
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -318,7 +398,7 @@ function RecordsPanel({
         </div>
         <div className="dq-panel-body">
           {records.error && <ErrorAlert message={records.error} />}
-          {!r && !records.error && <Loader kind="stack" label="Finding the records" size={44} />}
+          {!r && !records.error && <Loader kind="scan" label="Finding the records" size={44} />}
           {r && r.count === 0 && (
             <EmptyState icon="search" title="No record matches all of these">
               Remove a filter to widen the search.
@@ -338,10 +418,12 @@ function RecordsPanel({
                     )}
                   </div>
                   <dl className="dq-record-values">
-                    {SHOWN.filter((s) => row.values[s.field]).map((s) => (
-                      <div key={s.field}>
+                    {SHOWN.filter((s) => row.values[s.field] || flagged[s.field]).map((s) => (
+                      <div key={s.field} className={flagged[s.field] ? `is-flagged is-${flagged[s.field]}` : undefined}>
                         <dt>{s.label}</dt>
-                        <dd className={s.field === 'name' ? undefined : 'mono'}>{row.values[s.field]}</dd>
+                        <dd className={s.field === 'name' ? undefined : 'mono'}>
+                          {row.values[s.field] || <span className="muted">(empty)</span>}
+                        </dd>
                       </div>
                     ))}
                   </dl>
