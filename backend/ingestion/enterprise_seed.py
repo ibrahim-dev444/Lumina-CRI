@@ -38,6 +38,15 @@ def _lit(value):
     return "NULL" if value in (None, "") else "'" + str(value).replace("'", "''") + "'"
 
 
+def _date(value):
+    return f"DATE {_lit(value)}" if value else "NULL"
+
+
+def _email_or_none(value):
+    """Salesforce refuses a badly formed email and the whole batch with it; leave such a field empty instead."""
+    return value if value and "@" in value and "." in value.split("@")[-1] else None
+
+
 def _split_name(name):
     first, _, last = name.rpartition(" ")
     return (first or "", last or name)
@@ -70,7 +79,7 @@ def _public_of(path):
 
 # ---------- Snowflake ----------
 
-def seed_snowflake(out, bank, rotate):
+def seed_snowflake(out, bank, rotate, count=300):
     account = _ask("Account identifier (e.g. MYORG-MYACCOUNT)")
     admin = _ask("Your Snowflake username (an ACCOUNTADMIN)").upper()
     warehouse = _ask("Warehouse", "COMPUTE_WH").upper()
@@ -91,7 +100,7 @@ def seed_snowflake(out, bank, rotate):
         except ConnectorError as exc:
             raise CommandError(f"Snowflake refused: {exc}\n  {statement[:120]}") from exc
 
-    rows = customers(bank, seed=SEEDS["snowflake"])
+    rows = customers(bank, count=count, seed=SEEDS["snowflake"])
     run(f"CREATE DATABASE IF NOT EXISTS {database}")
     run(f"CREATE SCHEMA IF NOT EXISTS {database}.CORE")
     run(f"CREATE OR REPLACE TABLE {database}.CORE.CUSTOMERS (CUSTOMER_ID STRING, FULL_NAME STRING, DATE_OF_BIRTH DATE, "
@@ -101,7 +110,7 @@ def seed_snowflake(out, bank, rotate):
         f"({_lit(r['id'])}, {_lit(r['name'])}, {_lit(r['dob'])}, {_lit(r['gender'])}, {_lit(r['pan'])}, "
         f"{_lit(r['mobile'])}, {_lit(r['email'])}, {_lit(r['address'])}, {_lit(r['occupation'])}, "
         f"{_lit(r['income'])}, 'internal: never read by Lumina', {_lit(r['updated_at'])})" for r in rows))
-    owned = accounts(bank, SEEDS["snowflake"])
+    owned = accounts(bank, SEEDS["snowflake"], count)
     run(f"CREATE OR REPLACE TABLE {database}.CORE.ACCOUNTS (ACCOUNT_NO STRING, CUSTOMER_ID STRING, PRODUCT_CODE STRING, "
         "PRODUCT_NAME STRING, STATUS STRING, OPENED_ON DATE, BALANCE NUMBER(16,2), UPDATED_AT TIMESTAMP_NTZ)")
     run(f"INSERT INTO {database}.CORE.ACCOUNTS VALUES " + ", ".join(
@@ -133,7 +142,7 @@ def seed_snowflake(out, bank, rotate):
 
 # ---------- Databricks ----------
 
-def seed_databricks(out, bank, rotate):
+def seed_databricks(out, bank, rotate, count=300):
     host = _ask("Workspace address (e.g. dbc-1234abcd-5678.cloud.databricks.com)")
     warehouse = _ask("SQL warehouse ID")
     catalog = _ask("Catalog", "workspace")
@@ -146,17 +155,17 @@ def seed_databricks(out, bank, rotate):
         except ConnectorError as exc:
             raise CommandError(f"Databricks refused: {exc}\n  {statement[:120]}") from exc
 
-    rows = customers(bank, seed=SEEDS["databricks"])
+    rows = customers(bank, count=count, seed=SEEDS["databricks"])
     schema = f"`{catalog}`.lumina_demo"
     run(f"CREATE SCHEMA IF NOT EXISTS {schema}")
     run(f"CREATE OR REPLACE TABLE {schema}.customers (customer_id STRING, full_name STRING, date_of_birth DATE, "
         "gender STRING, pan STRING, mobile STRING, email STRING, address STRING, occupation STRING, "
         "income_band STRING, updated_at TIMESTAMP)")
     run(f"INSERT INTO {schema}.customers VALUES " + ", ".join(
-        f"({_lit(r['id'])}, {_lit(r['name'])}, DATE {_lit(r['dob'])}, {_lit(r['gender'])}, {_lit(r['pan'])}, "
+        f"({_lit(r['id'])}, {_lit(r['name'])}, {_date(r['dob'])}, {_lit(r['gender'])}, {_lit(r['pan'])}, "
         f"{_lit(r['mobile'])}, {_lit(r['email'])}, {_lit(r['address'])}, {_lit(r['occupation'])}, "
         f"{_lit(r['income'])}, TIMESTAMP {_lit(r['updated_at'].replace('T', ' '))})" for r in rows))
-    owned = accounts(bank, SEEDS["databricks"])
+    owned = accounts(bank, SEEDS["databricks"], count)
     run(f"CREATE OR REPLACE TABLE {schema}.accounts (account_no STRING, customer_id STRING, product_code STRING, "
         "product_name STRING, status STRING, opened_on DATE, balance DECIMAL(16,2))")
     run(f"INSERT INTO {schema}.accounts VALUES " + ", ".join(
@@ -170,7 +179,7 @@ def seed_databricks(out, bank, rotate):
 
 # ---------- ServiceNow ----------
 
-def seed_servicenow(out, bank, rotate):
+def seed_servicenow(out, bank, rotate, count=300):
     instance = _ask("Instance (e.g. dev12345)")
     user = _ask("Admin username", "admin")
     password = _secret("Admin password")
@@ -180,11 +189,11 @@ def seed_servicenow(out, bank, rotate):
     prefix = f"lumina.{bank}."
     try:
         _, old = _http("GET", f"{base}/api/now/table/{table}?" + urllib.parse.urlencode(
-            {"sysparm_query": f"user_nameSTARTSWITH{prefix}", "sysparm_fields": "sys_id", "sysparm_limit": 500}),
+            {"sysparm_query": f"user_nameSTARTSWITH{prefix}", "sysparm_fields": "sys_id", "sysparm_limit": 2000}),
             headers)
         for row in old.get("result", []):
             _http("DELETE", f"{base}/api/now/table/{table}/{row['sys_id']}", headers)
-        rows = customers(bank, seed=SEEDS["servicenow"])
+        rows = customers(bank, count=count, seed=SEEDS["servicenow"])
         for r in rows:
             first, last = _split_name(r["name"])
             _http("POST", f"{base}/api/now/table/{table}", headers, {
@@ -205,7 +214,7 @@ def seed_servicenow(out, bank, rotate):
 
 # ---------- Salesforce ----------
 
-def seed_salesforce(out, bank, rotate):
+def seed_salesforce(out, bank, rotate, count=300):
     domain = _ask("My Domain address (e.g. yourbank.my.salesforce.com)")
     client_id = _ask("Connected app consumer key")
     client_secret = _secret("Connected app consumer secret")
@@ -215,20 +224,23 @@ def seed_salesforce(out, bank, rotate):
         _, token = _http("POST", f"{base}/services/oauth2/token", body={
             "grant_type": "client_credentials", "client_id": client_id, "client_secret": client_secret}, form=True)
         headers = {"Authorization": f"Bearer {token['access_token']}"}
-        soql = f"SELECT Id FROM Contact WHERE Description = '{MARK} ({bank})' LIMIT 200"
+        soql = f"SELECT Id FROM Contact WHERE Description = '{MARK} ({bank})' LIMIT 2000"
         _, old = _http("GET", f"{base}{version}/query?" + urllib.parse.urlencode({"q": soql}), headers)
         ids = [r["Id"] for r in old.get("records", [])]
-        if ids:
-            _http("DELETE", f"{base}{version}/composite/sobjects?ids={','.join(ids)}&allOrNone=false", headers)
-        rows = customers(bank, seed=SEEDS["salesforce"])
+        for start in range(0, len(ids), 200):  # deletes also take at most 200 a call
+            _http("DELETE", f"{base}{version}/composite/sobjects?ids={','.join(ids[start:start + 200])}&allOrNone=false",
+                  headers)
+        rows = customers(bank, count=count, seed=SEEDS["salesforce"])
         records = []
         for r in rows:
             first, last = _split_name(r["name"])
             records.append({"attributes": {"type": "Contact"}, "FirstName": first, "LastName": last,
-                            "Birthdate": r["dob"], "Email": r["email"], "MobilePhone": r["mobile"],
+                            "Birthdate": r["dob"], "Email": _email_or_none(r["email"]), "MobilePhone": r["mobile"],
                             "MailingStreet": r["address"], "Title": r["occupation"],
                             "Description": f"{MARK} ({bank})"})
-        _http("POST", f"{base}{version}/composite/sobjects", headers, {"allOrNone": True, "records": records})
+        for start in range(0, len(records), 200):  # the API takes at most 200 records a call
+            _http("POST", f"{base}{version}/composite/sobjects", headers,
+                  {"allOrNone": True, "records": records[start:start + 200]})
     except (ConnectorError, KeyError) as exc:
         raise CommandError(f"Salesforce refused: {exc}") from exc
     out.write(f"{len(rows)} Contacts written.")

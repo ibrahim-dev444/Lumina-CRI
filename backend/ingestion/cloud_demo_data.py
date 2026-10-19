@@ -70,6 +70,78 @@ def _pan(first, last, n):
     return f"{a}{b}{c}P{last[0].upper()}{1000 + (n * 37) % 9000:04d}{letters[(n * 5) % 24]}"
 
 
+# The first rows stay tidy (the hand-made cases above and the matching tests rely on them). From row 25 on, values
+# arrive the way real bank systems send them: titles, odd phone and PAN formats, missing parts. The data profiling
+# screen measures exactly these. Fixed rules on the row's position, so every run gives the same counts.
+CLEAN_ROWS = 24
+TITLES = ["Mr. ", "Mrs. ", "Ms ", "Dr. ", "Shri ", "Smt. "]
+
+
+def _make_messy(row, n):
+    name = row["name"]
+    if n % 10 < 6:  # 60% carry a title
+        title = TITLES[n % 10]
+        if row["gender"] == "F" and title in ("Mr. ", "Shri "):
+            title = "Mrs. " if title == "Mr. " else "Smt. "
+        if row["gender"] == "M" and title in ("Mrs. ", "Ms ", "Smt. "):
+            title = "Mr. "
+        name = title + name
+    if n % 17 == 0:
+        name = name.upper()
+    elif n % 19 == 0:
+        name = name.replace(" ", "  ")  # double spaces
+    elif n % 23 == 0:
+        first, _, last = row["name"].partition(" ")
+        name = f"{first[0]}. {last}"  # initial only
+    elif n % 97 == 0:
+        name = ""
+    row["name"] = name
+
+    mobile = row["mobile"]
+    row["mobile"] = {
+        1: mobile[:9],  # 9 digits
+        2: "+91" + mobile,
+        3: "0" + mobile,
+        4: f"+91 {mobile[:5]} {mobile[5:]}",
+        5: f"{mobile[:5]}-{mobile[5:]}",
+        6: mobile + "1",  # 11 digits
+        7: "",
+        8: mobile[:2] + "ABC" + mobile[5:],  # letters typed in
+    }.get(n % 12, mobile)
+
+    pan = row.get("pan")
+    if pan:
+        row["pan"] = {
+            1: pan.lower(),
+            2: pan[:9],  # 9 characters
+            3: pan + "7",  # 11 characters
+            4: f"{pan[:5]} {pan[5:]}",
+            5: "",
+        }.get(n % 11, pan)
+
+    email = row.get("email")
+    if email:
+        local, _, domain = email.partition("@")
+        row["email"] = {1: local + "." + domain, 2: email.upper(), 3: local + "@", 4: ""}.get(n % 13, email)
+
+    year = int(row["dob"][:4])
+    row["dob"] = {
+        1: f"{2031 + n % 3}{row['dob'][4:]}",  # in the future
+        2: f"{1911 + n % 9}{row['dob'][4:]}",  # over 100 years old
+        3: None,
+        4: f"{2012 + n % 3}{row['dob'][4:]}",  # under 18
+    }.get(n % 14, row["dob"] if year else None)
+
+    gender = row["gender"]
+    row["gender"] = {1: {"M": "Male", "F": "Female"}[gender], 2: {"M": "1", "F": "2"}[gender], 3: "",
+                     4: gender.lower()}.get(n % 5, gender)
+
+    if n % 12 == 9:
+        row["address"] = ""
+    elif n % 12 == 10:
+        row["address"] = (row.get("address") or "").upper()
+
+
 def customers(bank, count=24, seed=0):
     """`count` synthetic customers for one bank's source. Different `seed` gives a different but overlapping set."""
     rows = []
@@ -112,6 +184,8 @@ def customers(bank, count=24, seed=0):
             "income": INCOME[k % len(INCOME)],
         })
         n += 1
+    for position in range(CLEAN_ROWS, len(rows)):
+        _make_messy(rows[position], position)
     for i, row in enumerate(rows):
         row["id"] = f"{bank.upper()[:2]}{seed}-{1001 + i}"
         row["updated_at"] = f"2026-0{1 + i % 9}-{10 + i % 18:02d}T{8 + i % 10:02d}:15:00"
@@ -140,12 +214,12 @@ STATUS_CODES = {
 }
 
 
-def accounts(bank, seed):
+def accounts(bank, seed, count=24):
     """Accounts for the customers of one core system (CORE_SEEDS only), 1 to 3 each. The first shared customer
     has an overdue card or loan, so the "before you speak" summary has something to warn about."""
     rows = []
     products = PRODUCTS[bank]
-    for i, person in enumerate(customers(bank, seed=seed)):
+    for i, person in enumerate(customers(bank, count=count, seed=seed)):
         for j in range(3 if i == 0 else 1 + i % 3):
             code, name, amount = products[(i + j * 2) % len(products)]
             if i == 0:  # the first shared customer: an overdue card plus two healthy products

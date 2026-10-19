@@ -376,7 +376,7 @@ def test_databricks_seeder_creates_tables_and_rows(private_hosts, fake, monkeypa
     enterprise_seed.seed_databricks(out, "axis", False)
     assert sent[0] == "CREATE SCHEMA IF NOT EXISTS `workspace`.lumina_demo"
     assert sent[2].startswith("INSERT INTO `workspace`.lumina_demo.customers VALUES ('AX5-1001', 'Suresh Kumar'")
-    assert "24 customers" in out.getvalue()
+    assert "300 customers" in out.getvalue()
 
 
 def test_servicenow_seeder_replaces_its_own_records_only(private_hosts, fake, monkeypatch):
@@ -396,4 +396,4 @@ def test_servicenow_seeder_replaces_its_own_records_only(private_hosts, fake, mo
     monkeypatch.setattr(enterprise_seed.getpass, "getpass", lambda prompt="": "pw")
     enterprise_seed.seed_servicenow(io.StringIO(), "hdfc", False)
     assert server.seen[0]["query"]["sysparm_query"] == "user_nameSTARTSWITHlumina.hdfc."
-    assert len(created) == 24 and created[0]["user_name"] == "lumina.hdfc.hd6-1001"
+    assert len(created) == 300 and created[0]["user_name"] == "lumina.hdfc.hd6-1001"
