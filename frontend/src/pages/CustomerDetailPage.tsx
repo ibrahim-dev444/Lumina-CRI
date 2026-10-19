@@ -74,7 +74,11 @@ export function CustomerDetailPage() {
       <>
         <PageHeader title={<Skeleton width={240} height={24} />} crumbs={crumbs} />
         <div className="card">
-          <Loader kind="converge" label="Building the golden record" />
+          {tab === 'products' ? (
+            <Loader kind="fan" label="Loading the products" />
+          ) : (
+            <Loader kind="converge" label="Building the golden record" />
+          )}
         </div>
       </>
     )

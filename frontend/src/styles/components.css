@@ -2666,6 +2666,66 @@ code {
   92%, 100% { transform: scale(1); opacity: 0; }
 }
 
+/* Data profiling, briefing, conversations, products, CSV files and tables (scan ... rows) */
+.logo-art [class^='lk-'],
+.logo-art [class*=' lk-'] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.logo-art .lk-bars rect { transform-box: fill-box; transform-origin: bottom; }
+.logo-art .lk-fan-l,
+.logo-art .lk-fan-r { transform-origin: 50% 90%; }
+
+.logo-art.is-animated .lk-bars rect { animation: lk-bar 1.6s ease-in-out infinite; }
+.logo-art.is-animated .lk-bars rect:nth-child(2) { animation-delay: 0.15s; }
+.logo-art.is-animated .lk-bars rect:nth-child(3) { animation-delay: 0.3s; }
+.logo-art.is-animated .lk-bars rect:nth-child(4) { animation-delay: 0.45s; }
+.logo-art.is-animated .lk-bars rect:nth-child(5) { animation-delay: 0.6s; }
+.logo-art.is-animated .lk-beam { animation: lk-scan 1.6s ease-in-out infinite; }
+.logo-art.is-animated .lk-ring { animation: lk-ripple 1.8s ease-out infinite; }
+.logo-art.is-animated .lk-ring.r2 { animation-delay: 0.6s; }
+.logo-art.is-animated .lk-ring.r3 { animation-delay: 1.2s; }
+.logo-art.is-animated .lk-pulse { animation: lk-glow 1.8s ease-in-out infinite; }
+.logo-art.is-animated .lk-bubble { animation: lk-pop 2.4s ease-in-out infinite; }
+.logo-art.is-animated .lk-bubble.b2 { animation-delay: 1.2s; }
+.logo-art.is-animated .lk-typing circle { animation: lk-dot 0.9s ease-in-out infinite; }
+.logo-art.is-animated .lk-typing circle:nth-child(2) { animation-delay: 0.15s; }
+.logo-art.is-animated .lk-typing circle:nth-child(3) { animation-delay: 0.3s; }
+.logo-art.is-animated .lk-fan-l { animation: lk-fan-l 2.2s ease-in-out infinite; }
+.logo-art.is-animated .lk-fan-r { animation: lk-fan-r 2.2s ease-in-out infinite; }
+.logo-art.is-animated .lk-fan-m { animation: lk-rise 2.2s ease-in-out infinite; }
+.logo-art.is-animated .lk-file { animation: lk-drop 1.8s ease-out infinite; }
+.logo-art.is-animated .lk-file.f2 { animation-delay: 0.6s; }
+.logo-art.is-animated .lk-file.f3 { animation-delay: 1.2s; }
+.logo-art.is-animated .lk-row { animation: lk-row 1.8s ease-in-out infinite; }
+.logo-art.is-animated .lk-row.g2 { animation-delay: 0.3s; }
+.logo-art.is-animated .lk-row.g3 { animation-delay: 0.6s; }
+
+@keyframes lk-bar { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+@keyframes lk-scan {
+  0% { transform: translateY(-14px); opacity: 0; }
+  15%, 85% { opacity: 1; }
+  100% { transform: translateY(30px); opacity: 0; }
+}
+@keyframes lk-ripple { 0% { transform: scale(0.4); opacity: 0.9; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes lk-glow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+@keyframes lk-pop {
+  0%, 100% { transform: scale(0.6); opacity: 0; }
+  15%, 45% { transform: scale(1); opacity: 1; }
+  60% { transform: scale(1); opacity: 0; }
+}
+@keyframes lk-dot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+@keyframes lk-fan-l { 0%, 100% { transform: rotate(0deg); } 40%, 60% { transform: rotate(-16deg) translateX(-4px); } }
+@keyframes lk-fan-r { 0%, 100% { transform: rotate(0deg); } 40%, 60% { transform: rotate(16deg) translateX(4px); } }
+@keyframes lk-rise { 0%, 100% { transform: translateY(0); } 40%, 60% { transform: translateY(-5px); } }
+@keyframes lk-drop {
+  0% { transform: translateY(-22px); opacity: 0; }
+  25% { opacity: 1; }
+  60%, 100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes lk-row { 0%, 100% { opacity: 0.28; } 20%, 40% { opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
   .logo-art.is-animated * {
     animation: none !important;

@@ -70,7 +70,7 @@ export function ConversationsTab({
             <ErrorAlert message={error} />
           </div>
         )}
-        {!data && !error && <Loader kind="trail" label="Loading conversations" />}
+        {!data && !error && <Loader kind="chat" label="Loading conversations" />}
         {data && data.length === 0 && (
           <EmptyState icon="edit" title="No conversations yet">
             Log calls, branch visits and messages so the next colleague knows what was said.

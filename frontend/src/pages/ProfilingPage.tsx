@@ -145,7 +145,7 @@ export function ProfilingPage() {
       {summary.error && <ErrorAlert message={summary.error} />}
       {!data && !summary.error && (
         <div className="card">
-          <Loader kind="stack" label="Profiling the records" />
+          <Loader kind="scan" label="Profiling the records" />
         </div>
       )}
 
@@ -398,7 +398,7 @@ function RecordsPanel({
         </div>
         <div className="dq-panel-body">
           {records.error && <ErrorAlert message={records.error} />}
-          {!r && !records.error && <Loader kind="stack" label="Finding the records" size={44} />}
+          {!r && !records.error && <Loader kind="scan" label="Finding the records" size={44} />}
           {r && r.count === 0 && (
             <EmptyState icon="search" title="No record matches all of these">
               Remove a filter to widen the search.
