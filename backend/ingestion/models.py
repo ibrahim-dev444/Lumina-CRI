@@ -49,6 +49,10 @@ class SourceRecord(models.Model):
     origin_file = models.ForeignKey("sources.UploadedFile", null=True, blank=True, on_delete=models.SET_NULL,
                                     related_name="+")  # for file uploads: the file this row was last read from
     origin_table = models.CharField(max_length=20, blank=True)  # for database connectors: "main" or an added table
+    # Data profiling (ingestion/profiling.py): checks on the values as the system sent them, e.g.
+    # {"mobile.digits": "9 digits"}, and those values for display (identity numbers already masked).
+    profile = models.JSONField(default=dict, blank=True)
+    sent_values = models.JSONField(default=dict, blank=True)
     synced_at = models.DateTimeField(auto_now=True)  # when Lumina last read it
 
     class Meta:
