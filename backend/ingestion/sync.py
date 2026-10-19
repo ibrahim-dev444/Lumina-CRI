@@ -13,6 +13,7 @@ from .connectors.adapters import FILE_KEY
 from .connectors.catalog import DEMO_TYPES
 from .connectors.generic import TABLE_KEY, MappedConnector
 from .models import RawRecord, SourceRecord
+from .profiling import display_values, profile
 
 
 @dataclass
@@ -132,7 +133,10 @@ def _store(source, connector, rows):
                 payload=_protect_raw({k: v for k, v in raw.items() if k != TABLE_KEY}, connector.sensitive_columns)
             )
 
-            std = _protect_record(clean_record(connector.to_standard(raw)))
+            as_sent = connector.to_standard(raw)
+            checks, shown = profile(as_sent), display_values(as_sent)  # before cleaning, which hides problems
+            std = _protect_record(clean_record(as_sent))
+            std["profile"], std["sent_values"] = checks, shown
             std["source_updated_at"] = _aware(std.get("source_updated_at"))
             std["active"] = True
             if origin_file is not None:
