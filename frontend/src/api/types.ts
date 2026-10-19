@@ -464,3 +464,37 @@ export interface FileRemoval {
   conversations: number
   corrections: number
 }
+
+// Data profiling: how each column's values look as the source systems sent them.
+export interface ProfileCheck {
+  key: string // e.g. "mobile.digits"
+  column: string // "Mobile"
+  label: string // "Number of digits"
+  records: number
+  values: { value: string; count: number; share: number }[]
+}
+
+export interface ProfilingSummary {
+  records: number
+  profiled: number // records synced since profiling started; the rest get their checks at the next sync
+  checks: ProfileCheck[]
+  sources: { code: string; name: string }[]
+}
+
+export interface ProfiledRecord {
+  id: number
+  source_code: string
+  source_name: string
+  record_id: string
+  values: Partial<Record<Field, string>>
+  checks: Record<string, string>
+  customer: { id: number; code: string } | null
+}
+
+export interface ProfiledRecords {
+  count: number
+  page: number
+  page_size: number
+  masked: boolean
+  results: ProfiledRecord[]
+}
