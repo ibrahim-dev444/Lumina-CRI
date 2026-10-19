@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { api } from '../api/client'
@@ -10,8 +10,50 @@ import { Card, EmptyState, ErrorAlert, PageHeader } from '../components/ui'
 
 // A chosen bar: "<check key>:<value>", the form the API takes.
 type Pick = string
+type Tone = 'good' | 'info' | 'fix' | 'bad' | 'empty'
 
-// Columns shown in the records list, in this order, when the source sent them.
+// How serious each kind of value is. Good: nothing to do. Info: worth knowing (a title). Fixable: Lumina's
+// cleaning or a simple rule can correct it. Invalid: a person has to fix it at the source. Empty: missing.
+const GOOD = new Set(['Valid', '10 digits', 'Plain digits', '10 characters', 'Normal', 'M / F', 'Filled', 'No title'])
+const BAD = new Set([
+  'Invalid', 'Wrong pattern', 'Missing @', 'Missing domain', 'In the future', 'Over 100 years', 'Unreadable',
+  'Contains letters', 'Other length', '9 digits', 'No digits', '9 characters', '11 characters', 'Contains digits',
+  'Other',
+])
+const INFO = new Set(['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Shri', 'Smt', 'Kumari'])
+const TONE_ORDER: Tone[] = ['bad', 'fix', 'empty', 'info', 'good']
+const TONE_LABEL: Record<Tone, string> = {
+  bad: 'Invalid',
+  fix: 'Fixable',
+  empty: 'Empty',
+  info: 'Worth knowing',
+  good: 'Good',
+}
+
+function toneOf(value: string): Tone {
+  if (value === 'Empty') return 'empty'
+  if (GOOD.has(value)) return 'good'
+  if (BAD.has(value)) return 'bad'
+  if (INFO.has(value)) return 'info'
+  return 'fix'
+}
+
+// Share of records whose value needs nothing (good or worth knowing), for one check.
+function cleanShare(check: ProfileCheck) {
+  const ok = check.values.filter((v) => ['good', 'info'].includes(toneOf(v.value))).reduce((n, v) => n + v.count, 0)
+  return check.records ? (100 * ok) / check.records : 0
+}
+
+function needsAttention(check: ProfileCheck) {
+  return check.values.filter((v) => ['bad', 'fix', 'empty'].includes(toneOf(v.value))).reduce((n, v) => n + v.count, 0)
+}
+
+function scoreTone(score: number): 'good' | 'fix' | 'bad' {
+  return score >= 85 ? 'good' : score >= 60 ? 'fix' : 'bad'
+}
+
+type Column = { name: string; checks: ProfileCheck[]; score: number; issues: number }
+
 const SHOWN: { field: 'name' | 'mobile' | 'pan' | 'email' | 'dob' | 'gender'; label: string }[] = [
   { field: 'name', label: 'Name' },
   { field: 'mobile', label: 'Mobile' },
@@ -21,42 +63,48 @@ const SHOWN: { field: 'name' | 'mobile' | 'pan' | 'email' | 'dob' | 'gender'; la
   { field: 'gender', label: 'Gender' },
 ]
 
-// Data profiling: how each column's values look as the bank's systems sent them, before Lumina cleans them.
-// Click a bar to see the records behind it; bars from different columns combine.
+// Data profiling: how each column looks as the bank's systems send it, before Lumina cleans it.
+// The scorecard picks a column; bars inside it filter the records, which open in a side panel.
 export function ProfilingPage() {
   const [source, setSource] = useState('all')
+  const [column, setColumn] = useState<string | null>(null)
   const [picks, setPicks] = useState<Pick[]>([])
-  const [all, setAll] = useState(false)
-  const [page, setPage] = useState(1)
-  const recordsRef = useRef<HTMLDivElement>(null)
+  const [panelOpen, setPanelOpen] = useState(false)
   const summary = useApi(() => api.profiling(source), [source])
-  const records = useApi(
-    () => (picks.length ? api.profilingRecords(source, picks, page, all ? 50 : 10) : Promise.resolve(null)),
-    [source, picks.join('|'), all, page],
-  )
+
+  const columns = useMemo<Column[]>(() => {
+    const byName = new Map<string, ProfileCheck[]>()
+    for (const c of summary.data?.checks ?? []) byName.set(c.column, [...(byName.get(c.column) ?? []), c])
+    return [...byName.entries()].map(([name, checks]) => ({
+      name,
+      checks,
+      score: checks.reduce((s, c) => s + cleanShare(c), 0) / checks.length,
+      issues: Math.max(...checks.map(needsAttention)),
+    }))
+  }, [summary.data])
+
+  const overall = columns.length ? columns.reduce((s, c) => s + c.score, 0) / columns.length : 0
+  const active = columns.find((c) => c.name === column) ?? columns[0]
 
   const toggle = (pick: Pick) => {
     const adding = !picks.includes(pick)
-    setPicks((p) => (p.includes(pick) ? p.filter((x) => x !== pick) : [...p, pick]))
-    setAll(false)
-    setPage(1)
-    // Bring the matching records into view; they sit above the column cards.
-    if (adding) requestAnimationFrame(() => recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    setPicks((p) => (adding ? [...p, pick] : p.filter((x) => x !== pick)))
+    if (adding) setPanelOpen(true)
   }
   const labelOf = (pick: Pick) => {
-    const [key, value] = [pick.slice(0, pick.indexOf(':')), pick.slice(pick.indexOf(':') + 1)]
+    const key = pick.slice(0, pick.indexOf(':'))
+    const value = pick.slice(pick.indexOf(':') + 1)
     const check = summary.data?.checks.find((c) => c.key === key)
     return check ? `${check.column} ${check.label.toLowerCase()}: ${value}` : value
   }
 
   const data = summary.data
-  const pages = records.data ? Math.max(1, Math.ceil(records.data.count / records.data.page_size)) : 1
 
   return (
     <>
       <PageHeader
         title="Data profiling"
-        description="How each column looks as your systems send it, before Lumina cleans it. Select a bar to see the records behind it."
+        description="How each column looks as your systems send it, before Lumina cleans it."
         actions={
           <select
             className="select"
@@ -64,8 +112,8 @@ export function ProfilingPage() {
             value={source}
             onChange={(e) => {
               setSource(e.target.value)
-              setPage(1)
-              setAll(false)
+              setPicks([])
+              setPanelOpen(false)
             }}
           >
             <option value="all">All connected systems</option>
@@ -93,159 +141,105 @@ export function ProfilingPage() {
         </Card>
       )}
 
-      {data && data.profiled > 0 && (
+      {data && data.profiled > 0 && active && (
         <>
-          <div className="profile-summary">
-            <span>
-              <strong>{data.records.toLocaleString('en-IN')}</strong> records
-              {data.profiled < data.records && (
-                <span className="muted"> · {data.records - data.profiled} not profiled yet (sync their connector)</span>
-              )}
-            </span>
-            {picks.length > 0 && (
-              <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                {picks.map((p) => (
-                  <button key={p} type="button" className="filter-chip" onClick={() => toggle(p)}>
-                    {labelOf(p)} <Icon name="x" size={12} />
-                  </button>
-                ))}
-                <button type="button" className="link" onClick={() => setPicks([])}>
-                  Clear
+          <section className="dq-scorecard" aria-label="Data quality by column">
+            <div className="dq-overall">
+              <span className="dq-overall-label">Overall</span>
+              <span className={`dq-overall-score is-${scoreTone(overall)}`}>{Math.round(overall)}%</span>
+              <span className="text-sm muted">
+                clean across {data.records.toLocaleString('en-IN')} records
+                {data.profiled < data.records && ` · ${data.records - data.profiled} not profiled yet`}
+              </span>
+            </div>
+            <div className="dq-tiles" role="tablist" aria-label="Columns">
+              {columns.map((c) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  role="tab"
+                  aria-selected={c.name === active.name}
+                  className={`dq-tile${c.name === active.name ? ' is-active' : ''}`}
+                  onClick={() => setColumn(c.name)}
+                >
+                  <span className="dq-tile-name">{c.name}</span>
+                  <span className={`dq-tile-score is-${scoreTone(c.score)}`}>{Math.round(c.score)}%</span>
+                  <span className="dq-meter" aria-hidden="true">
+                    <i className={`is-${scoreTone(c.score)}`} style={{ width: `${c.score}%` }} />
+                  </span>
+                  <span className="text-xs muted">
+                    {c.issues ? `${c.issues.toLocaleString('en-IN')} need attention` : 'All clean'}
+                  </span>
                 </button>
-              </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="dq-legend" aria-label="Colour key">
+            {TONE_ORDER.map((t) => (
+              <span key={t}>
+                <i className={`dq-dot is-${t}`} /> {TONE_LABEL[t]}
+              </span>
+            ))}
+            {picks.length > 0 && (
+              <button type="button" className="btn btn-primary btn-sm dq-open" onClick={() => setPanelOpen(true)}>
+                <Icon name="search" size={14} /> Show matching records ({picks.length} filter{picks.length === 1 ? '' : 's'})
+              </button>
             )}
           </div>
 
-          <div ref={recordsRef} className="profile-anchor" />
-          {picks.length > 0 && (
-            <Card
-              title="Matching records"
-              description={
-                records.data
-                  ? `Showing ${records.data.results.length} of ${records.data.count.toLocaleString('en-IN')}${records.data.masked ? '. Contact details are masked for your role.' : '.'}`
-                  : 'Finding the records'
-              }
-              actions={
-                records.data &&
-                records.data.count > 10 &&
-                (all ? (
-                  <button type="button" className="btn btn-sm" onClick={() => { setAll(false); setPage(1) }}>
-                    Show first 10
-                  </button>
-                ) : (
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() => { setAll(true); setPage(1) }}>
-                    See all {records.data.count.toLocaleString('en-IN')} records
-                  </button>
-                ))
-              }
-              footer={
-                all && records.data && pages > 1 && (
-                  <>
-                    <span className="text-sm muted">
-                      Page {page} of {pages}
-                    </span>
-                    <div className="row" style={{ gap: 8 }}>
-                      <button type="button" className="btn btn-sm" disabled={page <= 1} onClick={() => setPage((n) => n - 1)}>
-                        Previous
-                      </button>
-                      <button type="button" className="btn btn-sm" disabled={page >= pages} onClick={() => setPage((n) => n + 1)}>
-                        Next
-                      </button>
-                    </div>
-                  </>
-                )
-              }
-              flush
-            >
-              {records.error && (
-                <div className="card-body">
-                  <ErrorAlert message={records.error} />
-                </div>
-              )}
-              {!records.data && !records.error && <Loader kind="stack" label="Finding the records" size={44} />}
-              {records.data && records.data.count === 0 && (
-                <EmptyState icon="search" title="No record matches all of these">
-                  Remove a filter to widen the search.
-                </EmptyState>
-              )}
-              {records.data && records.data.count > 0 && (
-                <div className="table-wrap">
-                  <table className="table" style={{ minWidth: 860 }}>
-                    <thead>
-                      <tr>
-                        <th>Record</th>
-                        <th>System</th>
-                        {SHOWN.map((s) => (
-                          <th key={s.field}>{s.label}</th>
-                        ))}
-                        <th>Customer</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {records.data.results.map((r) => (
-                        <tr key={r.id}>
-                          <td className="mono text-sm nowrap">{r.record_id}</td>
-                          <td className="text-sm">{r.source_name}</td>
-                          {SHOWN.map((s) => (
-                            <td key={s.field} className={s.field === 'name' ? undefined : 'mono text-sm'}>
-                              {r.values[s.field] ? (
-                                <span className="sent-value">{r.values[s.field]}</span>
-                              ) : (
-                                <span className="muted">-</span>
-                              )}
-                            </td>
-                          ))}
-                          <td>
-                            {r.customer ? (
-                              <Link to={`/customers/${r.customer.id}`} className="link mono text-sm">
-                                {r.customer.code}
-                              </Link>
-                            ) : (
-                              <span className="muted">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-          )}
-
-          <div className="profile-grid">
-            {data.checks.map((check) => (
+          <div className="dq-checks" role="tabpanel" aria-label={active.name}>
+            {active.checks.map((check) => (
               <CheckCard key={check.key} check={check} picks={picks} onToggle={toggle} />
             ))}
           </div>
         </>
+      )}
+
+      {panelOpen && picks.length > 0 && (
+        <RecordsPanel
+          source={source}
+          picks={picks}
+          labelOf={labelOf}
+          onRemove={(p) => toggle(p)}
+          onClear={() => {
+            setPicks([])
+            setPanelOpen(false)
+          }}
+          onClose={() => setPanelOpen(false)}
+        />
       )}
     </>
   )
 }
 
 function CheckCard({ check, picks, onToggle }: { check: ProfileCheck; picks: Pick[]; onToggle: (p: Pick) => void }) {
+  const values = [...check.values].sort(
+    (a, b) => TONE_ORDER.indexOf(toneOf(a.value)) - TONE_ORDER.indexOf(toneOf(b.value)) || b.count - a.count,
+  )
   return (
     <Card
-      title={
-        <span className="stack" style={{ gap: 2 }}>
-          <span className="text-xs muted profile-column">{check.column}</span>
-          {check.label}
-        </span>
-      }
-      actions={<span className="text-sm muted num">{check.records.toLocaleString('en-IN')} records</span>}
+      title={check.label}
+      description={`${check.records.toLocaleString('en-IN')} records · ${Math.round(cleanShare(check))}% clean`}
     >
+      <div className="dq-stack" aria-hidden="true">
+        {values.map((v) => (
+          <i key={v.value} className={`is-${toneOf(v.value)}`} style={{ width: `${v.share}%` }} title={`${v.value}: ${v.share}%`} />
+        ))}
+      </div>
       <ul className="profile-bars">
-        {check.values.map((v) => {
+        {values.map((v) => {
           const pick = `${check.key}:${v.value}`
           const on = picks.includes(pick)
-          const tone = v.value === 'Empty' || /Invalid|Wrong|Missing|future|Over 100|Unreadable|letters/i.test(v.value)
+          const tone = toneOf(v.value)
           return (
             <li key={v.value}>
               <button type="button" className={`profile-bar${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => onToggle(pick)}>
-                <span className="profile-bar-label">{v.value}</span>
+                <span className="profile-bar-label">
+                  <i className={`dq-dot is-${tone}`} aria-label={TONE_LABEL[tone]} /> {v.value}
+                </span>
                 <span className="profile-bar-track" aria-hidden="true">
-                  <i className={tone ? 'is-issue' : undefined} style={{ width: `${Math.max(v.share, 1.5)}%` }} />
+                  <i className={`is-${tone}`} style={{ width: `${Math.max(v.share, 1.5)}%` }} />
                 </span>
                 <span className="profile-bar-count num">
                   {v.count.toLocaleString('en-IN')} <span className="muted">· {v.share}%</span>
@@ -256,5 +250,135 @@ function CheckCard({ check, picks, onToggle }: { check: ProfileCheck; picks: Pic
         })}
       </ul>
     </Card>
+  )
+}
+
+function RecordsPanel({
+  source,
+  picks,
+  labelOf,
+  onRemove,
+  onClear,
+  onClose,
+}: {
+  source: string
+  picks: Pick[]
+  labelOf: (p: Pick) => string
+  onRemove: (p: Pick) => void
+  onClear: () => void
+  onClose: () => void
+}) {
+  const key = picks.join('|')
+  const [view, setView] = useState({ key, all: false, page: 1 })
+  // A different set of filters starts again at the first 10.
+  const current = view.key === key ? view : { key, all: false, page: 1 }
+  const setAll = (all: boolean) => setView({ key, all, page: 1 })
+  const setPage = (page: number) => setView({ ...current, page })
+  const records = useApi(
+    () => api.profilingRecords(source, picks, current.page, current.all ? 50 : 10),
+    [source, key, current.all, current.page],
+  )
+  const r = records.data
+  const pages = r ? Math.max(1, Math.ceil(r.count / r.page_size)) : 1
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <>
+      <div className="dq-backdrop" onClick={onClose} aria-hidden="true" />
+      <aside className="dq-panel" role="dialog" aria-label="Matching records">
+        <header className="dq-panel-head">
+          <div className="stack" style={{ gap: 4, minWidth: 0 }}>
+            <h2>Matching records</h2>
+            <span className="text-sm muted">
+              {r
+                ? `Showing ${r.results.length} of ${r.count.toLocaleString('en-IN')}${r.masked ? ' · contact details masked for your role' : ''}`
+                : 'Finding the records'}
+            </span>
+          </div>
+          <button type="button" className="btn btn-sm" onClick={onClose} aria-label="Close">
+            <Icon name="x" size={14} />
+          </button>
+        </header>
+        <div className="dq-panel-chips">
+          {picks.map((p) => (
+            <button key={p} type="button" className="filter-chip" onClick={() => onRemove(p)}>
+              {labelOf(p)} <Icon name="x" size={12} />
+            </button>
+          ))}
+          <button type="button" className="link" onClick={onClear}>
+            Clear all
+          </button>
+        </div>
+        <div className="dq-panel-body">
+          {records.error && <ErrorAlert message={records.error} />}
+          {!r && !records.error && <Loader kind="stack" label="Finding the records" size={44} />}
+          {r && r.count === 0 && (
+            <EmptyState icon="search" title="No record matches all of these">
+              Remove a filter to widen the search.
+            </EmptyState>
+          )}
+          {r && r.count > 0 && (
+            <ul className="dq-records">
+              {r.results.map((row) => (
+                <li key={row.id} className="dq-record">
+                  <div className="dq-record-head">
+                    <span className="mono text-sm">{row.record_id}</span>
+                    <span className="text-xs muted">{row.source_name}</span>
+                    {row.customer && (
+                      <Link to={`/customers/${row.customer.id}`} className="link mono text-sm">
+                        {row.customer.code}
+                      </Link>
+                    )}
+                  </div>
+                  <dl className="dq-record-values">
+                    {SHOWN.filter((s) => row.values[s.field]).map((s) => (
+                      <div key={s.field}>
+                        <dt>{s.label}</dt>
+                        <dd className={s.field === 'name' ? undefined : 'mono'}>{row.values[s.field]}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {r && r.count > 10 && (
+          <footer className="dq-panel-foot">
+            {current.all ? (
+              <>
+                <button type="button" className="btn btn-sm" onClick={() => setAll(false)}>
+                  Show first 10
+                </button>
+                {pages > 1 && (
+                  <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                    <button type="button" className="btn btn-sm" disabled={current.page <= 1} onClick={() => setPage(current.page - 1)}>
+                      Previous
+                    </button>
+                    <span className="text-sm muted">
+                      {current.page} / {pages}
+                    </span>
+                    <button type="button" className="btn btn-sm" disabled={current.page >= pages} onClick={() => setPage(current.page + 1)}>
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => setAll(true)}>
+                See all {r.count.toLocaleString('en-IN')} records
+              </button>
+            )}
+          </footer>
+        )}
+      </aside>
+    </>
   )
 }
