@@ -33,7 +33,7 @@ def test_settings_are_shown_as_whole_numbers(admin):
     body = admin.get("/api/settings/trust/").json()
     trust = {s["code"]: s["trust"] for s in body["sources"]}
     assert trust == {"flexcube": 85, "salesforce": 55, "branch_csv": 40}
-    assert sum(w["points"] for w in body["weights"]) == 100 and len(body["weights"]) == 13
+    assert sum(w["points"] for w in body["weights"]) == 100 and len(body["weights"]) == 15
 
 
 def test_changing_source_trust_rescores_customers(admin, one_customer):

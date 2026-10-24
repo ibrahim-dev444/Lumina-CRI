@@ -64,15 +64,15 @@ class Command(BaseCommand):
                 "CREATE TABLE core.customers (cust_id varchar(20) PRIMARY KEY, cust_name varchar(100) NOT NULL, "
                 "date_of_birth date, gender_code varchar(10), pan_no varchar(16), mobile_no varchar(24), "
                 "email_id varchar(120), address_line varchar(200), occupation varchar(60), annual_income varchar(40), "
-                "internal_risk_note text, last_updated timestamp)"
+                "country_name varchar(40), residency_status varchar(20), internal_risk_note text, last_updated timestamp)"
             )
             with conn.cursor() as cur:
                 cur.executemany(
-                    "INSERT INTO core.customers VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO core.customers VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     [
                         (r["id"], r["name"].upper() if i % 3 == 0 else r["name"], r["dob"], r["gender"], r["pan"],
-                         r["mobile"], r["email"], r["address"], r["occupation"], r["income"],
-                         "internal note: never read by Lumina", r["updated_at"])
+                         r["mobile"], r["email"], r["address"], r["occupation"], r["income"], r["country"],
+                         r["residency"], "internal note: never read by Lumina", r["updated_at"])
                         for i, r in enumerate(rows)
                     ],
                 )
@@ -145,15 +145,15 @@ class Command(BaseCommand):
                 cur.execute(
                     "CREATE TABLE customer_master (CUSTOMER_ID varchar(20) PRIMARY KEY, FULL_NAME varchar(100) NOT NULL, "
                     "DOB date, SEX varchar(10), PAN varchar(16), PHONE varchar(24), EMAIL varchar(120), "
-                    "ADDRESS varchar(200), PROFESSION varchar(60), INCOME_BAND varchar(40), CREDIT_SCORE int, "
-                    "MODIFIED_AT datetime)"
+                    "ADDRESS varchar(200), PROFESSION varchar(60), INCOME_BAND varchar(40), COUNTRY varchar(40), "
+                    "RESIDENT_TYPE varchar(20), CREDIT_SCORE int, MODIFIED_AT datetime)"
                 )
                 cur.executemany(
-                    "INSERT INTO customer_master VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO customer_master VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     [
                         (r["id"], r["name"], r["dob"], {"M": "Male", "F": "Female"}.get(r["gender"], r["gender"]),
                          r["pan"], r["mobile"], r["email"], r["address"], r["occupation"], r["income"],
-                         600 + (i * 7) % 300,
+                         r["country"], r["residency"], 600 + (i * 7) % 300,
                          r["updated_at"].replace("T", " "))
                         for i, r in enumerate(rows)
                     ],
@@ -205,6 +205,7 @@ class Command(BaseCommand):
                     "contact": {"mobile": r["mobile"], "email": r["email"]},
                     "kyc": {"pan": r["pan"]},
                     "address": r["address"],
+                    "residence": {"country": r["country"], "status": r["residency"]},
                     "deviceTokens": ["never-read-by-lumina"],
                     "updatedAt": r["updated_at"],
                 }

@@ -67,7 +67,11 @@ export function GoldenFieldRow({
       <dt>{FIELD_LABELS[field]}</dt>
       <dd>
         <div className={`field-value${MONO_FIELDS.has(field) ? ' mono' : ''}`}>{formatFieldValue(field, golden.value)}</div>
-        {golden.correction ? (
+        {golden.guessed ? (
+          <div className="field-source">
+            <strong>Likely</strong> · worked out by Lumina from {golden.source_name}'s other details; no system sent it
+          </div>
+        ) : golden.correction ? (
           <div className="field-source">
             <strong>Approved correction</strong> · evidence {golden.correction.evidence_ref} · proposed by{' '}
             {golden.correction.proposed_by}, approved by {golden.correction.approved_by}
@@ -118,7 +122,9 @@ export function GoldenFieldRow({
         )}
       </dd>
       <dd>
-        {golden.correction ? (
+        {golden.guessed ? (
+          <StatusBadge tone="neutral">Likely</StatusBadge>
+        ) : golden.correction ? (
           <StatusBadge tone="good">Corrected</StatusBadge>
         ) : Number(golden.trust) <= 0.4 ? (
           <StatusBadge tone="bad">Low trust</StatusBadge>

@@ -31,7 +31,8 @@ def pick_winner(candidates):
     present = [c for c in candidates if c["value"] not in (None, "")]
     if not present:
         return None, 0
-    winner = max(present, key=lambda c: (c["trust"], c["updated_at"] or OLDEST))
+    # A value a system sent always beats one Lumina guessed ("guessed"), then trust, then the newest.
+    winner = max(present, key=lambda c: (not c.get("guessed"), c["trust"], c["updated_at"] or OLDEST))
     conflicts = len({c.get("compare") or normalise(c["value"]) for c in present}) - 1
     return winner, conflicts
 

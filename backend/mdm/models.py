@@ -9,7 +9,7 @@ from sources.models import Source
 # The fields that make up a golden record, in display order. "address" is the current address.
 FIELDS = [
     "name", "father_name", "dob", "gender", "pan", "aadhaar", "ckyc",
-    "mobile", "email", "address", "perm_address", "occupation", "income",
+    "mobile", "email", "address", "perm_address", "occupation", "income", "country", "residency",
 ]
 FIELD_CHOICES = [(f, f) for f in FIELDS]
 
@@ -117,6 +117,7 @@ class GoldenField(models.Model):
     correction = models.ForeignKey(FieldCorrection, on_delete=models.CASCADE, null=True, blank=True)
     trust = models.DecimalField(max_digits=3, decimal_places=2)
     conflicts = models.PositiveSmallIntegerField(default=0)  # how many OTHER different values sources hold
+    guessed = models.BooleanField(default=False)  # worked out by Lumina, not sent by any system ("likely")
 
     class Meta:
         ordering = ["customer", "field"]

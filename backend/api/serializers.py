@@ -138,7 +138,7 @@ class GoldenFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = GoldenField
         fields = ["field", "value", "trust", "conflicts", "source_code", "source_name", "source_record_id",
-                  "last_updated", "correction"]
+                  "last_updated", "correction", "guessed"]
 
     # A golden value comes from a source record, or from an approved correction.
     def get_source_code(self, obj):

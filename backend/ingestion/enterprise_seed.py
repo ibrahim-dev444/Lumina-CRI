@@ -105,11 +105,12 @@ def seed_snowflake(out, bank, rotate, count=300):
     run(f"CREATE SCHEMA IF NOT EXISTS {database}.CORE")
     run(f"CREATE OR REPLACE TABLE {database}.CORE.CUSTOMERS (CUSTOMER_ID STRING, FULL_NAME STRING, DATE_OF_BIRTH DATE, "
         "GENDER STRING, PAN STRING, MOBILE STRING, EMAIL STRING, ADDRESS STRING, OCCUPATION STRING, "
-        "INCOME_BAND STRING, RISK_NOTES STRING, UPDATED_AT TIMESTAMP_NTZ)")
+        "INCOME_BAND STRING, COUNTRY STRING, RESIDENCY_STATUS STRING, RISK_NOTES STRING, UPDATED_AT TIMESTAMP_NTZ)")
     run(f"INSERT INTO {database}.CORE.CUSTOMERS VALUES " + ", ".join(
         f"({_lit(r['id'])}, {_lit(r['name'])}, {_lit(r['dob'])}, {_lit(r['gender'])}, {_lit(r['pan'])}, "
         f"{_lit(r['mobile'])}, {_lit(r['email'])}, {_lit(r['address'])}, {_lit(r['occupation'])}, "
-        f"{_lit(r['income'])}, 'internal: never read by Lumina', {_lit(r['updated_at'])})" for r in rows))
+        f"{_lit(r['income'])}, {_lit(r['country'])}, {_lit(r['residency'])}, 'internal: never read by Lumina', "
+        f"{_lit(r['updated_at'])})" for r in rows))
     owned = accounts(bank, SEEDS["snowflake"], count)
     run(f"CREATE OR REPLACE TABLE {database}.CORE.ACCOUNTS (ACCOUNT_NO STRING, CUSTOMER_ID STRING, PRODUCT_CODE STRING, "
         "PRODUCT_NAME STRING, STATUS STRING, OPENED_ON DATE, BALANCE NUMBER(16,2), UPDATED_AT TIMESTAMP_NTZ)")
@@ -160,11 +161,12 @@ def seed_databricks(out, bank, rotate, count=300):
     run(f"CREATE SCHEMA IF NOT EXISTS {schema}")
     run(f"CREATE OR REPLACE TABLE {schema}.customers (customer_id STRING, full_name STRING, date_of_birth DATE, "
         "gender STRING, pan STRING, mobile STRING, email STRING, address STRING, occupation STRING, "
-        "income_band STRING, updated_at TIMESTAMP)")
+        "income_band STRING, country STRING, residency_status STRING, updated_at TIMESTAMP)")
     run(f"INSERT INTO {schema}.customers VALUES " + ", ".join(
         f"({_lit(r['id'])}, {_lit(r['name'])}, {_date(r['dob'])}, {_lit(r['gender'])}, {_lit(r['pan'])}, "
         f"{_lit(r['mobile'])}, {_lit(r['email'])}, {_lit(r['address'])}, {_lit(r['occupation'])}, "
-        f"{_lit(r['income'])}, TIMESTAMP {_lit(r['updated_at'].replace('T', ' '))})" for r in rows))
+        f"{_lit(r['income'])}, {_lit(r['country'])}, {_lit(r['residency'])}, "
+        f"TIMESTAMP {_lit(r['updated_at'].replace('T', ' '))})" for r in rows))
     owned = accounts(bank, SEEDS["databricks"], count)
     run(f"CREATE OR REPLACE TABLE {schema}.accounts (account_no STRING, customer_id STRING, product_code STRING, "
         "product_name STRING, status STRING, opened_on DATE, balance DECIMAL(16,2))")

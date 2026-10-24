@@ -11,6 +11,9 @@ import re
 from datetime import date
 
 from .clean import clean_date, clean_mobile
+from .places import CODES, COUNTRIES, RESIDENCY, clean_country, clean_residency
+
+RESIDENCY_COUNTRIES = list(COUNTRIES)  # the countries Lumina knows by name
 
 # What the screen shows: one card per check, in this order. (key, column label, check label)
 CHECKS = [
@@ -30,6 +33,8 @@ CHECKS = [
     ("aadhaar.check", "Aadhaar", "Value"),
     ("ckyc.check", "CKYC number", "Value"),
     ("perm_address.check", "Permanent address", "Value"),
+    ("country.check", "Country", "Value"),
+    ("residency.code", "Residency", "Code used"),
 ]
 LABELS = {key: (column, check) for key, column, check in CHECKS}
 EMPTY = "Empty"
@@ -148,6 +153,29 @@ def _gender(value):
     return {"gender.code": "Other"}
 
 
+def _country(value):
+    text = _text(value).strip()
+    if not text:
+        return {"country.check": EMPTY}
+    found = clean_country(text)
+    if text == found and found.lower() in {c.lower() for c in RESIDENCY_COUNTRIES}:
+        return {"country.check": "Full name"}
+    if text.lower().replace(".", "") in CODES:
+        return {"country.check": "Short code"}
+    if found.lower() in {c.lower() for c in RESIDENCY_COUNTRIES}:
+        return {"country.check": "Other spelling"}
+    return {"country.check": "Unknown"}
+
+
+def _residency(value):
+    text = _text(value).strip()
+    if not text:
+        return {"residency.code": EMPTY}
+    if text in RESIDENCY:
+        return {"residency.code": "Resident / NRI / Foreign national"}
+    return {"residency.code": "Other code" if clean_residency(text) else "Unknown"}
+
+
 def _plain(field, value):
     text = _text(value).strip()
     if not text:
@@ -161,7 +189,8 @@ def profile(std):
     """Checks for every Lumina field the connector maps. `std` is the record as the system sent it, renamed to
     Lumina's fields but not yet cleaned. Fields the connector does not map are left out (not counted as empty)."""
     result = {}
-    makers = {"name": _name, "mobile": _mobile, "pan": _pan, "email": _email, "dob": _dob, "gender": _gender}
+    makers = {"name": _name, "mobile": _mobile, "pan": _pan, "email": _email, "dob": _dob, "gender": _gender,
+              "country": _country, "residency": _residency}
     for field, value in std.items():
         if field in makers:
             result.update(makers[field](value))

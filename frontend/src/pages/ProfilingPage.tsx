@@ -14,11 +14,14 @@ type Tone = 'good' | 'info' | 'fix' | 'bad' | 'empty'
 
 // How serious each kind of value is. Good: nothing to do. Info: worth knowing (a title). Fixable: Lumina's
 // cleaning or a simple rule can correct it. Invalid: a person has to fix it at the source. Empty: missing.
-const GOOD = new Set(['Valid', '10 digits', 'Plain digits', '10 characters', 'Normal', 'M / F', 'Filled', 'No title'])
+const GOOD = new Set([
+  'Valid', '10 digits', 'Plain digits', '10 characters', 'Normal', 'M / F', 'Filled', 'No title', 'Full name',
+  'Resident / NRI / Foreign national',
+])
 const BAD = new Set([
   'Invalid', 'Wrong pattern', 'Missing @', 'Missing domain', 'In the future', 'Over 100 years', 'Unreadable',
   'Contains letters', 'Other length', '9 digits', 'No digits', '9 characters', '11 characters', 'Contains digits',
-  'Other',
+  'Other', 'Unknown',
 ])
 const INFO = new Set(['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Shri', 'Smt', 'Kumari'])
 const TONE_ORDER: Tone[] = ['bad', 'fix', 'empty', 'info', 'good']
@@ -54,13 +57,15 @@ function scoreTone(score: number): 'good' | 'fix' | 'bad' {
 
 type Column = { name: string; checks: ProfileCheck[]; score: number; issues: number }
 
-const SHOWN: { field: 'name' | 'mobile' | 'pan' | 'email' | 'dob' | 'gender'; label: string }[] = [
+const SHOWN: { field: 'name' | 'mobile' | 'pan' | 'email' | 'dob' | 'gender' | 'country' | 'residency'; label: string }[] = [
   { field: 'name', label: 'Name' },
   { field: 'mobile', label: 'Mobile' },
   { field: 'pan', label: 'PAN' },
   { field: 'email', label: 'Email' },
   { field: 'dob', label: 'Date of birth' },
   { field: 'gender', label: 'Gender' },
+  { field: 'country', label: 'Country' },
+  { field: 'residency', label: 'Residency' },
 ]
 
 // Data profiling: how each column looks as the bank's systems send it, before Lumina cleans it.

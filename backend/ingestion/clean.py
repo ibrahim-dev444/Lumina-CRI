@@ -115,6 +115,9 @@ def clean_text(value):
 
 def clean_record(record):
     """Clean every standard field of one record produced by a connector's to_standard()."""
+    from .places import place_and_residency
+
+    country, residency, guessed = place_and_residency(record)  # needs the mobile number as sent
     return {
         **record,
         "name": clean_name(record.get("name")),
@@ -130,4 +133,7 @@ def clean_record(record):
         "perm_address": clean_address(record.get("perm_address")),
         "occupation": clean_text(record.get("occupation")),
         "income": clean_text(record.get("income")),
+        "country": country,
+        "residency": residency,
+        "guessed": guessed,
     }

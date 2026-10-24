@@ -14,6 +14,8 @@ export const FIELDS: Field[] = [
   'perm_address',
   'occupation',
   'income',
+  'country',
+  'residency',
 ]
 
 export const FIELD_LABELS: Record<Field, string> = {
@@ -30,6 +32,8 @@ export const FIELD_LABELS: Record<Field, string> = {
   perm_address: 'Permanent address',
   occupation: 'Occupation',
   income: 'Annual income',
+  country: 'Country of residence',
+  residency: 'Residency status',
 }
 
 // Short labels for narrow table headers
@@ -47,6 +51,8 @@ export const FIELD_SHORT: Record<Field, string> = {
   perm_address: 'Perm. addr.',
   occupation: 'Job',
   income: 'Income',
+  country: 'Country',
+  residency: 'Residency',
 }
 
 // Identity numbers and phone numbers read best in the monospaced font

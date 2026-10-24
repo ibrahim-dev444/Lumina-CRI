@@ -3,6 +3,8 @@
 from collections import Counter
 from dataclasses import dataclass
 
+from decimal import Decimal
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -112,6 +114,28 @@ def rebuild_golden_record(customer):
     customer.refresh_from_db(fields=["trust_score", "score_updated_at", "pan_hash"])
 
 
+GUESSED_TRUST = Decimal("0.30")  # a value Lumina worked out itself counts for little and never beats a sent one
+
+
+def _nri_account_holders(records):
+    """{customer id: one of their records} for customers holding an NRE, NRO or FCNR account in that record's
+    source. Products point at the customer's ID inside the source (Holding.customer_ref)."""
+    from ingestion.places import NRI_ACCOUNT
+    from products.models import Holding
+
+    by_ref = {(r.source_id, r.source_record_id): (customer_id, r) for customer_id, rs in records.items() for r in rs}
+    if not by_ref:
+        return {}
+    found = {}
+    holdings = Holding.objects.filter(product_name__iregex=r"(^|[^a-z])(nre|nro|fcnr|nri)([^a-z]|$)",
+                                      source_id__in={s for s, _ in by_ref})
+    for h in holdings.values("source_id", "customer_ref", "product_name"):
+        hit = by_ref.get((h["source_id"], h["customer_ref"]))
+        if hit and NRI_ACCOUNT.search(h["product_name"]):
+            found.setdefault(hit[0], hit[1])
+    return found
+
+
 @transaction.atomic
 def rebuild_customers(customer_ids=None):
     """Recalculate golden fields and trust scores for these customers (all when None). Everything is read in a
@@ -131,6 +155,7 @@ def rebuild_customers(customer_ids=None):
     for c in approved.order_by("decided_at", "id"):
         corrections[(c.customer_id, c.field)] = c
     existing = {(g.customer_id, g.field): g for g in GoldenField.objects.filter(customer_id__in=ids)}
+    nri_accounts = _nri_account_holders(records)
 
     to_create, to_update, to_delete = [], [], []
     now = timezone.now()
@@ -141,7 +166,9 @@ def rebuild_customers(customer_ids=None):
             candidates = [
                 {
                     "value": getattr(r, field),
-                    "trust": r.source.trust_for(field),
+                    "trust": min(r.source.trust_for(field), GUESSED_TRUST) if field in (r.guessed or [])
+                    else r.source.trust_for(field),
+                    "guessed": field in (r.guessed or []),
                     "updated_at": r.source_updated_at,
                     "record_id": r.id,
                     "source_id": r.source_id,
@@ -158,6 +185,10 @@ def rebuild_customers(customer_ids=None):
                     "compare": compare_key(field, c.value),
                 })
             winner, conflicts = pick_winner(candidates)
+            if field == "residency" and (winner is None or winner.get("guessed")) and customer.id in nri_accounts:
+                r = nri_accounts[customer.id]  # an NRE, NRO or FCNR account: only NRIs can hold one
+                winner = {"value": "NRI", "trust": GUESSED_TRUST, "guessed": True, "record_id": r.id,
+                          "source_id": r.source_id, "correction_id": None, "compare": "nri"}
             winners[field] = winner
             current = existing.get((customer.id, field))
             if not winner:
@@ -166,7 +197,7 @@ def rebuild_customers(customer_ids=None):
                 continue
             wanted = {"value": str(winner["value"]), "trust": winner["trust"], "source_id": winner["source_id"],
                       "source_record_id": winner["record_id"], "correction_id": winner["correction_id"],
-                      "conflicts": conflicts}
+                      "conflicts": conflicts, "guessed": bool(winner.get("guessed"))}
             if current is None:
                 to_create.append(GoldenField(customer_id=customer.id, field=field, **wanted))
             elif any(getattr(current, k) != v for k, v in wanted.items()):
@@ -180,7 +211,7 @@ def rebuild_customers(customer_ids=None):
     GoldenField.objects.filter(id__in=to_delete).delete()
     GoldenField.objects.bulk_create(to_create, batch_size=1000)
     GoldenField.objects.bulk_update(to_update, ["value", "trust", "source", "source_record", "correction",
-                                                "conflicts"], batch_size=1000)
+                                                "conflicts", "guessed"], batch_size=1000)
     Customer.objects.bulk_update(customers, ["trust_score", "score_updated_at", "pan_hash"], batch_size=1000)
 
 
