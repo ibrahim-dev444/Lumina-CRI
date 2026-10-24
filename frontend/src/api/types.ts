@@ -511,3 +511,22 @@ export interface FieldTrust {
   default: number // used for fields without their own value
   fields: { field: Field; label: string; trust: number; own: boolean }[]
 }
+
+// Customer breakdown (Customers page): how many customers in each group of one fact, after the filters.
+export interface BreakdownGroup {
+  key: string
+  label: string
+  count: number
+  share: number
+  members?: string[] // "Other" countries: the countries it stands for
+}
+
+export interface CustomerBreakdown {
+  by: string
+  total: number // customers matching the filters
+  all: number // every customer
+  groups: BreakdownGroup[]
+  filters: Record<string, string[]>
+  dimensions: { key: string; label: string }[]
+  options: Record<string, { key: string; label: string; count: number; members?: string[] }[]>
+}

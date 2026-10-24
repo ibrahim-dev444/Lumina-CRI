@@ -23,6 +23,7 @@ import type {
   SyncResult,
   SyncRun,
   TrustSettings,
+  CustomerBreakdown,
   FieldTrust,
   UploadResult,
   UploadedFile,
@@ -133,6 +134,11 @@ function query(params: Record<string, string | undefined>): string {
   return clean.length ? `?${new URLSearchParams(clean)}` : ''
 }
 
+function withFilters(base: string, filters: string): string {
+  if (!filters) return base
+  return base ? `${base}&${filters}` : `?${filters}`
+}
+
 export const api = {
   // Login
   csrf: () => get<{ detail: string }>('/auth/csrf/'),
@@ -223,8 +229,11 @@ export const api = {
   },
 
   // Customers
-  customers: (params: { search?: string; ordering?: string; band?: string; page?: string }) =>
-    get<Page<CustomerSummary>>(`/customers/${query(params)}`),
+  // filters: the super filter as URL parameters (?kyc=overdue&country=India&country=Singapore).
+  customers: (params: { search?: string; ordering?: string; page?: string }, filters = '') =>
+    get<Page<CustomerSummary>>(`/customers/${withFilters(query(params), filters)}`),
+  customerBreakdown: (by: string, filters = '') =>
+    get<CustomerBreakdown>(`/customers/breakdown/${withFilters(query({ by }), filters)}`),
   customer: (id: number) => get<CustomerDetail>(`/customers/${id}/`),
   briefing: (id: number) => get<Briefing>(`/customers/${id}/briefing/`),
   interactions: (id: number) => get<Interaction[]>(`/customers/${id}/interactions/`),
