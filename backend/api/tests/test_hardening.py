@@ -1,10 +1,12 @@
 """Sign-in lockout, idle sign-out, security headers, scheduled syncs and the push API."""
 
 import json
+from unittest.mock import patch
 from datetime import timedelta
 
 import pytest
 from django.conf import settings as django_settings
+from django.core.cache import cache
 from django.contrib.auth.models import Group, User
 from django.utils import timezone
 from django_tenants.utils import schema_context
@@ -177,3 +179,31 @@ def test_key_is_shown_once_and_stored_hashed(push):
     assert key not in source.secret and key not in json.dumps(source.config)
     listed = admin.get("/api/sources/").json()["results"]
     assert key not in json.dumps(listed)
+
+
+@pytest.mark.parametrize("url, tenant", [("/api/auth/login/", None), ("/api/platform/auth/login/", "public")])
+def test_retrying_while_locked_does_not_extend_the_lock(db, url, tenant):
+    """Regression: tries made during a lock were counted as new failures, so the 15 minutes restarted each time."""
+    from accounts.lockout import LOCK_MINUTES
+    from audit.models import AuditEvent
+    from tenants.models import PlatformEvent
+
+    name = "retry.lock"
+    if tenant:
+        with schema_context(tenant):
+            User.objects.create_user(name, password="Right-pass-123", is_superuser=True)
+        events = lambda: PlatformEvent.objects.filter(actor_name=name)  # noqa: E731
+    else:
+        steward(name)
+        events = lambda: AuditEvent.objects.filter(actor_name=name)  # noqa: E731
+    c = APIClient()
+    start = timezone.now()
+    for _ in range(MAX_FAILURES):
+        c.post(url, {"username": name, "password": "wrong"})
+    events().update(at=start - timedelta(minutes=LOCK_MINUTES - 1))  # the wrong passwords were 14 minutes ago
+    for _ in range(MAX_FAILURES):  # someone keeps trying with the right password while it is locked
+        assert c.post(url, {"username": name, "password": "Right-pass-123"}).status_code == 429
+    events().filter(at__gt=start - timedelta(minutes=1)).update(at=start - timedelta(seconds=10))
+    cache.clear()  # the per-minute rate limit is a different guard; this test is about the lock
+    with patch("django.utils.timezone.now", return_value=start + timedelta(minutes=1, seconds=5)):
+        assert c.post(url, {"username": name, "password": "Right-pass-123"}).status_code == 200

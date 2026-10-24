@@ -24,13 +24,20 @@ def locked_for(failures, last_success_at=None, now=None):
     return max(1, math.ceil((unlock_at - now).total_seconds() / 60))
 
 
+def _counted(failed):
+    """Times of real wrong passwords. Tries made while already locked are logged too, but do not count: otherwise
+    every retry would push the unlock time back and the login would stay locked for as long as someone keeps trying."""
+    return [at for at, detail in failed if (detail or {}).get("reason") != "locked"]
+
+
 def org_lock_minutes(username):
     """Minutes this username is still locked inside the current organization (0 = not locked)."""
     from audit.models import AuditEvent
 
     since = timezone.now() - timedelta(minutes=LOCK_MINUTES)
     events = AuditEvent.objects.filter(at__gte=since).order_by("-at")
-    failures = list(events.filter(action=AuditEvent.LOGIN_FAILED, actor_name=username).values_list("at", flat=True))
+    failed = events.filter(action=AuditEvent.LOGIN_FAILED, actor_name=username).values_list("at", "detail")
+    failures = _counted(failed)
     success = events.filter(action=AuditEvent.LOGIN, actor_name=username).values_list("at", flat=True).first()
     return locked_for(failures, success)
 
@@ -41,7 +48,8 @@ def platform_lock_minutes(username):
 
     since = timezone.now() - timedelta(minutes=LOCK_MINUTES)
     events = PlatformEvent.objects.filter(at__gte=since).order_by("-at")
-    failures = list(events.filter(action="login_failed", actor_name=username).values_list("at", flat=True))
+    failed = events.filter(action="login_failed", actor_name=username).values_list("at", "detail")
+    failures = _counted(failed)
     success = events.filter(action="login", actor_name=username).values_list("at", flat=True).first()
     return locked_for(failures, success)
 
