@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { api } from '../api/client'
-import type { Band } from '../api/types'
 import { useApi } from '../api/useApi'
+import { BreakdownCard, FILTER_KEYS, type Filters } from '../components/BreakdownCard'
 import { KycBadge } from '../components/ComplianceTab'
 import { Icon } from '../components/Icon'
 import { LoaderRow } from '../components/Loader'
@@ -18,18 +18,27 @@ import {
 } from '../components/ui'
 import { formatRelative } from '../format'
 
-const BANDS: { value: '' | Band; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-]
 
 export function CustomersPage() {
-  // Filters live in the URL (?band=low&q=suresh) so a filtered list can be bookmarked or shared.
+  // Filters live in the URL (?kyc=overdue&country=India&q=suresh) so a filtered list can be bookmarked or shared.
+  // "band" is the older name for the trust filter; links that still use it keep working.
   const [params, setParams] = useSearchParams()
-  const band = params.get('band') ?? ''
   const ordering = params.get('sort') ?? 'score'
+  const by = params.get('by') ?? 'score'
+  const filters: Filters = {}
+  for (const key of FILTER_KEYS) {
+    const values = [...params.getAll(key), ...(key === 'score' ? params.getAll('band') : [])].filter(Boolean)
+    if (values.length) filters[key] = [...new Set(values)]
+  }
+  const filterQuery = new URLSearchParams(
+    Object.entries(filters).flatMap(([k, vs]) => (vs ?? []).map((v) => [k, v])),
+  ).toString()
+  const setFilters = (next: Filters) => {
+    const p = new URLSearchParams(params)
+    for (const key of [...FILTER_KEYS, 'band', 'page']) p.delete(key)
+    for (const [k, vs] of Object.entries(next)) for (const v of vs ?? []) p.append(k, v)
+    setParams(p, { replace: true })
+  }
   const [search, setSearch] = useState(params.get('q') ?? '')
   const navigate = useNavigate()
 
@@ -51,9 +60,10 @@ export function CustomersPage() {
   const q = params.get('q') ?? ''
   const page = Number(params.get('page') ?? '1')
   const { data, error, loading } = useApi(
-    () => api.customers({ search: q, ordering, band, page: page > 1 ? String(page) : undefined }),
-    [q, ordering, band, page],
+    () => api.customers({ search: q, ordering, page: page > 1 ? String(page) : undefined }, filterQuery),
+    [q, ordering, filterQuery, page],
   )
+  const breakdown = useApi(() => api.customerBreakdown(by, filterQuery), [by, filterQuery])
   const pages = data ? Math.max(1, Math.ceil(data.count / 50)) : 1 // backend PAGE_SIZE is 50
 
   return (
@@ -61,6 +71,14 @@ export function CustomersPage() {
       <PageHeader
         title="Customers"
         description="Lowest trust first, so clean-up starts where it matters."
+      />
+
+      <BreakdownCard
+        data={breakdown.data}
+        error={breakdown.error}
+        filters={filters}
+        onBy={(next) => setParam('by', next === 'score' ? '' : next)}
+        onFilters={setFilters}
       />
 
       <div className="toolbar">
@@ -74,13 +92,6 @@ export function CustomersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-        </div>
-        <div className="segmented" role="group" aria-label="Filter by trust">
-          {BANDS.map((b) => (
-            <button key={b.label} type="button" aria-pressed={band === b.value} onClick={() => setParam('band', b.value)}>
-              {b.label}
-            </button>
-          ))}
         </div>
         <select
           className="select"

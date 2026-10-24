@@ -862,7 +862,7 @@ function SyncStep({
       }
       flush
     >
-      <div className="table-wrap">
+      <div className="table-wrap runs-scroll" tabIndex={0} aria-label="Sync history">
         <table className="table">
           <thead>
             <tr>

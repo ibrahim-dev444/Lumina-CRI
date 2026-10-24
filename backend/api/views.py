@@ -27,6 +27,7 @@ from compliance.models import KycRecord
 from compliance.services import ConsentError, record_consent
 from stewardship.services import CorrectionError, decide, propose
 
+from .breakdown import breakdown as customer_breakdown, filtered_ids
 from .permissions import HasRole, requires
 from .throttles import LoginThrottle
 from .serializers import (
@@ -171,9 +172,10 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
                 q |= Q(id=int(code) - 10000)
             qs = qs.filter(q)
 
-        band = self.request.query_params.get("band")
-        if band in BAND_FILTERS:
-            qs = qs.filter(BAND_FILTERS[band])
+        # The super filter: trust band, KYC, country, residency, risk, source, gender, age (api/breakdown.py).
+        ids = filtered_ids(self.request.query_params, self.request.user)
+        if ids is not None:
+            qs = qs.filter(id__in=ids)
 
         ordering = {
             "score": ["trust_score", "id"],
@@ -267,6 +269,12 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
         if not recent.exists():
             record(request, AuditEvent.VIEW_CUSTOMER, target=response.data["code"], masked=response.data["masked"])
         return response
+
+    @action(detail=False, methods=["get"])
+    def breakdown(self, request):
+        """GET /api/customers/breakdown/?by=score|kyc|country|residency|risk|source|gender|age&<filters>
+        How many customers fall in each group, after the same filters the list uses. Counts only."""
+        return Response(customer_breakdown(request.query_params, request.user))
 
     @action(detail=False, methods=["get"])
     def export(self, request):
