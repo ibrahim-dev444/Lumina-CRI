@@ -25,7 +25,8 @@ def get_trust_settings():
     weights = dict(FieldWeight.objects.values_list("field", "weight"))
     return {
         "sources": [
-            {"code": s.code, "name": s.name, "category": s.category, "trust": _points(s.trust)}
+            {"code": s.code, "name": s.name, "category": s.category, "trust": _points(s.trust),
+             "own_fields": len(s.field_trust or {})}
             for s in Source.objects.order_by("-trust", "name")
         ],
         "weights": [

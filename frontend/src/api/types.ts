@@ -70,7 +70,7 @@ export interface OrgUser {
 }
 
 export interface TrustSettings {
-  sources: { code: string; name: string; category: string; trust: number }[]
+  sources: { code: string; name: string; category: string; trust: number; own_fields: number }[]
   weights: { field: string; label: string; points: number }[]
 }
 
@@ -497,4 +497,12 @@ export interface ProfiledRecords {
   page_size: number
   masked: boolean
   results: ProfiledRecord[]
+}
+
+// Trust per field for one connector: the fields it supplies and how much each is trusted (0-100).
+export interface FieldTrust {
+  code: string
+  name: string
+  default: number // used for fields without their own value
+  fields: { field: Field; label: string; trust: number; own: boolean }[]
 }

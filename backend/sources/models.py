@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 
@@ -11,7 +13,10 @@ class Source(models.Model):
     code = models.SlugField(unique=True)  # "flexcube"
     name = models.CharField(max_length=100)  # "Oracle FLEXCUBE"
     category = models.CharField(max_length=50)  # "Core banking"
-    trust = models.DecimalField(max_digits=3, decimal_places=2)  # 0.85
+    trust = models.DecimalField(max_digits=3, decimal_places=2)  # 0.85; the default for fields without their own
+    # Trust per field, set by an administrator after mapping: {"pan": 90, "mobile": 50} (0-100). A field not listed
+    # here uses the default above.
+    field_trust = models.JSONField(default=dict, blank=True)
     enabled = models.BooleanField(default=True)
     last_synced_at = models.DateTimeField(null=True, blank=True)
 
@@ -32,6 +37,11 @@ class Source(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.trust})"
+
+    def trust_for(self, field):
+        """How much this system is trusted for one field, 0.00 to 1.00."""
+        points = (self.field_trust or {}).get(field)
+        return self.trust if points is None else Decimal(points) / 100
 
 
 class SyncRun(models.Model):

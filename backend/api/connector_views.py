@@ -25,7 +25,9 @@ from ingestion.files import refresh, remove_files, removal_plan, set_status, upl
 from ingestion.retire import plan, remove_sources
 from ingestion.tables import remove_tables, save_table, set_table_status
 from ingestion.tables import removal_plan as table_removal_plan
+from mdm.field_trust import get_field_trust, set_field_trust
 from mdm.models import FIELDS
+from mdm.trust_settings import TrustSettingsError
 from products.services import ACCOUNT_FIELDS
 from security import crypto
 from sources.models import Source
@@ -97,6 +99,26 @@ def create_connector(request):
     source.save()
     record(request, AuditEvent.CONNECTOR_ADDED, target=f"source {code}", connector_type=connector_type, config=config)
     return Response(_source_json(source), status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET", "PUT"])
+@permission_classes([HasRole])
+def field_trust(request, code):
+    """GET /api/connectors/<code>/trust/  every field this connector supplies and how much it is trusted for it.
+    PUT {trust: {field: 0-100}}  administrators only; recalculates every customer."""
+    source = Source.objects.filter(code=code).first()
+    if source is None:
+        return Response({"detail": "No such connector."}, status=status.HTTP_404_NOT_FOUND)
+    if request.method == "PUT":
+        if not requires("manage_settings")().has_permission(request, None):
+            return Response({"detail": "Only an administrator can change trust."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            changes = set_field_trust(source, request.data.get("trust"))
+        except TrustSettingsError as exc:
+            return _bad(exc)
+        if changes:
+            record(request, AuditEvent.SETTINGS_CHANGED, target=f"source {code} trust", changes=changes)
+    return Response(get_field_trust(source))
 
 
 @api_view(["PATCH"])
