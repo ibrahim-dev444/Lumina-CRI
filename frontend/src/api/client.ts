@@ -23,6 +23,7 @@ import type {
   SyncResult,
   SyncRun,
   TrustSettings,
+  FieldTrust,
   UploadResult,
   UploadedFile,
   FileRemoval,
@@ -164,7 +165,9 @@ export const api = {
 
   // Connector setup (organization admins)
   connectorCatalog: () => get<ConnectorType[]>('/connectors/catalog/'),
-  createConnector: (body: { name: string; connector_type: string; trust: number; settings: Record<string, string> }) =>
+  fieldTrust: (code: string) => get<FieldTrust>(`/connectors/${code}/trust/`),
+  saveFieldTrust: (code: string, trust: Record<string, number>) => put<FieldTrust>(`/connectors/${code}/trust/`, { trust }),
+  createConnector: (body: { name: string; connector_type: string; settings: Record<string, string> }) =>
     post<Source>('/connectors/', body),
   updateConnector: (code: string, body: { name?: string; settings?: Record<string, string> }) =>
     patch<Source>(`/connectors/${code}/`, body),

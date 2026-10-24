@@ -141,7 +141,7 @@ def rebuild_customers(customer_ids=None):
             candidates = [
                 {
                     "value": getattr(r, field),
-                    "trust": r.source.trust,
+                    "trust": r.source.trust_for(field),
                     "updated_at": r.source_updated_at,
                     "record_id": r.id,
                     "source_id": r.source_id,

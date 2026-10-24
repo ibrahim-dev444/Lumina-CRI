@@ -4262,3 +4262,46 @@ button.link {
     overflow-x: auto;
   }
 }
+
+/* Connector setup, Trust step: tick details, give them one value */
+.trust-apply {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.trust-apply input[type='range'] { width: min(180px, 40vw); }
+.trust-apply .input { width: 72px; }
+.trust-table tr.is-selected td { background: var(--accent-soft); }
+.trust-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+}
+.trust-meter {
+  flex: 1;
+  max-width: 220px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.trust-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+.trust-meter i.is-good { background: var(--good-dot); }
+.trust-meter i.is-fix { background: var(--warn-dot); }
+.trust-meter i.is-bad { background: var(--bad-dot); }
+.trust-num { width: 28px; font-weight: 600; }
+.trust-was { white-space: nowrap; }
+.trust-by-inline { display: none; }
+@media (max-width: 640px) {
+  .trust-toolbar { padding-inline: 16px; }
+  .trust-table .trust-by { display: none; }
+  .trust-by-inline { display: block; margin-top: 2px; }
+  .trust-cell { min-width: 150px; }
+}

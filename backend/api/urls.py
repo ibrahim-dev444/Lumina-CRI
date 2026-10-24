@@ -29,6 +29,7 @@ urlpatterns = [
     path("connectors/", connector_views.create_connector),
     path("connectors/<slug:code>/", connector_views.update_connector),
     path("connectors/<slug:code>/test/", connector_views.test_connector),
+    path("connectors/<slug:code>/trust/", connector_views.field_trust),
     path("connectors/<slug:code>/discover/", connector_views.discover),
     path("connectors/<slug:code>/mapping/", connector_views.save_mapping),
     path("connectors/<slug:code>/accounts-mapping/", connector_views.save_accounts_mapping),

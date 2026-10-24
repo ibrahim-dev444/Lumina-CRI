@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react'
+import { Link } from 'react-router-dom'
 
 import { api } from '../api/client'
 import type { Field, TrustSettings } from '../api/types'
@@ -158,13 +159,26 @@ function TrustCard() {
     >
       <div className="settings-grid">
         <section>
-          <h3 className="settings-title">Source trust</h3>
-          <p className="text-sm muted">The system with the highest trust wins each detail. 0 = never trusted, 100 = fully.</p>
+          <h3 className="settings-title">Default trust per system</h3>
+          <p className="text-sm muted">
+            Used for every detail that has no trust of its own. Set trust per detail in each connector's Trust step.
+            0 = never trusted, 100 = fully.
+          </p>
           {draft.sources.map((s) => (
             <label key={s.code} className="slider-row">
               <span>
                 <strong>{s.name}</strong>
-                <span className="text-xs muted">{s.category}</span>
+                <span className="text-xs muted">
+                  {s.category}
+                  {s.own_fields > 0 && (
+                    <>
+                      {' · '}
+                      <Link to={`/connectors/${s.code}`} onClick={(e) => e.stopPropagation()}>
+                        {s.own_fields} detail{s.own_fields === 1 ? '' : 's'} set separately
+                      </Link>
+                    </>
+                  )}
+                </span>
               </span>
               <input
                 type="range"

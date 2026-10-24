@@ -8,6 +8,7 @@ import { useCan } from '../auth/AuthContext'
 import { ConnectorFields } from '../components/ConnectorFields'
 import { ConnectorLogo } from '../components/ConnectorLogo'
 import { DeleteConnectorCard } from '../components/DeleteConnectorCard'
+import { FieldTrustStep } from '../components/FieldTrustStep'
 import { UploadedFilesCard } from '../components/UploadedFilesCard'
 import { Icon } from '../components/Icon'
 import { Loader, LoaderRow } from '../components/Loader'
@@ -131,7 +132,8 @@ function SetupSteps({ source, type, onChanged }: { source: Source; type: Connect
     return (
       <>
         <ApiKeyStep source={source} onChanged={onChanged} />
-        <SyncStep source={source} onChanged={onChanged} push />
+        <FieldTrustStep source={source} title={<StepTitle n={2} text="Trust" />} onChanged={onChanged} />
+        <SyncStep source={source} onChanged={onChanged} push n={3} />
       </>
     )
   }
@@ -147,7 +149,12 @@ function SetupSteps({ source, type, onChanged }: { source: Source; type: Connect
         <CustomerTablesCard source={source} type={type} onChanged={onChanged} />
       )}
       {type.type !== 'file_upload' && <AccountsStep source={source} type={type} onChanged={onChanged} />}
-      <SyncStep source={source} onChanged={onChanged} n={type.type === 'file_upload' ? 3 : 4} />
+      <FieldTrustStep
+        source={source}
+        title={<StepTitle n={type.type === 'file_upload' ? 3 : 4} text="Trust" />}
+        onChanged={onChanged}
+      />
+      <SyncStep source={source} onChanged={onChanged} n={type.type === 'file_upload' ? 4 : 5} />
     </>
   )
 }
@@ -824,7 +831,7 @@ function SyncStep({
 
   return (
     <Card
-      title={<StepTitle n={push ? 2 : n} text={push ? 'Received data' : 'Sync'} />}
+      title={<StepTitle n={n} text={push ? 'Received data' : 'Sync'} />}
       description={
         push
           ? 'Every batch your systems sent, newest first.'

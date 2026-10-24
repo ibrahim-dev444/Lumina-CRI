@@ -63,7 +63,6 @@ function ConnectionForm({ type, onBack }: { type: ConnectorType; onBack: () => v
   const navigate = useNavigate()
   const toast = useToast()
   const [name, setName] = useState('')
-  const [trust, setTrust] = useState(60)
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(type.fields.map((f) => [f.name, f.default])),
   )
@@ -75,7 +74,7 @@ function ConnectionForm({ type, onBack }: { type: ConnectorType; onBack: () => v
     setBusy(true)
     setError(null)
     try {
-      const source = await api.createConnector({ name, connector_type: type.type, trust, settings: values })
+      const source = await api.createConnector({ name, connector_type: type.type, settings: values })
       toast('success', `${source.name} added. Now test it and choose what to read.`)
       navigate(`/connectors/${source.code}`)
     } catch (err) {
@@ -101,19 +100,6 @@ function ConnectionForm({ type, onBack }: { type: ConnectorType; onBack: () => v
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-        </div>
-        <div className="form-field">
-          <label htmlFor="cn-trust">How much you trust it: {trust}</label>
-          <input
-            id="cn-trust"
-            type="range"
-            min={0}
-            max={100}
-            value={trust}
-            onChange={(e) => setTrust(Number(e.target.value))}
-            style={{ accentColor: 'var(--accent)' }}
-          />
-          <span className="text-xs muted">Core systems with checked documents: 80+. Typed-in data: 50. Files: 40.</span>
         </div>
         <ConnectorFields fields={type.fields} values={values} onChange={setValues} />
         <div className="wide row" style={{ justifyContent: 'space-between' }}>
