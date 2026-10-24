@@ -15,6 +15,8 @@ export type Field =
   | 'perm_address'
   | 'occupation'
   | 'income'
+  | 'country'
+  | 'residency'
 export type Band = 'high' | 'medium' | 'low'
 
 export interface Page<T> {
@@ -211,6 +213,7 @@ export interface GoldenField {
   last_updated: string | null
   // Set when the value comes from an approved correction instead of a source system.
   correction: { id: number; evidence_ref: string; proposed_by: string; approved_by: string } | null
+  guessed: boolean // worked out by Lumina from other details, not sent by any system
 }
 
 export interface FieldCorrection {
@@ -248,6 +251,8 @@ export interface SourceRecord {
   email: string
   address: string
   perm_address: string
+  country: string
+  residency: string
   occupation: string
   income: string
   source_updated_at: string | null

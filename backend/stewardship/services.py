@@ -18,6 +18,7 @@ from ingestion.clean import (
     clean_pan,
     clean_text,
 )
+from ingestion.places import clean_country, clean_residency
 from mdm.models import FIELDS, FieldCorrection, GoldenField
 from mdm.services import rebuild_golden_record
 from security.fields import compare_key, display, protect
@@ -62,7 +63,14 @@ def _clean_value(field, raw):
         if not value:
             raise CorrectionError("Enter Male, Female or Other.")
         return value
-    if field in ("name", "father_name"):
+    if field == "residency":
+        value = clean_residency(raw)
+        if not value:
+            raise CorrectionError("Enter Resident, NRI or Foreign national.")
+        return value
+    if field == "country":
+        value = clean_country(raw)
+    elif field in ("name", "father_name"):
         value = clean_name(raw)
     elif field in ("address", "perm_address"):
         value = clean_address(raw)

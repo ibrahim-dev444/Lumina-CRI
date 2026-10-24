@@ -32,6 +32,8 @@ const GUESS: Record<Field | 'id' | 'updated', { has: string[]; not?: string[] }>
   perm_address: { has: ['permaddr', 'permanent', 'perm'] },
   occupation: { has: ['occupation', 'job', 'title', 'profession'] },
   income: { has: ['income', 'salary'] },
+  country: { has: ['country', 'nation', 'cntry'] },
+  residency: { has: ['residency', 'residenttype', 'residentstatus', 'resstatus', 'resident', 'nristatus'] },
   id: { has: ['custid', 'customerid', 'refno', 'ref', 'id', 'code'], not: ['pan', 'ckyc', 'aadhaar', 'email'] },
   updated: { has: ['updated', 'modified', 'lastupd', 'changed'] },
 }

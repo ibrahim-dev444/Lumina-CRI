@@ -42,6 +42,10 @@ class SourceRecord(models.Model):
     perm_address = models.CharField(max_length=300, blank=True)
     occupation = models.CharField(max_length=100, blank=True)
     income = models.CharField(max_length=60, blank=True)  # an income band, e.g. "10 to 25 lakh"
+    country = models.CharField(max_length=60, blank=True)  # country of residence, e.g. "United Arab Emirates"
+    residency = models.CharField(max_length=20, blank=True)  # "Resident", "NRI" or "Foreign national"
+    # Fields Lumina worked out itself because the system did not send them (ingestion/places.py), e.g. ["country"].
+    guessed = models.JSONField(default=list, blank=True)
     source_updated_at = models.DateTimeField(null=True, blank=True)  # when the source system last changed this row
     # False while the part of the source it came from is switched off (a suspended file), so it is left out of
     # matching and golden records without being deleted: switching back on restores it with the same customer.

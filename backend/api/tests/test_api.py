@@ -122,7 +122,7 @@ def test_band_filter_and_detail_extras(client, data):
 def test_overview_quality_breakdown(client, data):
     body = client.get("/api/overview/").json()
     assert len(body["scores"]) == 3
-    assert len(body["conflicts_by_field"]) == 13
+    assert len(body["conflicts_by_field"]) == 15
     suresh_mobile = next(r for r in body["conflicts_by_field"] if r["field"] == "mobile")
     assert suresh_mobile["customers"] >= 1  # FLEXCUBE and branch disagree on Suresh's mobile
     flex = next(s for s in body["source_agreement"] if s["code"] == "flexcube")

@@ -142,6 +142,50 @@ def _make_messy(row, n):
         row["address"] = (row.get("address") or "").upper()
 
 
+# Customers living abroad: (standard country, ways systems write it, dialling code, a local address).
+ABROAD = [
+    ("United Arab Emirates", ["United Arab Emirates", "UAE", "U.A.E"], "+971 50", "Flat {n}, Marina Heights, Dubai Marina, Dubai"),
+    ("United States", ["United States", "USA", "US"], "+1 408", "{n} Willow Street, San Jose, California"),
+    ("United Kingdom", ["United Kingdom", "UK", "GB"], "+44 7700", "{n} Baker Street, London"),
+    ("Singapore", ["Singapore", "SG", "Singapore"], "+65 9", "{n} Orchard Road, #08-12, Singapore"),
+    ("Canada", ["Canada", "CA", "Canada"], "+1 416", "{n} Bloor Street West, Toronto, Ontario"),
+]
+INDIA_SPELLINGS = ["India", "IN", "India", "IND", "india", "", "India", "Bharat", ""]
+RESIDENT_CODES = ["Resident", "R", "", "RES", "Resident", "Resident Indian", ""]
+NRI_CODES = ["NRI", "Non-Resident", "NR", ""]
+
+
+def _place(row, n):
+    """Country and residency the way systems hold them. The first rows are tidy Indian residents. From row 25
+    on, about 1 in 10 lives abroad (NRI) and about 1 in 40 is a foreign national; the rest live in India,
+    with the country and residency written every which way. NRIs come four ways: everything sent; short codes;
+    country left out (Lumina guesses it from the foreign number and address); nothing sent and an Indian
+    address, so only their NRE / NRO account gives them away."""
+    if n < CLEAN_ROWS:
+        row["country"], row["residency"] = "India", "Resident"
+        return
+    if n % 10 == 7:
+        country, spellings, dial, street = ABROAD[(n // 10) % len(ABROAD)]
+        style = (n // 10) % 4
+        row["holds_nri_account"] = True
+        if style == 3:  # hidden: nothing says abroad except the account they hold
+            row["country"], row["residency"] = "", ""
+            return
+        row["mobile"] = f"{dial} {(4100000 + n * 7919) % 10**7:07d}"
+        row["address"] = street.format(n=100 + n)
+        row["country"] = "" if style == 2 else spellings[style]
+        row["residency"] = NRI_CODES[style]
+        return
+    if n % 40 == 13:
+        country, spellings, dial, street = ABROAD[(n // 40) % len(ABROAD)]
+        row["mobile"] = f"{dial} {(5200000 + n * 104729) % 10**7:07d}"
+        row["address"] = street.format(n=200 + n)
+        row["country"], row["residency"] = spellings[0], ["Foreign national", "OCI", "Foreigner"][n % 3]
+        return
+    row["country"] = INDIA_SPELLINGS[n % len(INDIA_SPELLINGS)]
+    row["residency"] = RESIDENT_CODES[n % len(RESIDENT_CODES)]
+
+
 def customers(bank, count=24, seed=0):
     """`count` synthetic customers for one bank's source. Different `seed` gives a different but overlapping set."""
     rows = []
@@ -186,6 +230,8 @@ def customers(bank, count=24, seed=0):
         n += 1
     for position in range(CLEAN_ROWS, len(rows)):
         _make_messy(rows[position], position)
+    for position, row in enumerate(rows):
+        _place(row, position)
     for i, row in enumerate(rows):
         row["id"] = f"{bank.upper()[:2]}{seed}-{1001 + i}"
         row["updated_at"] = f"2026-0{1 + i % 9}-{10 + i % 18:02d}T{8 + i % 10:02d}:15:00"
@@ -208,6 +254,12 @@ PRODUCTS = {
         ("VL", "New Car Loan", 520000), ("CC", "Rewards Credit Card", 48000), ("LAP", "Loan Against Property", 1900000),
     ],
 }
+# Products only non-resident Indians can hold; Lumina reads these names as a sign the customer is an NRI.
+NRI_PRODUCTS = {
+    "axis": [("SB", "NRE Savings Account", 640000), ("SB", "NRO Savings Account", 210000),
+             ("FD", "FCNR Fixed Deposit", 1500000)],
+    "hdfc": [("HL", "NRI Home Loan", 5200000), ("PL", "NRI Personal Loan", 450000)],
+}
 STATUS_CODES = {
     "axis": {"active": "ACTIVE", "overdue": "OVERDUE", "dormant": "DORMANT", "closed": "CLOSED"},
     "hdfc": {"active": "Regular", "overdue": "Overdue", "dormant": "Regular", "closed": "Closed"},
@@ -225,6 +277,8 @@ def accounts(bank, seed, count=24):
             if i == 0:  # the first shared customer: an overdue card plus two healthy products
                 wanted = ["CC", "SB", "HL"] if bank == "axis" else ["CC", "HL", "PL"]
                 code, name, amount = next(p for p in products if p[0] == wanted[j])
+            if j == 0 and person.get("holds_nri_account"):  # an NRI's first product is a non-resident one
+                code, name, amount = NRI_PRODUCTS[bank][i % len(NRI_PRODUCTS[bank])]
             status = "overdue" if i == 0 and j == 0 else "closed" if (i + j) % 11 == 7 else (
                 "dormant" if (i + j) % 13 == 5 else "active")
             number = f"{(9 if bank == 'axis' else 5)}{seed}{(i * 7919 + j * 104729 + seed * 31) % 10**8:08d}"

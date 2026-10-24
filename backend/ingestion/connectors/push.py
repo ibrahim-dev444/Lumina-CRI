@@ -4,7 +4,7 @@ from .generic import _when
 # Fields a pushed record may carry: Lumina's own names, plus "id" (required) and "updated_at" (optional).
 PUSH_FIELDS = (
     "name", "father_name", "dob", "gender", "pan", "aadhaar", "ckyc", "mobile", "email", "address",
-    "perm_address", "occupation", "income",
+    "perm_address", "occupation", "income", "country", "residency",
 )
 
 
