@@ -225,7 +225,7 @@ function SourcesTab({ c }: { c: CustomerDetail }) {
                     <div className="stack" style={{ gap: 2 }}>
                       <span style={{ fontWeight: 500 }}>{r.source_name}</span>
                       <span className="text-xs muted mono">
-                        {r.source_record_id} · trust {formatScore(r.source_trust)}
+                        {r.source_record_id} · default trust {formatScore(r.source_trust)}
                       </span>
                       {!r.source_enabled && (
                         <span>

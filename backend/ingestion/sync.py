@@ -22,6 +22,7 @@ class SyncResult:
     created: int = 0
     updated: int = 0
     accounts: int | None = None  # products read, when the source has an accounts mapping
+    retired: int = 0  # records the system no longer sends, switched off (see _store)
 
 
 def _aware(dt):
@@ -156,6 +157,15 @@ def _store(source, connector, rows):
             # Rows of suspended tables are kept but switched off, so resuming brings back the same customers.
             tags = suspended + ([""] if "main" in suspended else [])  # rows saved before tables were tagged
             SourceRecord.objects.filter(source=source, origin_table__in=tags).update(active=False)
+        if (isinstance(connector, MappedConnector) and source.connector_type != "file_upload"
+                and getattr(connector, "complete", False)):
+            # A database that no longer sends a record has deleted it (or, for MongoDB keyed on _id, reloaded it
+            # with new IDs). Switch those records off, without deleting them, so they stop counting; if one comes
+            # back it is switched on again with the same customer. Skipped when a table hit the row limit.
+            tables = connector.active_tables()
+            tags = tables + ([""] if "main" in tables else [])  # rows saved before tables were tagged
+            result.retired = (SourceRecord.objects.filter(source=source, active=True, origin_table__in=tags)
+                              .exclude(source_record_id__in=seen).update(active=False))
         if source.connector_type == "file_upload":
             # Rows only suspended files hold are kept but switched off, so resuming brings back the same customer.
             SourceRecord.objects.filter(source=source).exclude(source_record_id__in=seen).update(active=False)

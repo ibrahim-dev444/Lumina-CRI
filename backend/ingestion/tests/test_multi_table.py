@@ -120,3 +120,45 @@ def test_file_connectors_do_not_take_tables(db):
                       format="json").json()["code"]
     assert admin.put(f"/api/connectors/{code}/tables/", {"object": "x"}, format="json").status_code == 400
 
+
+
+# ---------- Records a database stops sending ----------
+
+def _run(schema, cfg, sql):
+    params = dict(host=cfg["HOST"], port=cfg["PORT"], dbname=connection.settings_dict["NAME"], user=cfg["USER"],
+                  password=cfg["PASSWORD"], autocommit=True)
+    with psycopg.connect(**params) as conn:
+        conn.execute(sql.replace("{s}", f'"{schema}"'))
+
+
+def test_rows_the_database_no_longer_sends_are_switched_off_and_come_back(connected, bank_db):
+    admin, code, schema = connected
+    _, cfg = bank_db
+    vikram = Customer.objects.visible().get(golden_fields__value="Vikram Shetty").id
+    _run(schema, cfg, "DELETE FROM {s}.retail WHERE cust_id = 'C2'")
+    synced = admin.post(f"/api/sources/{code}/sync/").json()
+    assert synced["retired"] == 1
+    assert not SourceRecord.objects.get(source__code=code, source_record_id="C2").active  # kept, switched off
+    assert names() == ["Asha Rao", "Meera Pillai"]
+    _run(schema, cfg, "INSERT INTO {s}.retail VALUES ('C2', 'Vikram Shetty', '9000000202')")
+    assert admin.post(f"/api/sources/{code}/sync/").json()["retired"] == 0
+    assert Customer.objects.visible().get(golden_fields__value="Vikram Shetty").id == vikram  # same customer
+
+
+def test_new_ids_for_the_same_people_leave_no_duplicates(connected, bank_db):
+    """MongoDB keyed on _id gets new IDs when the data is reloaded; the old copies must stop counting."""
+    admin, code, schema = connected
+    _, cfg = bank_db
+    _run(schema, cfg, "UPDATE {s}.retail SET cust_id = 'N' || cust_id")
+    synced = admin.post(f"/api/sources/{code}/sync/").json()
+    assert synced["retired"] == 2
+    live = SourceRecord.objects.filter(source__code=code, active=True).values_list("source_record_id", flat=True)
+    assert sorted(live) == ["NC1", "NC2", "t2:C1"]
+    assert names() == ["Asha Rao", "Meera Pillai", "Vikram Shetty"]
+
+
+def test_no_retiring_when_a_table_hits_the_row_limit(connected, settings):
+    admin, code, _ = connected
+    settings.CONNECTOR_MAX_ROWS = 1  # the sync cannot be sure it saw every row
+    assert admin.post(f"/api/sources/{code}/sync/").json()["retired"] == 0
+    assert SourceRecord.objects.filter(source__code=code, active=False).count() == 0

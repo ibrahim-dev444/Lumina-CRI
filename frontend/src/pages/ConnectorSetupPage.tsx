@@ -434,6 +434,12 @@ function TableEditor({
                 <span className="text-xs muted">Required. Never changes for a customer.</span>
               </span>
               {columnSelect(mapping.id_column, (v) => setMapping((m) => ({ ...m, id_column: v })), 'Record ID column', 'Choose...')}
+              {mapping.id_column === '_id' && (
+                <span className="mapping-warn" role="note">
+                  MongoDB's own _id changes whenever the data is reloaded, so the same customer would come in again
+                  under a new ID. Choose your own customer ID column if there is one.
+                </span>
+              )}
             </div>
             <div className="mapping-row is-key">
               <span>
@@ -868,7 +874,8 @@ function SyncStep({
     try {
       const r = await api.syncSource(source.code)
       const products = r.accounts === null ? '' : ` and ${r.accounts} products`
-      toast('success', `Read ${r.fetched} rows: ${r.created} new, ${r.updated} updated${products}. Customers rebuilt.`)
+      const gone = r.retired ? `, ${r.retired} no longer in the system (switched off)` : ''
+      toast('success', `Read ${r.fetched} rows: ${r.created} new, ${r.updated} updated${gone}${products}. Customers rebuilt.`)
       onChanged()
     } catch (e) {
       toast('error', (e as Error).message)
