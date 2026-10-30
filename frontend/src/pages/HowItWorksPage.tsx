@@ -374,6 +374,10 @@ function TrustExample({
             </tr>
           </tbody>
         </table>
+        <p className="muted text-sm">
+          When other systems hold the same value, trust in it goes up: two separate systems are unlikely to both be
+          wrong. A system trusted 60 and one trusted 80 agreeing give 1 − 0.40 × 0.20 = 92. Each system counts once.
+        </p>
         <p className="muted text-sm">Below 60 is Low, 60 to 79 is Medium, 80 and above is High.</p>
       </div>
     </div>

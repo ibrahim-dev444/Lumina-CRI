@@ -42,9 +42,10 @@ def test_three_records_become_one_customer_with_golden_record(suresh):
     assert golden(customer, "name").value == "Suresh Kumar"  # FLEXCUBE 0.85 beats Salesforce 0.55
     assert golden(customer, "mobile").value == "9822104521"
     assert golden(customer, "mobile").conflicts == 1
-    # name 0.14, mobile 0.14, email 0.07 and dob 0.10 come from FLEXCUBE (trust 0.85); the other
-    # 9 fields are empty: (0.14 + 0.14 + 0.07 + 0.10) * 0.85 = 0.3825, rounded half up to 0.383
-    assert customer.trust_score == Decimal("0.383")
+    # name 0.14 and mobile 0.14 come from FLEXCUBE alone (trust 0.85). Email 0.07: FLEXCUBE and the branch file
+    # agree, 1 - 0.15 x 0.60 = 0.91. Date of birth 0.10: all three agree, 1 - 0.15 x 0.45 x 0.60 = 0.96.
+    # 0.14 x 0.85 + 0.14 x 0.85 + 0.07 x 0.91 + 0.10 x 0.96 = 0.3977, rounded half up to 0.398
+    assert customer.trust_score == Decimal("0.398")
 
 
 def test_rerun_keeps_the_same_customer_id(suresh):
@@ -62,7 +63,7 @@ def test_disabling_a_source_changes_the_golden_record_and_score(suresh):
 
     customer = Customer.objects.get()
     assert golden(customer, "name").value == "Sooresh Kumar"  # Salesforce now the most trusted left
-    assert customer.trust_score < Decimal("0.383")
+    assert customer.trust_score < Decimal("0.398")
 
 
 @pytest.mark.django_db

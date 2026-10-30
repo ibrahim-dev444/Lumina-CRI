@@ -118,6 +118,9 @@ class GoldenField(models.Model):
     trust = models.DecimalField(max_digits=3, decimal_places=2)
     conflicts = models.PositiveSmallIntegerField(default=0)  # how many OTHER different values sources hold
     guessed = models.BooleanField(default=False)  # worked out by Lumina, not sent by any system ("likely")
+    # Trust in this value after agreement: other systems holding the same value raise it (mdm/golden.py).
+    # The trust score uses this; "trust" stays the winning system's own trust.
+    score_trust = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
 
     class Meta:
         ordering = ["customer", "field"]

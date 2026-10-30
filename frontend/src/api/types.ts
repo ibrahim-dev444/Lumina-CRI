@@ -214,6 +214,7 @@ export interface GoldenField {
   // Set when the value comes from an approved correction instead of a source system.
   correction: { id: number; evidence_ref: string; proposed_by: string; approved_by: string } | null
   guessed: boolean // worked out by Lumina from other details, not sent by any system
+  score_trust: string | null // trust after agreement: other systems holding the same value raise it
 }
 
 export interface FieldCorrection {
@@ -238,6 +239,7 @@ export interface SourceRecord {
   source_code: string
   source_name: string
   source_trust: string
+  field_trust?: Partial<Record<Field, string>> // this system's trust for each field
   source_enabled: boolean
   source_record_id: string
   name: string

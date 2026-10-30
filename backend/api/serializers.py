@@ -120,7 +120,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
     def get_needs_review(self, obj):
         """Fields that are missing, or whose best value comes from a low-trust source."""
         golden = self._golden(obj)
-        return sum(1 for f in FIELDS if f not in golden or golden[f].trust <= LOW_TRUST)
+        return sum(1 for f in FIELDS if f not in golden or (golden[f].score_trust or golden[f].trust) <= LOW_TRUST)
 
 
 def shows_pii(context):
@@ -138,7 +138,7 @@ class GoldenFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = GoldenField
         fields = ["field", "value", "trust", "conflicts", "source_code", "source_name", "source_record_id",
-                  "last_updated", "correction", "guessed"]
+                  "last_updated", "correction", "guessed", "score_trust"]
 
     # A golden value comes from a source record, or from an approved correction.
     def get_source_code(self, obj):
@@ -199,11 +199,15 @@ class SourceRecordSerializer(serializers.ModelSerializer):
     source_trust = serializers.DecimalField(source="source.trust", max_digits=3, decimal_places=2)
     source_enabled = serializers.BooleanField(source="source.enabled")
     match_reason = serializers.CharField(source="customer_link.match_reason", default="")
+    field_trust = serializers.SerializerMethodField()  # this system's trust for each field (set per field by admins)
 
     class Meta:
         model = SourceRecord
         fields = ["id", "source_code", "source_name", "source_trust", "source_enabled", "source_record_id",
-                  *FIELDS, "source_updated_at", "match_reason"]
+                  *FIELDS, "source_updated_at", "match_reason", "field_trust"]
+
+    def get_field_trust(self, obj):
+        return {f: f"{obj.source.trust_for(f):.2f}" for f in FIELDS}
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

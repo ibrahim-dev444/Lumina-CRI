@@ -55,3 +55,41 @@ def test_trust_score_worked_example_from_the_docs():
 def test_missing_field_adds_zero():
     winners = {"name": cand("x", "0.85"), "mobile": None, "address": None, "email": None, "dob": None}
     assert trust_score(winners, WEIGHTS) == D("0.213")  # 0.25 x 0.85 = 0.2125, rounded
+
+
+# ---------- Agreement raises trust in a value ----------
+
+def src(value, trust, source_id, **extra):
+    return {"value": value, "trust": D(trust), "updated_at": None, "record_id": source_id, "source_id": source_id,
+            **extra}
+
+
+def test_two_systems_agreeing_combine_their_trust():
+    winner, _ = pick_winner([src("1986-03-23", "0.60", 1), src("1986-03-23", "0.80", 2)])
+    assert winner["trust"] == D("0.80") and winner["score_trust"] == D("0.92")  # 1 - 0.20 x 0.40
+
+
+def test_records_from_one_system_count_once():
+    winner, _ = pick_winner([src("9822104521", "0.60", 1), src("9822104521", "0.60", 1), src("9822104521", "0.60", 1)])
+    assert winner["score_trust"] == D("0.60")
+
+
+def test_disagreeing_values_and_guesses_add_nothing():
+    winner, conflicts = pick_winner([src("a@b.example", "0.80", 1), src("c@d.example", "0.60", 2)])
+    assert winner["score_trust"] == D("0.80") and conflicts == 1
+    winner, _ = pick_winner([src("India", "0.80", 1), src("India", "0.30", 2, guessed=True)])
+    assert winner["score_trust"] == D("0.80")
+
+
+def test_score_uses_the_raised_trust():
+    weights = {"dob": D("0.10")}
+    winner, _ = pick_winner([src("1986-03-23", "0.60", 1), src("1986-03-23", "0.80", 2)])
+    assert trust_score({"dob": winner}, weights) == D("0.092")
+
+
+def test_titles_do_not_make_names_disagree():
+    from security.fields import compare_key
+
+    assert compare_key("name", "Mr. Kabir Verma") == compare_key("name", "Kabir Verma")
+    assert compare_key("name", "Dr Rohan Patel") == compare_key("name", "rohan patel")
+    assert compare_key("name", "Mrinal Sen") != compare_key("name", "Inal Sen")

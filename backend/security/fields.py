@@ -5,6 +5,8 @@ officers and administrators can reveal the full value, with a reason that goes t
 Aadhaar: only the last 4 digits are ever kept (the full number is dropped as soon as it arrives).
 """
 
+import re
+
 from . import crypto
 
 ENCRYPTED_FIELDS = {"pan", "ckyc"}
@@ -20,13 +22,20 @@ def reveal(field, stored):
     return crypto.decrypt(stored) if field in ENCRYPTED_FIELDS else stored
 
 
+# Titles at the start of a name: never part of who the person is.
+NAME_TITLES = re.compile(r"^(?:(?:mr|mrs|ms|miss|dr|shri|sri|smt|kumari|prof|master)\b\.?\s*)+")
+
+
 def compare_key(field, stored):
     """What to compare when asking 'do these two stored values agree?'."""
     if stored in (None, ""):
         return ""
     if field in ENCRYPTED_FIELDS:
         return crypto.fingerprint(crypto.decrypt(stored))
-    return "".join(ch for ch in str(stored).lower() if ch.isalnum())
+    text = str(stored).lower()
+    if field in ("name", "father_name"):
+        text = NAME_TITLES.sub("", text)  # "Mr. Kabir Verma" and "Kabir Verma" are the same name
+    return "".join(ch for ch in text if ch.isalnum())
 
 
 def mask_pan(plain):

@@ -197,7 +197,8 @@ def rebuild_customers(customer_ids=None):
                 continue
             wanted = {"value": str(winner["value"]), "trust": winner["trust"], "source_id": winner["source_id"],
                       "source_record_id": winner["record_id"], "correction_id": winner["correction_id"],
-                      "conflicts": conflicts, "guessed": bool(winner.get("guessed"))}
+                      "conflicts": conflicts, "guessed": bool(winner.get("guessed")),
+                      "score_trust": winner.get("score_trust", winner["trust"])}
             if current is None:
                 to_create.append(GoldenField(customer_id=customer.id, field=field, **wanted))
             elif any(getattr(current, k) != v for k, v in wanted.items()):
@@ -211,7 +212,7 @@ def rebuild_customers(customer_ids=None):
     GoldenField.objects.filter(id__in=to_delete).delete()
     GoldenField.objects.bulk_create(to_create, batch_size=1000)
     GoldenField.objects.bulk_update(to_update, ["value", "trust", "source", "source_record", "correction",
-                                                "conflicts", "guessed"], batch_size=1000)
+                                                "conflicts", "guessed", "score_trust"], batch_size=1000)
     Customer.objects.bulk_update(customers, ["trust_score", "score_updated_at", "pan_hash"], batch_size=1000)
 
 

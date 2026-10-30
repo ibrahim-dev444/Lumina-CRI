@@ -11,6 +11,8 @@ from django_tenants.utils import schema_context
 from accounts.management.commands.seed_demo_users import DEMO_USERS
 from compliance.services import feed_file, import_feed
 from ingestion.retire import remove_demo_sources
+from mdm.models import GoldenField
+from mdm.services import rebuild_customers
 from tenants.models import Tenant
 
 
@@ -43,6 +45,9 @@ class Command(BaseCommand):
                             f"{tenant.name}: removed {removed.sources} demo sources, {removed.records} records, "
                             f"{removed.customers_removed} customers."
                         )
+                if GoldenField.objects.filter(score_trust__isnull=True).exists():
+                    rebuild_customers()  # once after a scoring change: values saved before it have no score_trust
+                    self.stdout.write(f"{tenant.name}: trust scores recalculated.")
                 if feed_file().exists():
                     import_feed()  # picks up changes to the compliance feed; unchanged rows stay as they are
                 if demo_password:
