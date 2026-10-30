@@ -1,9 +1,11 @@
+import re
 from datetime import date, datetime, time
 
 from django.conf import settings
 
 from ..clean import clean_date
 from .base import BaseConnector
+from .adapters import FILES_OBJECT
 from .catalog import adapter_for
 
 IDENTITY_FIELDS = ("pan", "aadhaar", "ckyc")
@@ -71,9 +73,32 @@ class MappedConnector(BaseConnector):
                 rows.append({**row, TABLE_KEY: key})
         return rows
 
+    def accounts_mapping(self):
+        """How to read this connector's products: its accounts table, or for a CSV connector its optional Product
+        column (one product per row, or several separated by ; or ,). None when neither is set up."""
+        if self.mapping.get("accounts"):
+            return self.mapping["accounts"]
+        if self.source.connector_type == "file_upload" and self.mapping.get("product_column"):
+            return {"id_column": "account", "customer_column": "customer", "fields": {"product_name": "product"},
+                    "no_number": True}
+        return None
+
     def fetch_accounts(self):
         """The rows of the optional accounts mapping (accounts, deposits, loans, cards), or None if not set up."""
         accounts = self.mapping.get("accounts")
+        product_column = self.mapping.get("product_column")
+        if not accounts and self.source.connector_type == "file_upload" and product_column:
+            id_column = self.tables[MAIN]["id_column"]
+            rows = []
+            for raw in adapter_for(self.source).fetch(FILES_OBJECT, [id_column, product_column],
+                                                      settings.CONNECTOR_MAX_ROWS):
+                customer = str(raw.get(id_column) or "").strip()
+                for product in re.split(r"[;,]", str(raw.get(product_column) or "")):
+                    product = product.strip()
+                    if customer and product:
+                        rows.append({"account": f"{customer}|{product.lower()}", "customer": customer,
+                                     "product": product})
+            return rows
         if not accounts:
             return None
         wanted = [accounts["id_column"], accounts["customer_column"], *(accounts.get("fields") or {}).values()]

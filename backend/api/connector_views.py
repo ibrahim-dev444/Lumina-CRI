@@ -191,6 +191,7 @@ def save_mapping(request, code):
     fields = {k: v for k, v in (d.get("fields") or {}).items() if v}
     id_column = str(d.get("id_column") or "").strip()
     updated_column = str(d.get("updated_column") or "").strip()
+    product_column = str(d.get("product_column") or "").strip() if source.connector_type == "file_upload" else ""
     unknown_fields = [f for f in fields if f not in FIELDS]
     if unknown_fields:
         return _bad(f"Unknown Lumina field(s): {', '.join(unknown_fields)}.")
@@ -202,13 +203,13 @@ def save_mapping(request, code):
         columns = adapter_for(source).list_columns(obj)
     except ConnectorError as exc:
         return _bad(exc)
-    used = [id_column, *fields.values()] + ([updated_column] if updated_column else [])
+    used = [id_column, *fields.values()] + [c for c in (updated_column, product_column) if c]
     missing = [c for c in used if c not in columns]
     if missing:
         return _bad(f"{', '.join(missing)} not found in {obj}.")
     kept = {k: v for k, v in (source.mapping or {}).items() if k in ("accounts", "tables", "status") and v}
     source.mapping = {"object": obj, "id_column": id_column, "updated_column": updated_column, "fields": fields,
-                      **kept}  # the accounts table and added customer tables are saved on their own
+                      **({"product_column": product_column} if product_column else {}), **kept}  # the accounts table and added customer tables are saved on their own
     source.save(update_fields=["mapping"])
     record(request, AuditEvent.CONNECTOR_CHANGED, target=f"source {code}", mapping=source.mapping)
     return Response(_source_json(source))

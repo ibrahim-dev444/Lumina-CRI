@@ -93,7 +93,8 @@ def store_accounts(source, rows, mapping):
         Holding.objects.update_or_create(
             source=source, account_key=key,
             defaults={
-                "account_last4": re.sub(r"[^0-9A-Za-z]", "", account)[-4:],
+                # A product read from a file's Product column has no account number to show.
+                "account_last4": "" if mapping.get("no_number") else re.sub(r"[^0-9A-Za-z]", "", account)[-4:],
                 "customer_ref": customer_ref,
                 "product_type": classify_type(value.get("product_type"), value.get("product_name")),
                 "product_name": str(value.get("product_name") or "").strip()[:120],

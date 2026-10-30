@@ -94,7 +94,7 @@ def _sync(source):
         if accounts is not None:
             from products.services import store_accounts
 
-            result.accounts = store_accounts(source, accounts, source.mapping["accounts"])
+            result.accounts = store_accounts(source, accounts, connector.accounts_mapping())
     return result
 
 

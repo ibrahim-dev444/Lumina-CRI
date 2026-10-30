@@ -111,6 +111,7 @@ export interface ConnectorMapping {
   id_column: string
   updated_column: string
   fields: Partial<Record<Field, string>>
+  product_column?: string // CSV connectors: a column naming the customer's product(s)
   accounts?: AccountsMapping
   status?: 'active' | 'suspended' // the main table
   tables?: CustomerTable[] // customer tables added after the main one
@@ -460,6 +461,9 @@ export interface UploadResult {
   ok: boolean
   rows?: number
   error?: string
+  missing?: string[] // mapped columns this file does not have
+  new_columns?: string[] // columns no earlier file had
+  lumina_ids?: boolean // its IDs look like Lumina's own customer IDs (C-10168)
 }
 
 export interface FileRemoval {

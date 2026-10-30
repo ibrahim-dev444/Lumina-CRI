@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { api } from '../api/client'
@@ -130,6 +130,8 @@ export function ConnectorSetupPage() {
 const MULTI_TABLE = ['postgresql', 'mysql', 'mongodb', 'snowflake', 'databricks', 'servicenow', 'salesforce', 'cloudera']
 
 function SetupSteps({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+  // Bumped after files change, so the mapping step reads the columns again.
+  const [filesVersion, setFilesVersion] = useState(0)
   if (type.type === 'push_api') {
     return (
       <>
@@ -142,11 +144,18 @@ function SetupSteps({ source, type, onChanged }: { source: Source; type: Connect
   return (
     <>
       {type.type === 'file_upload' ? (
-        <UploadedFilesCard source={source} title={<StepTitle n={1} text="Files" />} onChanged={onChanged} />
+        <UploadedFilesCard
+          source={source}
+          title={<StepTitle n={1} text="Files" />}
+          onChanged={() => {
+            setFilesVersion((v) => v + 1)
+            onChanged()
+          }}
+        />
       ) : (
         <ConnectionStep source={source} type={type} onChanged={onChanged} />
       )}
-      <MappingStep source={source} type={type} onChanged={onChanged} />
+      <MappingStep source={source} type={type} onChanged={onChanged} refresh={filesVersion} />
       {MULTI_TABLE.includes(type.type) && 'object' in source.mapping && (
         <CustomerTablesCard source={source} type={type} onChanged={onChanged} />
       )}
@@ -236,7 +245,17 @@ function ConnectionStep({ source, type, onChanged }: { source: Source; type: Con
   )
 }
 
-function MappingStep({ source, type, onChanged }: { source: Source; type: ConnectorType; onChanged: () => void }) {
+function MappingStep({
+  source,
+  type,
+  onChanged,
+  refresh = 0,
+}: {
+  source: Source
+  type: ConnectorType
+  onChanged: () => void
+  refresh?: number
+}) {
   const toast = useToast()
   const saved = 'object' in source.mapping ? (source.mapping as ConnectorMapping) : null
   return (
@@ -246,6 +265,7 @@ function MappingStep({ source, type, onChanged }: { source: Source; type: Connec
       saved={saved}
       title={<StepTitle n={2} text="What to read" />}
       description="Choose where customers are, then match its columns to Lumina's fields. Unmapped columns are never read."
+      refresh={refresh}
       onSave={async (mapping) => {
         await api.saveMapping(source.code, mapping)
         toast('success', 'Mapping saved. Sync to read the customers.')
@@ -264,12 +284,14 @@ function TableEditor({
   description,
   onSave,
   onCancel,
+  refresh = 0,
 }: {
   source: Source
   type: ConnectorType
   saved: ConnectorMapping | null
   title: ReactNode
   description: string
+  refresh?: number
   onSave: (mapping: ConnectorMapping) => Promise<void>
   onCancel?: () => void
 }) {
@@ -314,9 +336,20 @@ function TableEditor({
           id_column: (sameObject && m.id_column) || guess('id', cols),
           updated_column: (sameObject && m.updated_column) || guess('updated', cols),
           fields,
+          ...(type.type === 'file_upload'
+            ? { product_column: (sameObject && m.product_column) || cols.find((c) => /product/i.test(c)) || '' }
+            : {}),
         }
       })
     })
+
+  // CSV files: read the columns straight away, and again whenever files are uploaded, suspended or removed, so
+  // the lists below always offer every column the active files have. (Databases are only read on request.)
+  const isFiles = type.type === 'file_upload'
+  useEffect(() => {
+    if (isFiles && object) loadColumns(object)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFiles, refresh])
 
   const save = () => run('save', () => onSave(mapping))
 
@@ -418,6 +451,20 @@ function TableEditor({
                 {columnSelect(mapping.fields[f] ?? '', (v) => setField(f, v), `Column for ${FIELD_LABELS[f]}`, 'Not in this source')}
               </div>
             ))}
+            {isFiles && (
+              <div className="mapping-row">
+                <span>
+                  Product
+                  <span className="text-xs muted"> Optional. e.g. Savings, Home Loan; several can be separated by ;</span>
+                </span>
+                {columnSelect(
+                  mapping.product_column ?? '',
+                  (v) => setMapping((m) => ({ ...m, product_column: v })),
+                  'Column for Product',
+                  'Not in these files',
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
