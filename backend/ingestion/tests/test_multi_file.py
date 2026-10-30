@@ -52,14 +52,16 @@ def test_every_active_file_is_read_and_the_newest_wins(admin, branches):
     assert SourceRecord.objects.get(source__code=code, source_record_id="S1").origin_file_id == files["south.csv"]
 
 
-def test_several_files_at_once_each_checked_against_the_mapping(admin, branches):
+def test_several_files_at_once_each_checked(admin, branches):
     code, _ = branches
     batch = [csv_file("east.csv", HEADER + "E1,Ravi Das,9000000005\n"),
              csv_file("west.csv", "Ref,Name\nW1,Wrong columns\n"),
              csv_file("empty.csv", HEADER)]
     answer = admin.post(f"/api/connectors/{code}/upload/", {"files": batch}, format="multipart").json()["files"]
-    assert [(f["name"], f["ok"]) for f in answer] == [("east.csv", True), ("west.csv", False), ("empty.csv", False)]
-    assert "Full Name" in answer[1]["error"] and "Ravi Das" in visible_names()
+    # A file with different columns is kept and says what it lacks; an empty file is refused.
+    assert [(f["name"], f["ok"]) for f in answer] == [("east.csv", True), ("west.csv", True), ("empty.csv", False)]
+    assert answer[1]["missing"] == ["Full Name", "Phone"] and answer[1]["new_columns"] == ["Name"]
+    assert answer[0]["missing"] == [] and "Ravi Das" in visible_names()
     too_many = [csv_file(f"f{i}.csv", HEADER + f"X{i},P {i},9000000{i:03d}\n") for i in range(21)]
     assert admin.post(f"/api/connectors/{code}/upload/", {"files": too_many},
                       format="multipart").status_code == 400
@@ -109,3 +111,39 @@ def test_only_admins_manage_files(admin, branches):
     assert c.get(f"/api/connectors/{code}/files/").status_code == 403
     assert c.post(f"/api/connectors/{code}/files/status/", {"ids": [files["north.csv"]], "status": "suspended"},
                   format="json").status_code == 403
+
+
+# ---------- Files with different columns, a Product column, Lumina's own IDs ----------
+
+def test_a_later_file_can_add_columns_and_they_can_be_mapped(admin, branches):
+    code, _ = branches
+    extra = csv_file("update.csv", "Ref,Gender,Country,Product\nN1,F,India,Savings\nN2,M,UAE,Home Loan; Credit Card\n")
+    answer = admin.post(f"/api/connectors/{code}/upload/", {"files": [extra]}, format="multipart").json()["files"][0]
+    assert answer["ok"] and answer["missing"] == ["Full Name", "Phone"]
+    assert answer["new_columns"] == ["Gender", "Country", "Product"]
+    columns = admin.post(f"/api/connectors/{code}/discover/", {"object": "Uploaded files"}, format="json").json()
+    assert {"Gender", "Country", "Product", "Full Name", "Phone"} <= set(columns["columns"])  # every file's columns
+    saved = admin.put(f"/api/connectors/{code}/mapping/", {
+        "object": "Uploaded files", "id_column": "Ref", "product_column": "Product",
+        "fields": {"name": "Full Name", "mobile": "Phone", "gender": "Gender", "country": "Country"},
+    }, format="json")
+    assert saved.status_code == 200, saved.json()
+    assert admin.post(f"/api/sources/{code}/sync/").status_code == 200
+    n2 = SourceRecord.objects.get(source__code=code, source_record_id="N2")
+    # The newer file adds gender and country and keeps the name and mobile the older file gave.
+    assert (n2.name, n2.mobile, n2.gender, n2.country) == ("Vikram Shetty", "9000000002", "Male", "United Arab Emirates")
+    from products.models import Holding
+
+    held = sorted(Holding.objects.filter(source__code=code, customer_ref="N2").values_list("product_type", flat=True))
+    assert held == ["credit_card", "home_loan"]
+    assert Holding.objects.get(source__code=code, customer_ref="N1").account_last4 == ""
+
+
+def test_lumina_own_ids_are_flagged(admin, branches):
+    code, _ = branches
+    export = csv_file("export.csv", "Customer ID,Name\nC-10168,Rohan Singh\nC-10525,Rohan Singh\n")
+    answer = admin.post(f"/api/connectors/{code}/upload/", {"files": [export]}, format="multipart").json()["files"][0]
+    assert answer["ok"] and answer["lumina_ids"] is True
+    plain = csv_file("plain.csv", HEADER + "P1,Priya Nair,9000000009\n")
+    assert admin.post(f"/api/connectors/{code}/upload/", {"files": [plain]},
+                      format="multipart").json()["files"][0]["lumina_ids"] is False

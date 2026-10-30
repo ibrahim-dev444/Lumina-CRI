@@ -22,6 +22,7 @@ export function UploadedFilesCard({ source, title, onChanged }: { source: Source
   const [selected, setSelected] = useState<number[]>([])
   const [busy, setBusy] = useState<'upload' | 'status' | 'look' | 'remove' | null>(null)
   const [refused, setRefused] = useState<UploadResult[]>([])
+  const [notes, setNotes] = useState<UploadResult[]>([])
   const [removal, setRemoval] = useState<FileRemoval | null>(null)
   const [dragging, setDragging] = useState(false)
 
@@ -52,6 +53,7 @@ export function UploadedFilesCard({ source, title, onChanged }: { source: Source
       const results = await api.uploadConnectorFiles(source.code, picked)
       const kept = results.filter((r) => r.ok)
       setRefused(results.filter((r) => !r.ok))
+      setNotes(kept.filter((r) => r.missing?.length || r.new_columns?.length || r.lumina_ids))
       if (kept.length) {
         const rows = kept.reduce((n, r) => n + (r.rows ?? 0), 0)
         toast('success', `${kept.length} file${kept.length === 1 ? '' : 's'} uploaded, ${rows} rows.`)
@@ -164,6 +166,42 @@ export function UploadedFilesCard({ source, title, onChanged }: { source: Source
       {busy === 'upload' && <Loader kind="drop" label="Uploading the files" size={44} />}
       {!files.data && !files.error && busy !== 'upload' && <Loader kind="drop" label="Loading the files" size={44} />}
 
+      {notes.length > 0 && (
+        <div className="card-body">
+          <div className="upload-notes" role="status">
+            {notes.map((r) => (
+              <div key={r.name} className="upload-note">
+                <strong>{r.name}</strong>
+                <ul>
+                  {r.new_columns?.length ? (
+                    <li>
+                      New columns: {r.new_columns.join(', ')}. Map them in step 2; the column list there is already
+                      up to date.
+                    </li>
+                  ) : null}
+                  {r.missing?.length ? (
+                    <li>
+                      {r.missing.includes(source.mapping.id_column as string)
+                        ? `It has no ${source.mapping.id_column} column (the record ID), so its rows are skipped until the ID column is changed in step 2.`
+                        : `It has no ${r.missing.join(', ')} column${r.missing.length > 1 ? 's' : ''}. For customers also in earlier files, those values stay as the earlier files gave them.`}
+                    </li>
+                  ) : null}
+                  {r.lumina_ids ? (
+                    <li>
+                      Its IDs look like Lumina's own customer IDs (like C-10168). A file is read as its own system, so
+                      these rows join existing customers only through PAN, date of birth, email or mobile. Rows with
+                      just a name become new customers.
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
+            ))}
+            <button type="button" className="link text-sm" onClick={() => setNotes([])}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
       {refused.length > 0 && (
         <div className="card-body">
           <ErrorAlert message={`Not uploaded: ${refused.map((r) => `${r.name} (${r.error})`).join('; ')}`} />

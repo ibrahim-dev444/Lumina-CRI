@@ -422,22 +422,31 @@ class FileUploadAdapter(BaseAdapter):
         return [FILES_OBJECT]
 
     def list_columns(self, obj=None):
-        return csv_header(self._active()[0].content)
+        """Every column any active file has, newest file's columns first: files may differ (a later file can add
+        columns such as country, or leave some out)."""
+        seen = {}
+        for upload in self._active():
+            for column in csv_header(upload.content):
+                seen.setdefault(column, None)
+        return list(seen)
 
     def fetch(self, obj, columns, limit):
         _checked(columns, self.list_columns(obj))
         id_column = (self.source.mapping or {}).get("id_column") or columns[0]
         by_id, without_id = {}, []
         for upload in reversed(self._active()):  # oldest first, so a newer file overwrites the same customer ID
+            header = set(csv_header(upload.content))
             for row in csv.DictReader(io.StringIO(upload.content)):
                 clean = {(k or "").strip(): v for k, v in row.items()}
-                picked = {**{c: clean.get(c) for c in columns}, FILE_KEY: upload.id}
+                # Only the columns this file has: a newer file without a mobile column keeps the older file's mobile.
+                picked = {**{c: clean.get(c) for c in columns if c in header}, FILE_KEY: upload.id}
                 key = (clean.get(id_column) or "").strip()
                 if key:
-                    by_id[key] = picked
+                    by_id[key] = {**by_id.get(key, {}), **picked}
                 else:
                     without_id.append(picked)  # counted as read; the sync skips rows without an ID
-        return (list(by_id.values()) + without_id)[:limit]
+        rows = list(by_id.values()) + without_id
+        return [{**{c: None for c in columns}, **r} for r in rows][:limit]
 
 
 def csv_header(text):

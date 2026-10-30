@@ -4391,3 +4391,18 @@ button.link {
   .bd-tip { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .bd-track i { transition: none; } }
+
+/* CSV connector: what to look at after an upload (new columns, missing columns, Lumina's own IDs) */
+.upload-notes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  font-size: var(--text-sm);
+}
+.upload-note ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }

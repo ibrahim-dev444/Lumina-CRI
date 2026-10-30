@@ -5,6 +5,7 @@ switches off the rows only suspended files hold, without deleting them, so resum
 customers with the same IDs. Removing deletes the files, and the rows and customers only they held.
 """
 
+import re
 from dataclasses import dataclass
 
 from django.db import transaction
@@ -17,30 +18,57 @@ MAX_FILES = 20  # per upload
 MAX_BYTES = 5 * 1024 * 1024  # per file (parse_csv_upload checks it)
 
 
+LUMINA_ID = re.compile(r"^C-\d{5,}$")  # Lumina's own customer IDs, e.g. C-10168
+
+
 def upload_files(source, uploads, username):
-    """Check and save each file. Returns one result per file: {name, ok, rows | error}. Good files are kept even
-    when others in the same batch are refused."""
+    """Check and save each file. Returns one result per file: {name, ok, rows | error}, and for saved files what
+    to look at: mapped columns it lacks (missing), columns no earlier file had (new_columns), and whether its IDs
+    look like Lumina's own customer IDs (lumina_ids). Files may differ in columns; good files are kept even when
+    others in the same batch are refused."""
     if not uploads:
         raise ConnectorError("Choose one or more CSV files.")
     if len(uploads) > MAX_FILES:
         raise ConnectorError(f"Upload at most {MAX_FILES} files at a time.")
     mapping = source.mapping or {}
-    needed = [c for c in [mapping.get("id_column"), mapping.get("updated_column"),
+    needed = [c for c in [mapping.get("id_column"), mapping.get("updated_column"), mapping.get("product_column"),
                           *(mapping.get("fields") or {}).values()] if c]
+    known = {c for f in source.uploads.filter(status=UploadedFile.ACTIVE) for c in csv_header(f.content)}
     results = []
     for upload in uploads:
         name = (upload.name or "file.csv")[:200]
         try:
             text, rows = parse_csv_upload(name, upload.read())
-            missing = [c for c in needed if c not in csv_header(text)]
-            if missing:
-                raise ConnectorError(f"Missing the mapped column(s) {', '.join(missing)}.")
+            header = csv_header(text)
         except ConnectorError as exc:
             results.append({"name": name, "ok": False, "error": str(exc)})
             continue
         UploadedFile.objects.create(source=source, name=name, content=text, rows=rows, uploaded_by=username)
-        results.append({"name": name, "ok": True, "rows": rows})
+        results.append({
+            "name": name, "ok": True, "rows": rows,
+            "missing": [c for c in needed if c not in header],
+            "new_columns": [c for c in header if c not in known and c not in needed] if known else [],
+            "lumina_ids": _looks_like_lumina_ids(text, mapping.get("id_column")),
+        })
+        known.update(header)
     return results
+
+
+def _looks_like_lumina_ids(text, id_column):
+    """True when most values of the ID column (or of the first column) are Lumina's own customer IDs. Such a file
+    is still read as its own system: its rows join existing customers only by PAN, date of birth, email or mobile."""
+    import csv
+    import io
+
+    values = []
+    for row in csv.DictReader(io.StringIO(text)):
+        clean = {(k or "").strip(): (v or "").strip() for k, v in row.items()}
+        value = clean.get(id_column) if id_column in clean else next(iter(clean.values()), "")
+        if value:
+            values.append(value)
+        if len(values) >= 50:
+            break
+    return bool(values) and sum(1 for v in values if LUMINA_ID.match(v)) >= 0.8 * len(values)
 
 
 def _ids_by_file(source):
