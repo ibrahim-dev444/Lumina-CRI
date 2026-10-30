@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import type { Field, GoldenField, SourceRecord } from '../api/types'
-import { FIELD_LABELS, formatDate, formatFieldValue, formatScore, MONO_FIELDS } from '../format'
+import { FIELD_LABELS, formatDate, formatFieldValue, formatRelative, formatScore, MONO_FIELDS } from '../format'
 import { namesOnce, trustFor } from './agreement'
 import { Icon } from './Icon'
 import { StatusBadge } from './ui'
@@ -81,7 +81,8 @@ export function GoldenFieldRow({
         ) : (
           <div className="field-source">
             From <strong>{golden.source_name}</strong> · trust {formatScore(golden.trust)}
-            {golden.last_updated && ` · updated ${formatDate(golden.last_updated)}`}
+            {golden.last_updated && ` · last changed in the source ${formatDate(golden.last_updated)}`}
+            {golden.last_read && ` · read by Lumina ${formatRelative(golden.last_read)}`}
           </div>
         )}
         {agreeing.length > 0 && (

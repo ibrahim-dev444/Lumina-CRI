@@ -133,12 +133,13 @@ class GoldenFieldSerializer(serializers.ModelSerializer):
     source_code = serializers.SerializerMethodField()
     source_name = serializers.SerializerMethodField()
     last_updated = serializers.SerializerMethodField()
+    last_read = serializers.SerializerMethodField()  # when Lumina last read the record the value came from
     correction = serializers.SerializerMethodField()
 
     class Meta:
         model = GoldenField
         fields = ["field", "value", "trust", "conflicts", "source_code", "source_name", "source_record_id",
-                  "last_updated", "correction", "guessed", "score_trust"]
+                  "last_updated", "last_read", "correction", "guessed", "score_trust"]
 
     # A golden value comes from a source record, or from an approved correction.
     def get_source_code(self, obj):
@@ -149,6 +150,10 @@ class GoldenFieldSerializer(serializers.ModelSerializer):
 
     def get_last_updated(self, obj):
         when = obj.source_record.source_updated_at if obj.source_record_id else obj.correction.decided_at
+        return serializers.DateTimeField().to_representation(when) if when else None
+
+    def get_last_read(self, obj):
+        when = obj.source_record.synced_at if obj.source_record_id else None
         return serializers.DateTimeField().to_representation(when) if when else None
 
     def get_correction(self, obj):

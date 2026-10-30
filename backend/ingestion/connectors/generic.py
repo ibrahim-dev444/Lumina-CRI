@@ -64,14 +64,21 @@ class MappedConnector(BaseConnector):
         return [k for k, t in self.tables.items() if t["status"] != "active"]
 
     def fetch(self):
-        """Rows from every active table, each tagged with its table."""
+        """Rows from every active table, each tagged with its table. Sets self.complete: False when a table hit the
+        row limit, so the sync knows it may not have seen every row."""
         adapter, rows = adapter_for(self.source), []
+        self.complete = True
         for key, table in self.tables.items():
             if table["status"] != "active":
                 continue
-            for row in adapter.fetch(table["object"], self._columns(table), settings.CONNECTOR_MAX_ROWS):
-                rows.append({**row, TABLE_KEY: key})
+            read = adapter.fetch(table["object"], self._columns(table), settings.CONNECTOR_MAX_ROWS)
+            if len(read) >= settings.CONNECTOR_MAX_ROWS:
+                self.complete = False
+            rows.extend({**row, TABLE_KEY: key} for row in read)
         return rows
+
+    def active_tables(self):
+        return [k for k, t in self.tables.items() if t["status"] == "active"]
 
     def accounts_mapping(self):
         """How to read this connector's products: its accounts table, or for a CSV connector its optional Product

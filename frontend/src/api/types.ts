@@ -184,6 +184,7 @@ export interface SyncResult {
   created: number
   updated: number
   accounts: number | null // products read, when the connector has an accounts mapping
+  retired?: number // records the system no longer sends, switched off
   customers: number
   new_suggestions: number
 }
@@ -211,7 +212,8 @@ export interface GoldenField {
   source_code: string
   source_name: string
   source_record_id: number | null
-  last_updated: string | null
+  last_updated: string | null // when the source system says it last changed the record
+  last_read?: string | null // when Lumina last read that record
   // Set when the value comes from an approved correction instead of a source system.
   correction: { id: number; evidence_ref: string; proposed_by: string; approved_by: string } | null
   guessed: boolean // worked out by Lumina from other details, not sent by any system
