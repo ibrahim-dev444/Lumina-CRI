@@ -188,7 +188,7 @@ function IdentityTab({ c, onChanged }: { c: CustomerDetail; onChanged: () => voi
           </dl>
         </Card>
         <Card title="Why this score" description="Points each field adds, out of 100.">
-          <ScoreBreakdown golden={c.golden} weights={c.weights} score={c.trust_score} />
+          <ScoreBreakdown golden={c.golden} weights={c.weights} score={c.trust_score} records={c.records} />
         </Card>
       </div>
       <RevealPanel customer={c} />

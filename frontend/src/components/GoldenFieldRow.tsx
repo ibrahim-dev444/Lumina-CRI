@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import type { Field, GoldenField, SourceRecord } from '../api/types'
 import { FIELD_LABELS, formatDate, formatFieldValue, formatScore, MONO_FIELDS } from '../format'
+import { namesOnce, trustFor } from './agreement'
 import { Icon } from './Icon'
 import { StatusBadge } from './ui'
 
@@ -18,7 +19,7 @@ interface ValueGroup {
 function groupValues(field: Field, records: SourceRecord[]): ValueGroup[] {
   const holding = records
     .filter((r) => r.source_enabled && r[field])
-    .sort((a, b) => Number(b.source_trust) - Number(a.source_trust))
+    .sort((a, b) => trustFor(b, field) - trustFor(a, field))
   const groups = new Map<string, ValueGroup>()
   for (const r of holding) {
     const value = r[field] as string
@@ -85,7 +86,9 @@ export function GoldenFieldRow({
         )}
         {agreeing.length > 0 && (
           <div className="field-source">
-            <Icon name="check" size={12} /> Also in {agreeing.map((r) => r.source_name).join(', ')}
+            <Icon name="check" size={12} /> Also in {namesOnce(agreeing)}
+            {golden.score_trust !== null && Number(golden.score_trust) > Number(golden.trust) &&
+              ` · agreement raises trust to ${formatScore(golden.score_trust)}`}
           </div>
         )}
 
@@ -104,12 +107,17 @@ export function GoldenFieldRow({
               <ul className="alternatives">
                 {others.map((g) => {
                   const best = g.records[0]
-                  const lowerTrust = Number(best.source_trust) < Number(golden.trust)
+                  const lowerTrust = trustFor(best, field) < Number(golden.trust)
                   return (
                     <li key={g.value}>
                       <span className="alt-value">{formatFieldValue(field, g.value)}</span>
                       <span className="alt-meta">
-                        {g.records.map((r) => `${r.source_name} (${formatScore(r.source_trust)})`).join(', ')}
+                        {[...new Map(g.records.map((r) => [r.source_name, r])).values()]
+                          .map((r) => {
+                            const n = g.records.filter((x) => x.source_name === r.source_name).length
+                            return `${r.source_name} (trust ${formatScore(trustFor(r, field))}${n > 1 ? `, ${n} records` : ''})`
+                          })
+                          .join(', ')}
                         {' · '}
                         {golden.correction ? 'replaced by the approved correction' : lowerTrust ? 'lower trust' : 'same trust, older update'}
                       </span>
