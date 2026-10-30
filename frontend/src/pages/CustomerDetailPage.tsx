@@ -204,7 +204,7 @@ function SourcesTab({ c }: { c: CustomerDetail }) {
         <AgreementGrid customer={c} />
       </Card>
 
-      <Card title="What each source says" description="Highlighted values are the ones in use." flush>
+      <Card title="What each source says" description="Shaded values match the value in use. The outlined one is the record it was taken from." flush>
         <div className="table-wrap">
           <table className="table" style={{ minWidth: 1700 }}>
             <thead>
@@ -242,11 +242,14 @@ function SourcesTab({ c }: { c: CustomerDetail }) {
                           -
                         </td>
                       )
+                    // Every record holding the value in use is shaded, not only the one it was taken from.
                     const used = c.golden.some((g) => g.field === f && g.source_record_id === r.id)
+                    const same = used || r.agreement?.[f] === true
                     return (
                       <td
                         key={f}
-                        className={[used ? 'win' : '', MONO_FIELDS.has(f) ? 'mono nowrap' : ''].join(' ').trim() || undefined}
+                        className={[same ? 'win' : '', used ? 'used' : '', MONO_FIELDS.has(f) ? 'mono nowrap' : ''].join(' ').trim() || undefined}
+                        title={used ? 'In use: taken from this record' : same ? 'Same as the value in use' : undefined}
                       >
                         {formatFieldValue(f, value)}
                       </td>
