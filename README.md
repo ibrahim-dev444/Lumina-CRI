@@ -2,7 +2,7 @@
 
 Bank customer data platform. Lumina reads customer data from several bank systems, cleans it, works out which records belong to the same person, builds one **golden record** per customer, and gives each customer a **trust score** from 0 to 100.
 
-Live demo: https://lumina-cri.vercel.app (see [Hosted demo](#hosted-demo)).
+Live demo: https://lumina-cri-flame.vercel.app (see [Hosted demo](#hosted-demo)).
 
 Team rules (branches, pull requests, migrations, secrets) are in [CONTRIBUTING.md](CONTRIBUTING.md). Read it before your first change.
 
@@ -51,8 +51,8 @@ You need Git, Docker Desktop, Python 3.10 or newer, and Node 20 or newer.
 **1. Get the code**
 
 ```
-git clone https://github.com/ibrahim-dev444/Lumina-CRI.git
-cd Lumina-CRI
+git clone https://github.com/DataIQAdmin/Lumina_CRI.git
+cd Lumina_CRI
 ```
 
 **2. Create your `.env`.** Copy `.env.example` to `.env`, then replace `change-me-locally` (both places) with a password of your choice, and `DJANGO_SECRET_KEY` with a random string. To make one:
