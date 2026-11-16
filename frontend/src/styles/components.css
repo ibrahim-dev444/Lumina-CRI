@@ -8164,3 +8164,66 @@ td.num .count-button {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Popups: an extra-wide one for rows, and long values that wrap instead of stretching the popup. */
+.dlg.is-xl {
+  width: min(1200px, 100%);
+}
+
+.dlg-b {
+  min-width: 0;
+}
+
+.dlg .table-wrap {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.dlg .lx-example,
+.dlg .lx-code,
+.dlg .dq-v code,
+.dlg .regex-input {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.dlg .lx-examples > div {
+  min-width: 0;
+}
+
+/* Keep the popup's column no wider than the screen, whatever a wide table inside it would like. */
+.dlg-scrim {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+.dlg {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Scrolling inside a popup or menu stops at its edge instead of carrying on to the page behind. */
+.dlg-scrim,
+.dlg-b,
+.palette-list,
+.job-overlay,
+.job-dialog,
+.job-dialog *,
+.sidebar,
+.xp-card {
+  overscroll-behavior: contain;
+}
+
+/* The popup's middle part scrolls; what is inside it keeps its full height instead of being squeezed and cut off. */
+.dlg {
+  overflow: hidden;
+}
+
+.dlg-b {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.dlg-b > * {
+  flex-shrink: 0;
+}
