@@ -5,18 +5,17 @@ import { api } from '../api/client'
 import type { Capability } from '../api/types'
 import { applyTheme, getTheme, type Theme } from '../theme'
 import { useAuth } from '../auth/AuthContext'
-import { useOrganization } from '../organization'
 import { BrandMark } from './BrandMark'
 import { CommandPalette } from './CommandPalette'
 import { useScrollLock } from './scrollLock'
 import { Icon, type IconName } from './Icon'
-import { OrgLogo } from './OrgLogo'
+import { GeniePanel, onOpenGenie } from './GeniePanel'
 import { ProfileJobPanel } from './ProfileJobPanel'
 import { Avatar } from './ui'
 
 type NavItem = { to: string; label: string; icon: IconName; end?: boolean; needs?: Capability[] }
 
-// Data work is split into dedicated destinations; the regex library sits beneath Rules in the menu.
+// Data work is split into dedicated destinations, with the regex library as a peer feature in the menu.
 const GROUPS: { label: string; items: (NavItem & { sub?: boolean })[] }[] = [
   {
     label: '',
@@ -26,7 +25,7 @@ const GROUPS: { label: string; items: (NavItem & { sub?: boolean })[] }[] = [
       { to: '/profiling', label: 'Data profiling', icon: 'shield' },
       { to: '/rules', label: 'Rules', icon: 'sliders' },
       { to: '/silver', label: 'Silver layer', icon: 'layers' },
-      { to: '/regex', label: 'Regex library', icon: 'key', needs: ['manage_sources'], sub: true },
+      { to: '/regex', label: 'Regex library', icon: 'key', needs: ['manage_sources'] },
       { to: '/customers', label: 'Customers', icon: 'customers' },
     ],
   },
@@ -56,7 +55,6 @@ const PAGE_TITLES = [
 
 export function Layout() {
   const { user, logout } = useAuth()
-  const org = useOrganization()
   const location = useLocation()
   const [pending, setPending] = useState<number | null>(null)
   const [pendingCorrections, setPendingCorrections] = useState<number | null>(null)
@@ -64,7 +62,9 @@ export function Layout() {
   // Phones and small tablets: the menu is a drawer that slides in from the left.
   const [navOpen, setNavOpen] = useState(false)
   const [palette, setPalette] = useState(false)
+  const [genieOpen, setGenieOpen] = useState(false)
   useScrollLock(navOpen)
+  useEffect(() => onOpenGenie(() => setGenieOpen(true)), [])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -111,7 +111,7 @@ export function Layout() {
   const page = location.pathname === '/' ? { title: 'Home' } : PAGE_TITLES.find((p) => location.pathname.startsWith(p.path))
 
   return (
-    <div className="shell">
+    <div className={`shell${genieOpen ? ' genie-open' : ''}`}>
       <aside id="main-nav" className={`sidebar${navOpen ? ' open' : ''}`} aria-label="Main navigation">
         <Link to="/" className="brand" title="Go to Home" onClick={closeNav}>
           <BrandMark />
@@ -196,11 +196,10 @@ export function Layout() {
               <span className="find-text">Search pages and tables…</span>
               <kbd>Ctrl K</kbd>
             </button>
-            {/* The organization's own logo: the one place its identity appears inside Lumina. */}
-            <span className="org-badge" title={`Signed in to ${org.name}`}>
-              <OrgLogo org={org} size={26} />
-              <span className="org-badge-name">{org.name}</span>
-            </span>
+            <button type="button" className={`genie-trigger${genieOpen ? ' is-active' : ''}`} onClick={() => setGenieOpen((open) => !open)} aria-expanded={genieOpen} aria-controls="genie-panel">
+              <span className="genie-trigger-mark" aria-hidden="true"><BrandMark size={20} /></span>
+              <span>Lumina AI</span>
+            </button>
           </div>
         </header>
         <div className="content-inner">
@@ -211,6 +210,7 @@ export function Layout() {
       </main>
       <ProfileJobPanel />
       {palette && <CommandPalette onClose={() => setPalette(false)} />}
+      <GeniePanel open={genieOpen} onClose={() => setGenieOpen(false)} />
     </div>
   )
 }
